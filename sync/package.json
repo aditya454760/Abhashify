@@ -1,0 +1,13 @@
+{
+  "name": "prep-ledger-sync",
+  "private": true,
+  "scripts": {
+    "test:overlap": "node test/overlap.test.js",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-pl \"node test/rules.test.js\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.0",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

@@ -1,0 +1,108 @@
+rules_version = '2';
+// Prep Ledger. Every request must come from a signed-in, email-verified Google account.
+// A person can only touch their own data. A course can be shared with other people by invitation.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function courseDoc(cid) {
+      return get(/databases/$(database)/documents/courses/$(cid)).data;
+    }
+    function isMember(cid) {
+      return signedIn() && (courseDoc(cid).ownerUid == request.auth.uid
+                            || request.auth.uid in courseDoc(cid).members);
+    }
+    function isStr(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
+    function isNum(v) { return v is number; }
+
+    // Fields a course may contain.
+    function validCourse(d) {
+      return d.keys().hasOnly(['name', 'ownerUid', 'members', 'invited', 'plan', 'updatedAt'])
+          && d.keys().hasAll(['name', 'ownerUid', 'members', 'plan'])
+          && isStr(d.name, 80)
+          && d.members is list && d.members.size() <= 10
+          && (!('invited' in d) || (d.invited is list && d.invited.size() <= 10))
+          && d.plan is map
+          && d.plan.subjects is list && d.plan.subjects.size() <= 60
+          && d.plan.blocks is list && d.plan.blocks.size() <= 300;
+    }
+
+    // A study session. s and e are epoch milliseconds, at most 12 hours long.
+    function validSession(d, uid) {
+      return d.keys().hasOnly(['uid', 's', 'e', 'subj', 'block', 'planStart', 'sheets', 'device', 'source', 'mid', 'mu', 'tz'])
+          && d.keys().hasAll(['uid', 's', 'e', 'device', 'source'])
+          && d.uid == uid
+          && isNum(d.s) && isNum(d.e) && d.e > d.s && d.e - d.s <= 43200000
+          && isStr(d.device, 64)
+          && d.source in ['manual', 'timer', 'phone', 'laptop', 'tablet'];
+    }
+
+    function validMaterial(d) {
+      return d.keys().hasOnly(['title', 'subj', 'kind', 'unit', 'total', 'done', 'file', 'updatedAt'])
+          && d.keys().hasAll(['title', 'kind', 'total', 'done'])
+          && isStr(d.title, 160)
+          && isNum(d.total) && d.total >= 0 && d.total <= 100000
+          && isNum(d.done) && d.done >= 0 && d.done <= 100000;
+    }
+
+    // Time spent in the study apps you picked, per device and day. Intervals only, never app names.
+    function validUsage(d, uid) {
+      return d.keys().hasOnly(['uid', 'device', 'day', 'intervals', 'updatedAt'])
+          && d.uid == uid
+          && isStr(d.device, 64)
+          && isStr(d.day, 10)
+          && d.intervals is list && d.intervals.size() <= 400;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+                            && request.resource.data.keys().hasOnly(['email', 'createdAt', 'lastSeen']);
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /courses/{cid} {
+      allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid
+                                    || request.auth.uid in resource.data.members);
+      allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid
+                    && validCourse(request.resource.data);
+      // Only the owner edits the plan and the member list.
+      allow update: if signedIn() && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && validCourse(request.resource.data);
+      // An invited person can add themselves to members, and nothing else.
+      allow update: if signedIn()
+                    && 'invited' in resource.data
+                    && request.auth.token.email in resource.data.invited
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+                    && request.resource.data.members.toSet().difference(resource.data.members.toSet()) == [request.auth.uid].toSet();
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      // Each person's own data lives under people/{uid}.
+      match /people/{uid}/sessions/{sid} {
+        allow read: if isMember(cid);   // combined course view
+        allow create: if isMember(cid) && request.auth.uid == uid && validSession(request.resource.data, uid);
+        allow update: if isMember(cid) && request.auth.uid == uid && validSession(request.resource.data, uid);
+        allow delete: if isMember(cid) && request.auth.uid == uid;
+      }
+      match /people/{uid}/usage/{uid2} {
+        allow read: if isMember(cid);
+        allow create, update: if isMember(cid) && request.auth.uid == uid && validUsage(request.resource.data, uid);
+        allow delete: if isMember(cid) && request.auth.uid == uid;
+      }
+      // Reading material progress stays private to each person.
+      match /people/{uid}/materials/{mid} {
+        allow read: if isMember(cid) && request.auth.uid == uid;
+        allow create, update: if isMember(cid) && request.auth.uid == uid && validMaterial(request.resource.data);
+        allow delete: if isMember(cid) && request.auth.uid == uid;
+      }
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
