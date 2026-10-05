@@ -1,0 +1,699 @@
+<title>Prep Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: phone-first ledger. Sticky header with exam countdown, four tabs pinned to the bottom, ruled rows with OMR-style bubbles for status. */
+:root{
+  --bg:#F1F3F2; --surface:#FFFFFF; --ink:#16212B; --ink2:#52606D; --line:#D9DFE2; --track:#E3E8EA;
+  --accent:#3B3FA8; --accent-ink:#FFFFFF; --hlbg:#FFE27A; --good:#1E7F4F; --warn:#9A6A12; --bad:#C2413A;
+  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101318; --surface:#181C23; --ink:#E7EAF0; --ink2:#9AA5B1; --line:#2A313B; --track:#232A33;
+    --accent:#9EA6FF; --accent-ink:#10131A; --hlbg:#5A4B12; --good:#5BC08A; --warn:#E0AE55; --bad:#EE7E76; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101318; --surface:#181C23; --ink:#E7EAF0; --ink2:#9AA5B1; --line:#2A313B; --track:#232A33;
+  --accent:#9EA6FF; --accent-ink:#10131A; --hlbg:#5A4B12; --good:#5BC08A; --warn:#E0AE55; --bad:#EE7E76; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);padding-inline:16px;padding-block:0 84px;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:640px;margin-inline:auto}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:1.15rem}
+h3{font-size:1rem}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--ink2)}
+.small{font-size:.85rem}
+.caps{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink2);font-weight:500}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-16px;padding:10px 16px}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.2rem}
+.count{font-family:var(--f-mono);font-size:.8rem;background:var(--hlbg);padding:2px 8px;border-radius:4px;white-space:nowrap}
+#view{display:flex;flex-direction:column;gap:16px;padding-block:16px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+nav.tabs button{background:none;border:0;padding:8px 4px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--ink2);min-height:44px}
+nav.tabs button[aria-current="page"]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--accent)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.card.flat{background:transparent;border-style:dashed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:8px}
+.grow{flex:1 1 0;min-width:0}
+
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:10px 14px;font-weight:600;min-height:44px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;min-height:36px;font-size:.85rem}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.btn:focus-visible,nav.tabs button:focus-visible,input:focus-visible,select:focus-visible,.item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn:disabled{opacity:.5}
+
+.item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);cursor:pointer;text-align:left;background:none;border-inline:0;border-bottom:0;width:100%}
+.item:first-child{border-top:0}
+.item .t{font-weight:600;overflow-wrap:anywhere}
+.time{font-family:var(--f-mono);font-size:.82rem;color:var(--ink2);min-width:4.6em}
+.bub{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(var(--ink) calc(var(--p,0)*1%),transparent 0);flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;border:1px solid var(--line);border-radius:999px;padding:1px 9px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.meter{height:8px;background:var(--track);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.meter.good i{background:var(--good)} .meter.warn i{background:var(--warn)} .meter.bad i{background:var(--bad)}
+
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--ink2)}
+input[type=text],input[type=number],input[type=time],input[type=date],select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:44px;width:100%;color:var(--ink)}
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.days label{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.85rem}
+.days input{position:absolute;opacity:0;pointer-events:none}
+.days label:has(input:checked){background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.days label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+
+#sheet,#alarm{position:fixed;inset:0;z-index:20;background:rgba(10,12,16,.55);display:flex;align-items:flex-end;justify-content:center}
+#alarm{align-items:center;padding:16px}
+.sheet-card{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:14px 14px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet-card form{display:flex;flex-direction:column;gap:12px}
+.alarm-card{background:var(--surface);border:2px solid var(--accent);border-radius:14px;padding:22px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px;text-align:center}
+.alarm-card .big{font-family:var(--f-mono);font-size:2rem}
+
+.timer{border-color:var(--accent);background:var(--surface)}
+.timer .big{font-family:var(--f-mono);font-size:2rem;font-variant-numeric:tabular-nums}
+.note{font-size:.85rem;color:var(--ink2);border-left:3px solid var(--hlbg);padding-left:10px}
+.err{color:var(--bad);font-size:.85rem}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th{font-weight:500;text-align:left;color:var(--ink2);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 6px 6px 0}
+.tbl td{padding:8px 6px 8px 0;border-top:1px solid var(--line);vertical-align:top}
+.scroll-x{overflow-x:auto}
+svg text{fill:var(--ink2);font-family:var(--f-mono);font-size:10px}
+.b-plan{fill:none;stroke:var(--ink2);stroke-width:1.2}
+.b-act{fill:var(--accent)}
+.axis{stroke:var(--line);stroke-width:1}
+.statline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat .n{font-family:var(--f-mono);font-size:1.35rem;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){.meter i{transition:width .3s}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand">Prep Ledger</div>
+  <div class="count" id="count" hidden></div>
+</div></header>
+<div class="wrap"><main id="view"><div class="card flat"><p class="muted">Loading your plan…</p></div></main></div>
+<nav class="tabs" aria-label="Sections"><div class="wrap" id="tabs"></div></nav>
+<div id="sheet" hidden></div>
+<div id="alarm" hidden></div>
+
+<script>
+//#LOGIC-START
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAYS_LONG=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const KINDS={theory:'Theory',practice:'Practice',revision:'Revision',mock:'Mock test',other:'Sport / other'};
+const MKINDS={theory:'Theory / book',sheet:'Practice sheet',notes:'Notes / slides',mock:'Mock paper'};
+const BLOCK_MAT={theory:['theory','notes'],practice:['sheet'],revision:['notes','theory','sheet'],mock:['mock'],other:[]};
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseYmd=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const dow=d=>(d.getDay()+6)%7;
+const toMin=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
+const fromMin=n=>pad(Math.floor(n/60)%24)+':'+pad(n%60);
+const addDays=(d,n)=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x};
+const weekStart=d=>addDays(d,-dow(d));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fmtDur=m=>{m=Math.round(m);if(m<=0)return '0m';const h=Math.floor(m/60),r=m%60;return h?(r?h+'h '+r+'m':h+'h'):r+'m'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function blocksOn(plan,date){
+  const w=dow(date);
+  return plan.blocks.filter(b=>b.days.includes(w)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+}
+function addHours(arr,start,len){
+  while(len>0){const h=Math.floor(start/60)%24,room=60-(start%60),take=Math.min(room,len);arr[h]+=take;start+=take;len-=take}
+}
+
+function weekReport(S,ws,now){
+  const today=ymd(now),nowMin=now.getHours()*60+now.getMinutes();
+  const days=[],bySub={},planH=new Array(24).fill(0),actH=new Array(24).fill(0),sessions=[];
+  let tp=0,td=0,ta=0,shD=0,shT=0,shA=0,bDue=0,bHit=0,tN=0,tOn=0,tSum=0;
+  const sub=id=>bySub[id]||(bySub[id]={p:0,a:0,sh:0,shA:0});
+  for(let i=0;i<7;i++){
+    const d=addDays(ws,i),ds=ymd(d);let p=0,due=0,a=0;
+    for(const b of blocksOn(S.plan,d)){
+      p+=b.m;shT+=b.sh||0;addHours(planH,toMin(b.st),b.m);
+      if(ds<today||(ds===today&&toMin(b.st)<=nowMin)){
+        due+=b.m;shD+=b.sh||0;bDue++;sub(b.s).p+=b.m;sub(b.s).sh+=b.sh||0;
+        const done=S.logs.filter(l=>l.d===ds&&l.b===b.id).reduce((x,l)=>x+l.m,0);
+        if(done>=b.m*0.8)bHit++;
+      }
+    }
+    for(const l of S.logs){
+      if(l.d!==ds)continue;
+      a+=l.m;shA+=l.q||0;sub(l.s).a+=l.m;sub(l.s).shA+=l.q||0;addHours(actH,toMin(l.st),l.m);
+      if(l.ps){const diff=toMin(l.st)-toMin(l.ps);tN++;if(Math.abs(diff)<=30)tOn++;tSum+=diff;sessions.push({d:ds,s:l.s,ps:l.ps,st:l.st,diff})}
+    }
+    days.push({ds,label:DAYS[i],p,due,a});tp+=p;td+=due;ta+=a;
+  }
+  const hoursPct=td?ta/td*100:null,sheetsPct=shD?shA/shD*100:null,timingPct=tN?tOn/tN*100:null;
+  let w=0,sc=0;
+  if(hoursPct!==null){w+=.5;sc+=.5*Math.min(100,hoursPct)}
+  if(sheetsPct!==null){w+=.25;sc+=.25*Math.min(100,sheetsPct)}
+  if(timingPct!==null){w+=.25;sc+=.25*timingPct}
+  return {days,bySub,planH,actH,sessions,tp,td,ta,shD,shT,shA,bDue,bHit,tN,tOn,
+    avgShift:tN?tSum/tN:null,hoursPct,sheetsPct,timingPct,score:w?Math.round(sc/w):null};
+}
+
+function planner(S,today){
+  const plan=S.plan,subj=Object.fromEntries(plan.subjects.map(s=>[s.id,s]));
+  const exam=plan.exam?parseYmd(plan.exam):null;
+  const daysLeft=exam?Math.max(1,Math.round((exam-new Date(today.getFullYear(),today.getMonth(),today.getDate()))/864e5)):90;
+  const contentDays=Math.max(7,daysLeft-(plan.buffer||0));
+  const bpw={};
+  for(const b of plan.blocks){if(b.k==='theory'||b.k==='practice')bpw[b.s]=(bpw[b.s]||0)+b.days.length}
+  const theory={};
+  for(const m of S.materials){if(m.kind==='theory'&&m.total>0){const t=theory[m.subj]||(theory[m.subj]={d:0,n:0});t.d+=Math.min(m.done,m.total);t.n+=m.total}}
+  const out=[];
+  for(const m of S.materials){
+    const known=m.total>0,remaining=known?Math.max(0,m.total-m.done):null;
+    if(known&&remaining===0)continue;
+    const sb=subj[m.subj]||{w:3,c:3},frac=known?remaining/m.total:1;
+    let bonus=0;
+    if(m.kind==='sheet'){const t=theory[m.subj];bonus=(t&&t.d/t.n<.5)?-6:1}
+    if(m.kind==='mock')bonus=daysLeft<45?3:-3;
+    const score=sb.w*(6-sb.c)*(.4+frac)+bonus;
+    const sessionsLeft=Math.max(1,Math.round((bpw[m.subj]||0.7)*contentDays/7));
+    out.push({m,score,remaining,sessionsLeft,chunk:known?Math.max(1,Math.ceil(remaining/sessionsLeft)):null});
+  }
+  return out.sort((a,b)=>b.score-a.score);
+}
+function nextFor(order,block){
+  const kinds=BLOCK_MAT[block.k]||[];
+  return order.find(o=>o.m.subj===block.s&&kinds.includes(o.m.kind))||order.find(o=>o.m.subj===block.s&&block.k!=='other')||null;
+}
+//#LOGIC-END
+
+/* ---------- state & storage ---------- */
+const defaultPlan=()=>({exam:'',examName:'',buffer:21,lead:5,subjects:[],blocks:[]});
+let S={plan:defaultPlan(),materials:[],logs:[]};
+let UID=null,DB=null,ASSETS=null,DL=null;
+let saveState='loading';
+const dirty=new Set();let flushT=null,chain=Promise.resolve();
+const lsGet=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const docData=k=>k==='plan'?S.plan:{items:S[k]};
+function mark(k){dirty.add(k);saveState='saving';paintSave();clearTimeout(flushT);flushT=setTimeout(flush,500)}
+function flush(){
+  chain=chain.then(async()=>{
+    for(const k of [...dirty]){
+      dirty.delete(k);
+      try{
+        if(DB)await DB.doc('data/users/'+UID+'/'+k).set(docData(k));
+        else lsSet('pl.'+k,docData(k));
+        saveState=DB?'cloud':'local';
+      }catch(e){saveState='error';console.error(e)}
+    }
+    paintSave();
+  });
+}
+function applyDocs(p,m,l){
+  S.plan=Object.assign(defaultPlan(),p||{});
+  S.materials=(m&&m.items)||[];S.logs=(l&&l.items)||[];
+}
+async function loadAll(){
+  if(DB){
+    const [a,b,c]=await Promise.all(['plan','materials','logs'].map(k=>DB.doc('data/users/'+UID+'/'+k).get()));
+    applyDocs(a.exists?a.data():null,b.exists?b.data():null,c.exists?c.data():null);
+    saveState='cloud';
+  }else{
+    applyDocs(lsGet('pl.plan',null),lsGet('pl.materials',null),lsGet('pl.logs',null));
+    saveState='local';
+  }
+}
+function paintSave(){const el=document.getElementById('savestat');if(el)el.textContent=saveText()}
+const saveText=()=>({loading:'Loading…',saving:'Saving…',cloud:'Saved to your account',local:'Saved on this device only (sign in to sync across devices)',error:'Could not save. Check your connection and try again.'}[saveState]);
+
+/* ---------- local-only state: running timer, fired alarms ---------- */
+let run=lsGet('pl.run',null);
+let armed=false,wakeLock=null,audioCtx=null,snoozes={},fired=lsGet('pl.fired',{});
+let tab='today',weekOffset=0,matFilter='left',matOrder=true,errMsg='';
+
+/* ---------- helpers for UI ---------- */
+const subjName=id=>(S.plan.subjects.find(s=>s.id===id)||{name:'Other'}).name;
+const subjDot=id=>{const i=Math.max(0,S.plan.subjects.findIndex(s=>s.id===id));return `<span class="dot" style="background:hsl(${(i*47+215)%360} 55% 52%)"></span>`};
+const subjChip=id=>`<span class="chip">${subjDot(id)}${esc(subjName(id))}</span>`;
+const subjOpts=sel=>S.plan.subjects.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('');
+const kindOpts=(o,sel)=>Object.entries(o).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${esc(v)}</option>`).join('');
+const blockTitle=b=>b.t||(subjName(b.s)+' · '+KINDS[b.k]);
+const endTime=b=>fromMin(toMin(b.st)+b.m);
+const loggedFor=(ds,bid)=>S.logs.filter(l=>l.d===ds&&l.b===bid).reduce((x,l)=>x+l.m,0);
+const pct=(a,b)=>b>0?Math.max(0,Math.min(100,a/b*100)):0;
+
+/* ---------- views ---------- */
+function paintHeader(){
+  const c=document.getElementById('count');
+  if(S.plan.exam){
+    const d=Math.round((parseYmd(S.plan.exam)-parseYmd(ymd(new Date())))/864e5);
+    c.hidden=false;c.textContent=(S.plan.examName||'Exam')+' · '+(d>=0?d+' days':'done');
+  }else c.hidden=true;
+}
+function paintTabs(){
+  document.getElementById('tabs').innerHTML=[['today','Today'],['plan','Plan'],['materials','Materials'],['report','Report']]
+    .map(([k,l])=>`<button type="button" data-act="tab" data-v="${k}"${tab===k?' aria-current="page"':''}>${l}</button>`).join('');
+}
+function render(){
+  paintHeader();paintTabs();
+  const v=document.getElementById('view');
+  v.innerHTML=({today:vToday,plan:vPlan,materials:vMaterials,report:vReport}[tab])()+
+    `<p class="small muted" id="savestat">${esc(saveText())}</p>`;
+  tickTimer();
+}
+function onboarding(){
+  return `<div class="card"><h2>Set up your schedule</h2>
+    <p class="muted">Prep Ledger rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps a list of what you have finished in your books and sheets.</p>
+    <div class="stack"><button class="btn" type="button" data-act="tpl">Start with a GATE DA 2027 template</button>
+    <button class="btn ghost" type="button" data-act="blank">Start empty and build my own</button></div>
+    <p class="small muted">The template sets the exam date to 6 February 2027 and adds a weekly timetable and eight subjects. Change anything afterwards.</p></div>`;
+}
+function vToday(){
+  if(!S.plan.subjects.length&&!S.plan.blocks.length)return onboarding();
+  const now=new Date(),ds=ymd(now),blocks=blocksOn(S.plan,now),order=planner(S,now);
+  const planned=blocks.reduce((x,b)=>x+b.m,0),logged=S.logs.filter(l=>l.d===ds).reduce((x,l)=>x+l.m,0);
+  let h=`<div class="row between"><div><h1>${DAYS_LONG[dow(now)]}</h1><p class="muted">${now.toLocaleDateString(undefined,{day:'numeric',month:'long'})}</p></div>
+    <div class="mono small" style="text-align:right"><div>${fmtDur(logged)} logged</div><div class="muted">of ${fmtDur(planned)} planned</div></div></div>`;
+  if(run){
+    h+=`<div class="card timer"><span class="caps">Session running</span><div class="big" id="clock">00:00:00</div>
+      <p>${esc(run.s?subjName(run.s):'Extra session')}${run.pm?' · planned '+fmtDur(run.pm):''}</p>
+      <button class="btn" type="button" data-act="stop">Stop and log</button></div>`;
+  }
+  if(!blocks.length)h+=`<div class="card flat"><p class="muted">Nothing is scheduled for today. Add a block in Plan, or log an extra session below.</p></div>`;
+  else{
+    h+=`<div class="card">`+blocks.map(b=>{
+      const done=loggedFor(ds,b.id),p=pct(done,b.m),nx=nextFor(order,b);
+      const isRun=run&&run.b===b.id;
+      return `<div class="item" style="cursor:default"><span class="bub" style="--p:${p}" title="${Math.round(p)}% of planned time"></span>
+        <div class="stack" style="gap:4px;min-width:0"><span class="t">${esc(blockTitle(b))}</span>
+        <span class="small muted"><span class="mono">${b.st}–${endTime(b)}</span> · ${fmtDur(b.m)}${b.sh?' · '+b.sh+(b.sh>1?' sheets':' sheet'):''}${done?' · '+fmtDur(done)+' logged':''}</span>
+        ${nx?`<span class="small">Do now: ${esc(nx.m.title)}${nx.chunk?` <span class="mono">(${nx.chunk} ${esc(nx.m.unit||'units')})</span>`:''}</span>`:''}</div>
+        <div class="stack">${isRun?'<span class="chip">running</span>':`<button class="btn sm" type="button" data-act="start" data-b="${b.id}">Start</button>`}
+        <button class="btn sm ghost" type="button" data-act="log" data-b="${b.id}">Log</button></div></div>`;
+    }).join('')+`</div>`;
+  }
+  h+=`<button class="btn ghost" type="button" data-act="log" data-b="">Log an extra session</button>`;
+  const seen=new Set(),nextUp=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,4);
+  if(nextUp.length)h+=`<div class="card"><div><h3>Study next</h3><p class="small muted">Ordered by subject importance, your confidence, how much is left and what needs to come first.</p></div>`+
+    nextUp.map((o,i)=>`<div class="row"><span class="mono muted">${i+1}</span><div class="grow"><div class="t" style="font-weight:600">${esc(o.m.title)}</div><div class="small muted">${esc(subjName(o.m.subj))}${o.chunk?` · about ${o.chunk} ${esc(o.m.unit||'units')} per session`:''}</div></div></div>`).join('')+`</div>`;
+  if(S.plan.blocks.length)h+=`<div class="card flat"><div class="row between"><div class="grow"><h3>Alarms</h3><p class="small muted">${armed?'Armed. The alarm rings on this screen at the start of each block.':'Alarms ring while this page is open. Tap to arm them and keep the screen awake.'}</p></div>
+    <button class="btn sm${armed?' ghost':''}" type="button" data-act="arm">${armed?'Test sound':'Arm alarms'}</button></div></div>`;
+  return h;
+}
+function vPlan(){
+  let h=`<div class="row between"><h1>Plan</h1><button class="btn sm" type="button" data-act="addblock">Add block</button></div>`;
+  if(!S.plan.subjects.length&&!S.plan.blocks.length)return h+onboarding();
+  h+=`<div class="card">`+DAYS_LONG.map((n,i)=>{
+    const bl=S.plan.blocks.filter(b=>b.days.includes(i)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+    return `<div class="stack"><span class="caps">${n}</span>`+(bl.length?bl.map(b=>`<button type="button" class="item" data-act="editblock" data-b="${b.id}" style="grid-template-columns:auto 1fr auto"><span class="time">${b.st}</span><span><span class="t">${esc(blockTitle(b))}</span><br><span class="small muted">${fmtDur(b.m)}${b.sh?' · '+b.sh+' sheet'+(b.sh>1?'s':''):''}</span></span><span class="small muted">${b.al?'alarm '+(S.plan.lead||0)+'m':'no alarm'}</span></button>`).join(''):`<p class="small muted">Free day.</p>`)+`</div>`;
+  }).join('')+`</div>`;
+  h+=`<div class="card"><div class="row between"><h3>Subjects</h3><button class="btn sm ghost" type="button" data-act="addsubj">Add</button></div>
+    <p class="small muted">Importance and confidence (1 to 5) decide what the planner puts first.</p>`+
+    S.plan.subjects.map(s=>`<button type="button" class="item" data-act="editsubj" data-s="${esc(s.id)}" style="grid-template-columns:1fr auto"><span>${subjChip(s.id)}</span><span class="small muted mono">importance ${s.w} · confidence ${s.c}</span></button>`).join('')+`</div>`;
+  h+=`<div class="card"><h3>Settings, calendar and backup</h3>
+    <button class="btn ghost" type="button" data-act="settings">Exam date, alarm lead time, exports</button></div>`;
+  h+=`<div class="card flat"><h3>Other apps on your phone</h3><p class="small muted">A web page cannot see what you do in other apps, so this app only counts what you log or time here. For alarms that ring when this page is closed, export the schedule to your calendar from Settings. Automatic tracking of other apps needs a native Android app with usage access, which is a separate build.</p></div>`;
+  return h;
+}
+function matPct(m){return m.total>0?pct(m.done,m.total):(m.done>0?100:0)}
+function vMaterials(){
+  const order=planner(S,new Date()),rank=new Map(order.map((o,i)=>[o.m.id,i+1]));
+  const total=S.materials.length,doneN=S.materials.filter(m=>m.total>0&&m.done>=m.total).length;
+  let list=S.materials.slice();
+  if(matFilter==='left')list=list.filter(m=>!(m.total>0&&m.done>=m.total));
+  if(matFilter==='done')list=list.filter(m=>m.total>0&&m.done>=m.total);
+  if(matOrder&&matFilter!=='done')list.sort((a,b)=>(rank.get(a.id)||999)-(rank.get(b.id)||999));
+  let h=`<div class="row between"><div><h1>Materials</h1><p class="small muted">${doneN} of ${total} completed</p></div><button class="btn sm" type="button" data-act="addmat">Add</button></div>`;
+  h+=`<div class="row"><button class="btn sm${matFilter==='left'?'':' ghost'}" type="button" data-act="filter" data-v="left">Left</button>
+    <button class="btn sm${matFilter==='done'?'':' ghost'}" type="button" data-act="filter" data-v="done">Done</button>
+    <button class="btn sm${matFilter==='all'?'':' ghost'}" type="button" data-act="filter" data-v="all">All</button>
+    <button class="btn sm ghost" type="button" data-act="order" aria-pressed="${matOrder}">${matOrder?'Suggested order on':'Suggested order off'}</button></div>`;
+  if(!total)return h+`<div class="card flat"><p class="muted">Add books, PDFs, practice sheets or images. Set how many pages or questions each has, then update your progress as you go.</p></div>`;
+  h+=`<div class="card">`+(list.length?list.map(m=>{
+    const p=matPct(m),o=order.find(x=>x.m.id===m.id);
+    return `<div class="item" style="grid-template-columns:auto 1fr auto;cursor:default"><span class="bub" style="--p:${p}"></span>
+      <div class="stack" style="gap:4px;min-width:0"><span class="t">${matOrder&&rank.get(m.id)?`<span class="mono muted">${rank.get(m.id)}. </span>`:''}${esc(m.title)}</span>
+      <span class="small muted">${esc(subjName(m.subj))} · ${esc(MKINDS[m.kind]||'')} · ${m.total>0?`${m.done}/${m.total} ${esc(m.unit||'units')}`:'total not set'}${o&&o.chunk?` · ~${o.chunk} per session`:''}</span>
+      <div class="meter ${p>=100?'good':''}"><i style="width:${p}%"></i></div></div>
+      <div class="stack">${m.asset?`<a class="btn sm ghost" style="text-decoration:none;text-align:center" href="/_blob/${esc(m.asset)}" target="_blank" rel="noopener">Open</a>`:''}
+      <button class="btn sm ghost" type="button" data-act="editmat" data-m="${m.id}">Update</button></div></div>`;
+  }).join(''):`<p class="muted">Nothing here.</p>`)+`</div>`;
+  return h;
+}
+function vReport(){
+  const now=new Date(),ws=addDays(weekStart(now),weekOffset*7),r=weekReport(S,ws,now),we=addDays(ws,6);
+  const range=ws.toLocaleDateString(undefined,{day:'numeric',month:'short'})+' to '+we.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  let h=`<div class="row between"><div><h1>Weekly report</h1><p class="small muted">${range}${weekOffset===0?' · so far':''}</p></div>
+    <div class="row"><button class="btn sm ghost" type="button" data-act="wk" data-v="-1" aria-label="Previous week">Prev</button><button class="btn sm ghost" type="button" data-act="wk" data-v="1"${weekOffset>=0?' disabled':''} aria-label="Next week">Next</button></div></div>`;
+  if(!S.plan.blocks.length&&!S.logs.length)return h+`<div class="card flat"><p class="muted">Add a schedule and log a session. The report compares your hours, sheets and start times with the plan.</p></div>`;
+  const tone=p=>p===null?'':p>=85?'good':p>=60?'warn':'bad';
+  const meter=(label,val,pc,detail)=>`<div class="stack"><div class="row between"><span>${label}</span><span class="mono small">${detail}</span></div><div class="meter ${tone(pc)}"><i style="width:${Math.min(100,pc||0)}%"></i></div></div>`;
+  h+=`<div class="card"><div class="row between"><div><span class="caps">Discipline score</span><div class="mono" style="font-size:2rem">${r.score===null?'–':r.score}</div></div>
+    <p class="small muted" style="max-width:15rem">Half hours studied, a quarter sheets attempted, a quarter starting within 30 minutes of plan.</p></div>
+    ${meter('Hours studied',r.hoursPct,r.hoursPct,fmtDur(r.ta)+' of '+fmtDur(r.td)+' due')}
+    ${meter('Practice sheets',r.sheetsPct,r.sheetsPct,r.shA+' of '+r.shD+' due')}
+    ${meter('Started on time',r.timingPct,r.timingPct,r.tN?r.tOn+' of '+r.tN+' sessions':'no timed sessions')}
+    <p class="small muted">Full week plan: ${fmtDur(r.tp)} and ${r.shT} sheets. Blocks completed: ${r.bHit} of ${r.bDue} due.</p></div>`;
+  h+=`<div class="card"><h3>Hours per day</h3>${dayChart(r)}<p class="small muted">Outline is planned, filled is logged.</p></div>`;
+  const rows=Object.entries(r.bySub).filter(([,v])=>v.p||v.a||v.sh||v.shA);
+  if(rows.length)h+=`<div class="card"><h3>By subject</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Subject</th><th>Hours</th><th>Sheets</th></tr></thead><tbody>`+
+    rows.map(([id,v])=>`<tr><td>${subjChip(id)}</td><td class="mono">${fmtDur(v.a)} / ${fmtDur(v.p)}</td><td class="mono">${v.shA} / ${v.sh}</td></tr>`).join('')+`</tbody></table></div></div>`;
+  h+=`<div class="card"><h3>Study time of day</h3>${hourChart(r)}<p class="small muted">Outline is when the plan puts study, filled is when you studied.${r.avgShift!==null?` Sessions started ${Math.abs(Math.round(r.avgShift))} minutes ${r.avgShift>=0?'later':'earlier'} than planned on average.`:''}</p></div>`;
+  if(r.sessions.length)h+=`<div class="card"><h3>Planned and actual start</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Day</th><th>Subject</th><th>Plan</th><th>Actual</th><th>Shift</th></tr></thead><tbody>`+
+    r.sessions.map(s=>`<tr><td>${DAYS[dow(parseYmd(s.d))]}</td><td>${esc(subjName(s.s))}</td><td class="mono">${s.ps}</td><td class="mono">${s.st}</td><td class="mono">${s.diff>0?'+':''}${s.diff}m</td></tr>`).join('')+`</tbody></table></div></div>`;
+  const tips=coach(r);
+  if(tips.length)h+=`<div class="card"><h3>What to change</h3>`+tips.map(t=>`<p class="note">${esc(t)}</p>`).join('')+`</div>`;
+  h+=`<button class="btn ghost" type="button" data-act="copyrep">Copy report as text</button>`;
+  return h;
+}
+function coach(r){
+  const t=[];
+  if(r.hoursPct!==null&&r.hoursPct<75){
+    const gap=Object.entries(r.bySub).map(([id,v])=>[id,v.p-v.a]).sort((a,b)=>b[1]-a[1])[0];
+    t.push(`You are ${fmtDur(r.td-r.ta)} behind the plan so far.${gap&&gap[1]>0?` The biggest gap is ${subjName(gap[0])}, ${fmtDur(gap[1])} short.`:''}`);
+  }
+  if(r.sheetsPct!==null&&r.sheetsPct<75)t.push(`${r.shD-r.shA} practice sheets are still owed this week. Do them before starting new theory.`);
+  if(r.avgShift!==null&&r.avgShift>20)t.push(`You start about ${Math.round(r.avgShift)} minutes late on average. Move the alarm earlier or shift those blocks to a time you actually keep.`);
+  const best=r.actH.reduce((b,v,i)=>v>r.actH[b]?i:b,0);
+  if(r.actH[best]>0)t.push(`Most of your study this week happened around ${pad(best)}:00. Put the hardest subject there.`);
+  if(!t.length&&r.td)t.push('You are on plan. Keep the same blocks next week.');
+  return t;
+}
+function dayChart(r){
+  const W=340,H=170,L=26,B=22,T=10,iw=W-L-6,ih=H-B-T;
+  const max=Math.max(1,Math.ceil(Math.max(...r.days.map(d=>Math.max(d.p,d.a)))/60));
+  const y=v=>T+ih-(v/60)/max*ih,bw=iw/7*0.62;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Planned and logged hours per day">`;
+  for(let g=0;g<=max;g++){const yy=T+ih-g/max*ih;s+=`<line class="axis" x1="${L}" x2="${W-6}" y1="${yy}" y2="${yy}"/><text x="${L-4}" y="${yy+3}" text-anchor="end">${g}h</text>`}
+  r.days.forEach((d,i)=>{
+    const x=L+iw/7*i+(iw/7-bw)/2;
+    if(d.a>0)s+=`<rect class="b-act" x="${x}" y="${y(d.a)}" width="${bw}" height="${Math.max(0,T+ih-y(d.a))}" rx="2"/>`;
+    if(d.p>0)s+=`<rect class="b-plan" x="${x}" y="${y(d.p)}" width="${bw}" height="${Math.max(0,T+ih-y(d.p))}" rx="2"/>`;
+    s+=`<text x="${x+bw/2}" y="${H-7}" text-anchor="middle">${d.label}</text>`;
+  });
+  return s+`</svg>`;
+}
+function hourChart(r){
+  const lo=5,hi=23,n=hi-lo+1,W=340,H=120,L=6,B=18,T=6,iw=W-L-6,ih=H-B-T,bw=iw/n;
+  const max=Math.max(60,...r.planH.slice(lo,hi+1),...r.actH.slice(lo,hi+1));
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Minutes studied by hour of day">`;
+  s+=`<line class="axis" x1="${L}" x2="${W-6}" y1="${T+ih}" y2="${T+ih}"/>`;
+  for(let h=lo;h<=hi;h++){
+    const x=L+(h-lo)*bw+1,w=bw-2,ph=r.planH[h]/max*ih,ah=r.actH[h]/max*ih;
+    if(r.actH[h]>0)s+=`<rect class="b-act" x="${x}" y="${T+ih-ah}" width="${w}" height="${ah}" rx="1.5"/>`;
+    if(r.planH[h]>0)s+=`<rect class="b-plan" x="${x}" y="${T+ih-ph}" width="${w}" height="${ph}" rx="1.5"/>`;
+    if((h-lo)%3===0)s+=`<text x="${x+w/2}" y="${H-5}" text-anchor="middle">${pad(h)}</text>`;
+  }
+  return s+`</svg>`;
+}
+function reportText(){
+  const now=new Date(),ws=addDays(weekStart(now),weekOffset*7),r=weekReport(S,ws,now);
+  const L=[`Weekly report, week of ${ymd(ws)}`,`Hours: ${fmtDur(r.ta)} of ${fmtDur(r.td)} due (full week plan ${fmtDur(r.tp)})`,`Sheets: ${r.shA} of ${r.shD} due`,
+    `Started within 30 min of plan: ${r.tOn} of ${r.tN} sessions`,`Discipline score: ${r.score===null?'n/a':r.score}`,''];
+  for(const [id,v] of Object.entries(r.bySub))L.push(`${subjName(id)}: ${fmtDur(v.a)} of ${fmtDur(v.p)}, sheets ${v.shA} of ${v.sh}`);
+  return L.join('\n');
+}
+
+/* ---------- sheets (modal forms) ---------- */
+const sheetEl=document.getElementById('sheet');
+function openSheet(title,body,onSubmit){
+  sheetEl.innerHTML=`<div class="sheet-card" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="row between"><h2>${esc(title)}</h2><button type="button" class="btn sm ghost" data-act="close">Close</button></div><form id="sf">${body}<p class="err" id="sferr"></p></form></div>`;
+  sheetEl.hidden=false;
+  const f=document.getElementById('sf');
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();const btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
+    try{await onSubmit(new FormData(f))}catch(err){document.getElementById('sferr').textContent=err&&err.message?err.message:'Something went wrong.';if(btn)btn.disabled=false}
+  });
+  const first=f.querySelector('input,select');if(first&&first.type!=='file')try{first.focus({preventScroll:true})}catch(e){}
+}
+function closeSheet(){sheetEl.hidden=true;sheetEl.innerHTML=''}
+const need=(v,msg)=>{if(!v)throw new Error(msg);return v};
+
+function blockForm(b){
+  b=b||{id:'',days:[],st:'06:30',m:90,s:S.plan.subjects[0]?S.plan.subjects[0].id:'',k:'theory',sh:0,al:true,t:''};
+  const body=`<div class="stack"><span class="caps">Days</span><div class="days">${DAYS.map((d,i)=>`<label><input type="checkbox" name="day" value="${i}"${b.days.includes(i)?' checked':''}>${d}</label>`).join('')}</div></div>
+    <div class="grid2"><label class="f">Start<input type="time" name="st" value="${b.st}" required></label><label class="f">Minutes<input type="number" name="m" min="5" max="600" step="5" value="${b.m}" required></label></div>
+    <div class="grid2"><label class="f">Subject<select name="s">${subjOpts(b.s)}</select></label><label class="f">Type<select name="k">${kindOpts(KINDS,b.k)}</select></label></div>
+    <div class="grid2"><label class="f">Practice sheets to attempt<input type="number" name="sh" min="0" max="20" value="${b.sh||0}"></label><label class="f">Name (optional)<input type="text" name="t" value="${esc(b.t||'')}" maxlength="60"></label></div>
+    <label class="row"><input type="checkbox" name="al"${b.al?' checked':''} style="width:20px;height:20px"> Ring an alarm for this block</label>
+    <button class="btn" type="submit">${b.id?'Save block':'Add block'}</button>
+    ${b.id?`<button class="btn danger" type="button" data-act="delblock" data-b="${b.id}">Delete block</button>`:''}`;
+  openSheet(b.id?'Edit block':'New block',body,fd=>{
+    const days=fd.getAll('day').map(Number);need(days.length,'Pick at least one day.');need(S.plan.subjects.length,'Add a subject first.');
+    const nb={id:b.id||uid(),days,st:fd.get('st'),m:Math.max(5,+fd.get('m')||60),s:fd.get('s'),k:fd.get('k'),sh:Math.max(0,+fd.get('sh')||0),al:fd.get('al')==='on',t:(fd.get('t')||'').trim()};
+    const i=S.plan.blocks.findIndex(x=>x.id===nb.id);if(i<0)S.plan.blocks.push(nb);else S.plan.blocks[i]=nb;
+    mark('plan');closeSheet();render();
+  });
+}
+function subjForm(s){
+  s=s||{id:'',name:'',w:3,c:3};
+  const sel=v=>[1,2,3,4,5].map(n=>`<option${n===v?' selected':''}>${n}</option>`).join('');
+  openSheet(s.id?'Edit subject':'New subject',`<label class="f">Name<input type="text" name="name" value="${esc(s.name)}" required maxlength="40"></label>
+    <div class="grid2"><label class="f">Importance (marks it carries)<select name="w">${sel(s.w)}</select></label><label class="f">Confidence (5 is strong)<select name="c">${sel(s.c)}</select></label></div>
+    <button class="btn" type="submit">${s.id?'Save subject':'Add subject'}</button>${s.id?`<button class="btn danger" type="button" data-act="delsubj" data-s="${esc(s.id)}">Delete subject</button>`:''}`,fd=>{
+    const ns={id:s.id||uid(),name:need((fd.get('name')||'').trim(),'Enter a name.'),w:+fd.get('w'),c:+fd.get('c')};
+    const i=S.plan.subjects.findIndex(x=>x.id===ns.id);if(i<0)S.plan.subjects.push(ns);else S.plan.subjects[i]=ns;
+    mark('plan');closeSheet();render();
+  });
+}
+function logForm(bid){
+  const now=new Date(),ds=ymd(now),b=bid?S.plan.blocks.find(x=>x.id===bid):(run&&run.b?S.plan.blocks.find(x=>x.id===run.b):null);
+  const fromRun=run&&(!bid||run.b===bid)?run:null;
+  const mins=fromRun?Math.max(1,Math.round((Date.now()-fromRun.t0)/60000)):(b?b.m:30);
+  const st=fromRun?fromRun.st:(b?b.st:fromMin(Math.max(0,now.getHours()*60+now.getMinutes()-mins)));
+  const subj=fromRun?fromRun.s:(b?b.s:(S.plan.subjects[0]||{}).id);
+  const mats=S.materials.filter(m=>!(m.total>0&&m.done>=m.total));
+  openSheet(b||fromRun?'Log session':'Log extra session',`<div class="grid2"><label class="f">Minutes studied<input type="number" name="m" min="1" max="720" value="${mins}" required></label><label class="f">Started at (feeds the on-time score)<input type="time" name="st" value="${st}" required></label></div>
+    <label class="f">Subject<select name="s">${subjOpts(subj)}</select></label>
+    <div class="grid2"><label class="f">Practice sheets attempted<input type="number" name="q" min="0" max="50" value="0"></label>
+    <label class="f">Material worked on<select name="mid"><option value="">None</option>${mats.map(m=>`<option value="${m.id}">${esc(m.title)}</option>`).join('')}</select></label></div>
+    <label class="f">Pages or questions finished in it<input type="number" name="mu" min="0" value="0"></label>
+    <button class="btn" type="submit">Save log</button>`,fd=>{
+    need(S.plan.subjects.length,'Add a subject first.');
+    const mid=fd.get('mid')||null,mu=Math.max(0,+fd.get('mu')||0);
+    S.logs.push({id:uid(),d:ds,b:b?b.id:(fromRun?fromRun.b:null),s:fd.get('s'),st:fd.get('st'),ps:b?b.st:(fromRun?fromRun.ps:null),pm:b?b.m:null,m:Math.max(1,+fd.get('m')||1),q:Math.max(0,+fd.get('q')||0),mid,mu});
+    if(mid&&mu){const m=S.materials.find(x=>x.id===mid);if(m){m.done=m.total>0?Math.min(m.total,m.done+mu):m.done+mu;mark('materials')}}
+    if(S.logs.length>1800)S.logs=S.logs.slice(-1800);
+    if(fromRun){run=null;lsSet('pl.run',null)}
+    mark('logs');closeSheet();render();
+  });
+}
+function matForm(m){
+  const isNew=!m;m=m||{id:'',title:'',subj:(S.plan.subjects[0]||{}).id,kind:'theory',unit:'pages',total:0,done:0};
+  const body=(isNew?`<label class="f">Files (PDF, images, CSV, text or Markdown)<input type="file" name="files" id="files" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.svg,.csv,.md,.txt,.json"></label>
+    <p class="small muted">Word, Excel and PowerPoint files cannot be stored here. Convert them to PDF, or add them below without a file and track progress by hand.</p>`:'')+
+    `<label class="f">${isNew?'Title (used when no file is chosen)':'Title'}<input type="text" name="title" value="${esc(m.title)}" maxlength="120"></label>
+    <div class="grid2"><label class="f">Subject<select name="subj">${subjOpts(m.subj)}</select></label><label class="f">Kind<select name="kind">${kindOpts(MKINDS,m.kind)}</select></label></div>
+    <div class="grid2"><label class="f">Counted in<select name="unit">${['pages','chapters','questions','sheets','lectures'].map(u=>`<option${u===m.unit?' selected':''}>${u}</option>`).join('')}</select></label>
+    <label class="f">Total<input type="number" name="total" min="0" value="${m.total||''}" placeholder="${isNew?'auto for PDFs':''}"></label></div>
+    ${isNew?'':`<label class="f">Finished so far<input type="number" name="done" min="0" value="${m.done}"></label>`}
+    <button class="btn" type="submit" id="matsave">${isNew?'Add':'Save'}</button>
+    ${isNew?'':`<button class="btn ghost" type="button" data-act="matdone" data-m="${m.id}">Mark complete</button><button class="btn danger" type="button" data-act="delmat" data-m="${m.id}">Delete</button>`}`;
+  openSheet(isNew?'Add material':'Update material',body,async fd=>{
+    const subj=fd.get('subj'),kind=fd.get('kind'),unit=fd.get('unit'),total=Math.max(0,+fd.get('total')||0);
+    need(S.plan.subjects.length,'Add a subject first.');
+    if(!isNew){
+      m.title=need((fd.get('title')||'').trim(),'Enter a title.');m.subj=subj;m.kind=kind;m.unit=unit;m.total=total;m.done=Math.max(0,+fd.get('done')||0);
+      if(m.total>0)m.done=Math.min(m.done,m.total);mark('materials');closeSheet();render();return;
+    }
+    const files=[...document.getElementById('files').files];
+    if(!files.length){
+      S.materials.push({id:uid(),title:need((fd.get('title')||'').trim(),'Choose a file or enter a title.'),subj,kind,unit,total,done:0,asset:null,added:ymd(new Date())});
+    }else{
+      need(ASSETS,'File storage is not available in this view. Add the item with a title instead.');
+      const btn=document.getElementById('matsave');
+      for(let i=0;i<files.length;i++){
+        const f=files[i];btn.textContent=`Uploading ${i+1} of ${files.length}…`;
+        const ext=(f.name.split('.').pop()||'').toLowerCase(),map={pdf:'application/pdf',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml',csv:'text/csv',md:'text/markdown',txt:'text/plain',json:'application/json'};
+        const type=map[ext];
+        if(!type)throw new Error(`${f.name}: this file type is not supported. Convert it to PDF first.`);
+        const res=await ASSETS.upload(f,{type});
+        let n=total;
+        if(!n&&ext==='pdf')n=await pdfPages(f);
+        S.materials.push({id:uid(),title:files.length===1&&(fd.get('title')||'').trim()?(fd.get('title')).trim():f.name.replace(/\.[^.]+$/,''),subj,kind,unit,total:n,done:0,asset:res.id,type:res.contentType,file:f.name,added:ymd(new Date())});
+        mark('materials');
+      }
+    }
+    mark('materials');closeSheet();render();
+  });
+}
+async function pdfPages(file){
+  try{
+    if(file.size>25e6)return 0;
+    const t=new TextDecoder('latin1').decode(new Uint8Array(await file.arrayBuffer()));
+    const c=(t.match(/\/Type\s*\/Page[^s]/g)||[]).length;
+    return c;
+  }catch(e){return 0}
+}
+function settingsForm(){
+  const p=S.plan;
+  openSheet('Settings',`<div class="grid2"><label class="f">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="f">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
+    <div class="grid2"><label class="f">Alarm rings this many minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}"></label><label class="f">Revision buffer before exam (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}"></label></div>
+    <button class="btn" type="submit">Save settings</button>
+    <hr style="border:0;border-top:1px solid var(--line);width:100%">
+    <button class="btn ghost" type="button" data-act="exportcsv">Export schedule for Google Calendar (CSV)</button>
+    <p class="small muted">Import the file in Google Calendar on a computer. Your calendar's own notifications then work when this page is closed.</p>
+    <button class="btn ghost" type="button" data-act="exportjson">Download a backup (JSON)</button>`,fd=>{
+    p.examName=(fd.get('en')||'').trim();p.exam=fd.get('ex')||'';p.lead=Math.max(0,+fd.get('lead')||0);p.buffer=Math.max(0,+fd.get('buf')||0);
+    mark('plan');closeSheet();render();
+  });
+}
+async function saveFile(name,data){
+  if(!DL){flash('Saving files is not available in this view.');return}
+  try{await DL.save({filename:name,data})}catch(e){if(!e||e.code!=='declined')flash('The file could not be saved.')}
+}
+function flash(msg){const e=document.getElementById('sferr');if(e)e.textContent=msg;else{errMsg=msg;}}
+function csvQ(v){v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function calendarCsv(){
+  const rows=[['Subject','Start Date','Start Time','End Date','End Time','All Day Event','Description','Private']];
+  const t12=m=>{const h=Math.floor(m/60)%24,mm=m%60;return (h%12||12)+':'+pad(mm)+' '+(h<12?'AM':'PM')};
+  const us=d=>pad(d.getMonth()+1)+'/'+pad(d.getDate())+'/'+d.getFullYear();
+  const start=new Date(),end=S.plan.exam?parseYmd(S.plan.exam):addDays(start,90);
+  for(let d=new Date(start.getFullYear(),start.getMonth(),start.getDate());d<=end&&rows.length<600;d=addDays(d,1)){
+    for(const b of blocksOn(S.plan,d)){
+      const s=toMin(b.st),e=s+b.m;
+      rows.push([blockTitle(b),us(d),t12(s),us(d),t12(e),'False',b.sh?`${b.sh} practice sheet(s)`:'','True']);
+    }
+  }
+  return rows.map(r=>r.map(csvQ).join(',')).join('\n');
+}
+
+/* ---------- template ---------- */
+function applyTemplate(){
+  const subs=[['prob','Probability & Statistics',5,3],['la','Linear Algebra',4,3],['calc','Calculus & Optimization',3,3],['py','Python & DSA',3,3],['db','Databases & Warehousing',2,3],['ml','Machine Learning',5,3],['ai','Artificial Intelligence',4,3],['ga','General Aptitude',3,3],['mix','Revision & full mocks',3,3]];
+  S.plan=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
+  const B=(days,st,m,s,k,sh)=>S.plan.blocks.push({id:uid(),days,st,m,s,k,sh:sh||0,al:true,t:''});
+  B([0],'06:30',90,'prob','theory');B([0],'19:30',60,'prob','practice',1);
+  B([1],'06:30',90,'la','theory');B([1],'19:30',60,'la','practice',1);
+  B([2],'06:30',90,'calc','theory');B([2],'19:30',60,'calc','practice',1);
+  B([3],'06:30',90,'ml','theory');B([3],'19:30',60,'ml','practice',1);
+  B([4],'06:30',90,'ai','theory');B([4],'19:30',60,'py','practice',1);
+  B([5],'07:00',120,'db','theory');B([5],'15:00',60,'ga','practice',1);
+  B([6],'07:00',120,'prob','revision');B([6],'16:00',180,'mix','mock');
+  mark('plan');render();
+}
+
+/* ---------- timer, alarms ---------- */
+function startRun(bid){
+  const b=bid?S.plan.blocks.find(x=>x.id===bid):null,n=new Date();
+  run={b:b?b.id:null,s:b?b.s:(S.plan.subjects[0]||{}).id,t0:Date.now(),st:pad(n.getHours())+':'+pad(n.getMinutes()),ps:b?b.st:null,pm:b?b.m:null};
+  lsSet('pl.run',run);render();
+}
+function tickTimer(){
+  const el=document.getElementById('clock');if(!el||!run)return;
+  const s=Math.floor((Date.now()-run.t0)/1000);el.textContent=pad(Math.floor(s/3600))+':'+pad(Math.floor(s/60)%60)+':'+pad(s%60);
+}
+function beep(){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    for(let i=0;i<3;i++){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;o.connect(g);g.connect(audioCtx.destination);
+      const t=audioCtx.currentTime+i*.25;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.start(t);o.stop(t+.22)}
+  }catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+}
+async function keepAwake(){try{if(navigator.wakeLock&&!wakeLock){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}}catch(e){}}
+let ringTimer=null;
+function ring(b,late){
+  const el=document.getElementById('alarm');
+  el.innerHTML=`<div class="alarm-card" role="alertdialog" aria-label="Study alarm"><span class="caps">${late?'Missed alarm':'Time to study'}</span><h2>${esc(blockTitle(b))}</h2><div class="big">${b.st}</div><p class="muted">${fmtDur(b.m)}${b.sh?' · '+b.sh+' sheet'+(b.sh>1?'s':''):''}</p>
+    <button class="btn" type="button" data-act="alarmstart" data-b="${b.id}">Start now</button>
+    <div class="grid2"><button class="btn ghost" type="button" data-act="snooze" data-b="${b.id}">Snooze 5 min</button><button class="btn ghost" type="button" data-act="dismiss">Dismiss</button></div></div>`;
+  el.hidden=false;beep();clearInterval(ringTimer);let n=0;ringTimer=setInterval(()=>{if(++n>40)return stopRing();beep()},2200);
+}
+function stopRing(){clearInterval(ringTimer);document.getElementById('alarm').hidden=true}
+function alarmTick(){
+  tickTimer();
+  const now=new Date(),ds=ymd(now),nm=now.getHours()*60+now.getMinutes();
+  for(const b of blocksOn(S.plan,now)){
+    if(!b.al)continue;
+    const key=ds+'|'+b.id,at=toMin(b.st)-(S.plan.lead||0);
+    const sz=snoozes[key];
+    if(sz){if(Date.now()>=sz){delete snoozes[key];ring(b,false)}continue}
+    if(fired[key])continue;
+    if(nm>=at&&nm<=at+5&&armed&&document.getElementById('alarm').hidden){fired[key]=1;lsSet('pl.fired',fired);ring(b,nm>at+1)}
+  }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const a=t.dataset.act,d=t.dataset;
+  switch(a){
+    case 'tab':tab=d.v;render();window.scrollTo(0,0);break;
+    case 'close':closeSheet();break;
+    case 'tpl':applyTemplate();break;
+    case 'blank':S.plan.subjects=[{id:uid(),name:'Subject 1',w:3,c:3}];mark('plan');tab='plan';render();break;
+    case 'start':startRun(d.b);break;
+    case 'stop':case 'log':logForm(a==='stop'?(run&&run.b):d.b);break;
+    case 'addblock':blockForm();break;
+    case 'editblock':blockForm(S.plan.blocks.find(b=>b.id===d.b));break;
+    case 'delblock':
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      S.plan.blocks=S.plan.blocks.filter(b=>b.id!==d.b);mark('plan');closeSheet();render();break;
+    case 'addsubj':subjForm();break;
+    case 'editsubj':subjForm(S.plan.subjects.find(s=>s.id===d.s));break;
+    case 'delsubj':
+      if(S.plan.blocks.some(b=>b.s===d.s)||S.materials.some(m=>m.subj===d.s)){document.getElementById('sferr').textContent='Move or delete this subject’s blocks and materials first.';break}
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      S.plan.subjects=S.plan.subjects.filter(s=>s.id!==d.s);mark('plan');closeSheet();render();break;
+    case 'addmat':matForm();break;
+    case 'editmat':matForm(S.materials.find(m=>m.id===d.m));break;
+    case 'matdone':{const m=S.materials.find(x=>x.id===d.m);if(m){if(!m.total)m.total=Math.max(1,m.done);m.done=m.total;mark('materials');closeSheet();render()}break}
+    case 'delmat':{
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      const m=S.materials.find(x=>x.id===d.m);S.materials=S.materials.filter(x=>x.id!==d.m);mark('materials');
+      if(m&&m.asset&&ASSETS){try{await ASSETS.delete(m.asset)}catch(err){}}
+      closeSheet();render();break}
+    case 'filter':matFilter=d.v;render();break;
+    case 'order':matOrder=!matOrder;render();break;
+    case 'wk':weekOffset=Math.min(0,weekOffset+(+d.v));render();break;
+    case 'copyrep':{
+      const txt=reportText();
+      try{await navigator.clipboard.writeText(txt);t.textContent='Copied'}catch(err){t.textContent='Copy blocked: select the text from the report instead'}
+      break}
+    case 'settings':settingsForm();break;
+    case 'exportcsv':await saveFile('prep-schedule.csv',calendarCsv());break;
+    case 'exportjson':await saveFile('prep-ledger-backup.json',JSON.stringify(S,null,1));break;
+    case 'arm':armed=true;beep();keepAwake();render();break;
+    case 'alarmstart':stopRing();startRun(d.b);tab='today';render();break;
+    case 'snooze':snoozes[ymd(new Date())+'|'+d.b]=Date.now()+5*60000;stopRing();break;
+    case 'dismiss':stopRing();break;
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!sheetEl.hidden)closeSheet()}});
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState!=='visible')return;
+  if(armed)keepAwake();
+  if(DB&&!dirty.size&&sheetEl.hidden){
+    try{const before=JSON.stringify(S);await loadAll();if(JSON.stringify(S)!==before)render()}catch(err){}
+  }
+});
+
+/* ---------- boot ---------- */
+(async function boot(){
+  try{
+    const c=window.claude;
+    if(c&&c.use){
+      const u=await c.use('user');UID=u?await u.id():null;
+      DB=UID?await c.use('db'):null;
+      ASSETS=await c.use('assets');DL=await c.use('downloads');
+    }
+  }catch(e){DB=null}
+  try{await loadAll()}catch(e){DB=null;await loadAll();saveState='local'}
+  render();
+  setInterval(alarmTick,5000);setInterval(paintHeader,60000);
+})();
+</script>
