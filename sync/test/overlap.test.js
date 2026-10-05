@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { mergeIntervals, unionMinutes, overlapSaved, MIN } = require('../core/overlap');
+const { mergeIntervals, unionMinutes, overlapSaved, effectiveMinutes, MIN } = require('../core/overlap');
 const IST = 330;
 const at = (day, h, m) => Date.parse(`2026-10-${String(day).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00Z`) - IST * MIN;
 const S = (course, a, b, source = 'manual') => ({ course, s: a, e: b, source });
@@ -49,5 +49,15 @@ t('input is not mutated', () => {
   const copy = JSON.stringify(a);
   unionMinutes(a, IST);
   assert.strictEqual(JSON.stringify(a), copy);
+});
+t('effectiveMinutes adds up to the union and keeps input order', () => {
+  const l = [{ s: at(5, 7, 30), e: at(5, 8, 0) }, { s: at(5, 7, 0), e: at(5, 7, 40) }, { s: at(5, 9, 0), e: at(5, 9, 10) }];
+  const eff = effectiveMinutes(l);
+  assert.deepStrictEqual(eff, [20, 40, 10]);
+  assert.strictEqual(eff.reduce((a, b) => a + b, 0), unionMinutes(l.map(x => ({ ...x, course: 'g' })), IST).g['2026-10-05']);
+});
+t('effectiveMinutes: identical sessions, one counts', () => {
+  const eff = effectiveMinutes([{ s: 0, e: 600000 }, { s: 0, e: 600000 }]);
+  assert.strictEqual(eff[0] + eff[1], 10);
 });
 console.log(n + ' tests passed');

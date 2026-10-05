@@ -65,5 +65,21 @@ function overlapSaved(sessions) {
   return res;
 }
 
-const api = { mergeIntervals, splitByDay, unionMinutes, overlapSaved, dayKey, MIN };
+// How many minutes each session adds once earlier overlapping time is taken out.
+// Input [{s,e}] in any order; output array in the SAME order. The outputs add up to the union length.
+function effectiveMinutes(list) {
+  const idx = list.map((x, i) => i).filter(i => list[i] && list[i].e > list[i].s).sort((a, b) => list[a].s - list[b].s || a - b);
+  const out = new Array(list.length).fill(0);
+  let end = -Infinity;
+  for (const i of idx) {
+    const { s, e } = list[i];
+    const from = Math.max(s, end);
+    if (e > from) out[i] = (e - from) / MIN;
+    if (e > end) end = e;
+  }
+  return out;
+}
+
+const api = { effectiveMinutes, mergeIntervals, splitByDay, unionMinutes, overlapSaved, dayKey, MIN };
 if (typeof module !== 'undefined') module.exports = api;
+if (typeof globalThis !== 'undefined') globalThis.Overlap = api;

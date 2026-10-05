@@ -1,0 +1,27 @@
+/* additions */
+.blk{grid-template-columns:48px 1fr}
+.blk.pl{grid-template-columns:48px 1fr auto;cursor:pointer}
+.blk .ba{grid-column:1/-1;flex-direction:row;gap:8px;margin-top:2px}
+.blk .ba .btn{flex:1}
+.blk .tt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.item-main{background:none;border:0;padding:0;text-align:left;display:flex;flex-direction:column;gap:5px;min-width:0;color:inherit}
+.item-main .meter{display:block}
+.gz{touch-action:none;display:flex;flex-direction:column;gap:10px}
+.icb.sm{width:34px;height:34px;border-radius:10px}
+.hero-ringl .clk{font-family:var(--f-display);font-size:1.02rem;font-weight:700}
+.hero.run{background:linear-gradient(160deg,var(--accent-soft),var(--surface) 70%)}
+.scorebox{display:flex;align-items:center;gap:16px}
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.wk{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wk .mid{text-align:center}
+.pill-note{font-size:.8rem;color:var(--ink3)}
+.aboutapp{display:flex;gap:12px;align-items:flex-start}
+.aboutapp .ic{color:var(--ink3);margin-top:2px}
+.btn .ic{width:18px;height:18px}
+.bellon{color:var(--accent)}
+body.lock{overflow:hidden}
+[hidden]{display:none!important}
+.brand span:last-child{white-space:nowrap}.count{overflow:hidden;text-overflow:ellipsis;max-width:48vw}
+.tiles{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))}.tile{padding:12px 10px}.tile .v{font-size:1.1rem}
+.avatar{background:var(--accent-soft)!important;color:var(--accent)!important;font-weight:700;border-radius:50%!important}
+body.gate nav.tabs,body.gate #bell{display:none}

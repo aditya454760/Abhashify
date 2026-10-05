@@ -65,7 +65,9 @@ service cloud.firestore {
 
     match /courses/{cid} {
       allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid
-                                    || request.auth.uid in resource.data.members);
+                                    || request.auth.uid in resource.data.members
+                                    || ('invited' in resource.data
+                                        && request.auth.token.email in resource.data.invited));
       allow create: if signedIn() && request.resource.data.ownerUid == request.auth.uid
                     && validCourse(request.resource.data);
       // Only the owner edits the plan and the member list.

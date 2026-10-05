@@ -1,0 +1,9 @@
+{
+  "name": "Prep Ledger",
+  "short_name": "Prep Ledger",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F2F4F3",
+  "theme_color": "#4349C9",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
