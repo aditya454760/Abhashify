@@ -1,6 +1,6 @@
 /* Abhyashify service worker: keeps the app shell available offline.
    Only same-origin files are cached. Firebase, Google sign-in and fonts always go straight to the network. */
-const CACHE = 'abhyashify-v5';
+const CACHE = 'abhyashify-v6';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -18,6 +18,11 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put('index.html', copy)); return r; })
       .catch(() => caches.match('index.html')));
+    return;
+  }
+  // The offline voice engine is large and never changes between releases: saved copy first, no background refresh.
+  if (url.pathname.includes('/voice/runtime/')) {
+    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return r; })));
     return;
   }
   // Everything else: saved copy first, refresh in the background.

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Voice recorder</title>
+<style>
+:root{--bg:#f4f5f8;--card:#fff;--ink:#14171f;--mute:#5b6270;--line:#dfe2ea;--brand:#4349c9;--brand-ink:#fff;--good:#1f8a57;--warn:#a5700c;--bad:#c23b35;--rad:14px}
+@media (prefers-color-scheme:dark){:root{--bg:#10131a;--card:#181c26;--ink:#eef0f5;--mute:#9aa2b2;--line:#2a3040;--brand:#7c82ff;--brand-ink:#0d1020;--good:#58c68c;--warn:#e4b35b;--bad:#f2837c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;padding:16px;padding-bottom:40px}
+main{max-width:640px;margin:0 auto;display:grid;gap:14px}
+h1{font-size:22px;margin:4px 0 0}h2{font-size:17px;margin:0 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:16px}
+.mute{color:var(--mute)}.small{font-size:14px}
+label{display:grid;gap:4px;font-size:14px;color:var(--mute);margin-top:10px}
+select,input[type=text]{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;font-weight:600;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;min-height:46px}
+button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+button.rec{background:var(--bad);color:#fff;border-color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:12px;color:var(--ink);font-size:15px}.check input{margin-top:5px;width:20px;height:20px;flex:none}
+.say{font-size:24px;line-height:1.45;padding:18px;border-radius:var(--rad);background:var(--bg);border:1px dashed var(--line);margin:8px 0}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--brand);width:0}
+.meter{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}.meter>i{display:block;height:100%;width:0;background:var(--good);transition:width .06s}
+.msg{margin-top:10px;font-size:14px}.msg.warn{color:var(--warn)}.msg.bad{color:var(--bad)}.msg.good{color:var(--good)}
+.note{border-left:4px solid var(--warn);padding:8px 12px;background:var(--bg);border-radius:8px;font-size:14px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<header><h1 id="t-title">Record a voice for the assistant</h1>
+<p class="mute small" id="t-sub">Everything stays on this device until you press Download. Nothing is uploaded.</p></header>
+
+<section class="card" id="s-setup">
+  <h2 id="t-setup">1. Who is speaking?</h2>
+  <label><span id="t-lang">Language to record</span><select id="lang"><option value="en">English</option><option value="hi">हिन्दी (Hindi)</option></select></label>
+  <label><span id="t-voice">Which assistant voice is this for?</span><select id="gender"><option value="female">Anu (female voice)</option><option value="male">Adi (male voice)</option></select></label>
+  <label><span id="t-name">Speaker's name</span><input type="text" id="name" maxlength="60" autocomplete="off" placeholder="Name"></label>
+  <div class="note" style="margin-top:12px" id="t-note">Only record someone who has clearly agreed. The trained voice can be added to the app and may be used by anyone who uses the app, so the speaker must be fine with that. They can ask you to remove it at any time.</div>
+  <label class="check"><input type="checkbox" id="agree"><span id="t-agree">I am the speaker, or the speaker is here and agrees that their voice is recorded and used to train a voice for the Abhyashify study assistant, which may be shared with the app's users.</span></label>
+  <div class="row"><button class="primary" id="start" disabled>Start</button></div>
+  <p class="msg" id="setup-msg"></p>
+</section>
+
+<section class="card" id="s-rec" hidden>
+  <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><h2 id="t-prog">Sentence</h2><span class="mute small" id="count"></span></div>
+  <div class="bar"><i id="barfill"></i></div>
+  <p class="mute small" id="t-tip" style="margin:10px 0 0">Find a quiet room and hold the phone about a hand's width from your mouth. Read naturally, as if talking to a friend. Press Record, read the sentence, press Stop.</p>
+  <div class="say" id="say" lang="en"></div>
+  <div class="meter"><i id="level"></i></div>
+  <p class="msg" id="rec-msg"></p>
+  <div class="row">
+    <button class="rec" id="btn-rec">● Record</button>
+    <button id="btn-play" disabled>▶ Play</button>
+    <button id="btn-keep" class="primary" disabled>Keep &amp; next ›</button>
+  </div>
+  <div class="row"><button id="btn-prev">‹ Back</button><button id="btn-skip">Skip ›</button><button id="btn-export">Download my recordings</button></div>
+  <p class="mute small" id="t-resume">You can stop at any time and come back later; your takes are saved on this device.</p>
+</section>
+</main>
+
+<script>
+/* ---------- text in two languages ---------- */
+const TXT={
+  en:{consentLine:n=>`I, ${n}, agree that recordings of my voice may be used to train a voice for the Abhyashify study assistant, and that this voice may be shared with the app's users. I can ask for it to be removed at any time.`,
+      tip:'Find a quiet room and hold the phone about a hand\'s width from your mouth. Read naturally, as if talking to a friend. Press Record, read the sentence, press Stop.',
+      consentStep:'Consent: read this aloud',rec:'● Record',stop:'■ Stop',play:'▶ Play',keep:'Keep & next ›',skip:'Skip ›',back:'‹ Back',dl:'Download my recordings'},
+  hi:{consentLine:n=>`मैं, ${n}, सहमत हूँ कि मेरी आवाज़ की रिकॉर्डिंग अभ्यासिफ़ाई पढ़ाई सहायक की एक आवाज़ तैयार करने में इस्तेमाल हो सकती है, और यह आवाज़ ऐप के उपयोगकर्ताओं के साथ साझा की जा सकती है। इसे हटाने का अनुरोध कभी भी किया जा सकता है।`,
+      tip:'शांत कमरे में रहें और फ़ोन को मुँह से एक हथेली की दूरी पर रखें। दोस्त से बात करने की तरह स्वाभाविक ढंग से पढ़ें। रिकॉर्ड दबाएँ, वाक्य पढ़ें, फिर रोकें।',
+      consentStep:'सहमति: इसे ज़ोर से पढ़ें',rec:'● रिकॉर्ड',stop:'■ रोकें',play:'▶ सुनें',keep:'रखें और आगे ›',skip:'छोड़ें ›',back:'‹ पीछे',dl:'मेरी रिकॉर्डिंग डाउनलोड करें'}
+};
+const $=id=>document.getElementById(id);
+const q=new URLSearchParams(location.search),LIMIT=+q.get('limit')||0;
+let S=null;                      // {lang,gender,name,sentences,idx}
+let ctx=null,stream=null,proc=null,src=null,chunks=[],recording=false,pendingTake=null;
+const RATE=22050;
+
+/* ---------- storage: takes are kept in IndexedDB so a session can be resumed ---------- */
+const DB=new Promise(res=>{try{const r=indexedDB.open('abhyashify-voice-kit',1);r.onupgradeneeded=()=>r.result.createObjectStore('takes');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});
+const mem=new Map();
+const dbReq=async(mode,f)=>{const d=await DB;if(!d)return null;return new Promise(res=>{try{const t=d.transaction('takes',mode),r=f(t.objectStore('takes'));t.oncomplete=()=>res(r?r.result:undefined);t.onerror=t.onabort=()=>res(undefined)}catch(e){res(undefined)}})};
+const tget=async k=>{const r=await dbReq('readonly',o=>o.get(k));return r===null?mem.get(k):r};
+const tput=async(k,v)=>{const r=await dbReq('readwrite',o=>o.put(v,k));if(r===null)mem.set(k,v)};
+const tdel=async k=>{const r=await dbReq('readwrite',o=>o.delete(k));if(r===null)mem.delete(k)};
+const tkeys=async p=>{const r=await dbReq('readonly',o=>o.getAllKeys());const ks=r===null?[...mem.keys()]:(r||[]);return ks.filter(k=>String(k).startsWith(p))};
+
+/* ---------- setup ---------- */
+const sess=()=>`${$('lang').value}-${$('gender').value}`;
+function applyLang(){
+  const l=$('lang').value,t=TXT[l];$('t-tip').textContent=t.tip;$('btn-rec').textContent=recording?t.stop:t.rec;$('btn-play').textContent=t.play;$('btn-keep').textContent=t.keep;$('btn-skip').textContent=t.skip;$('btn-prev').textContent=t.back;$('btn-export').textContent=t.dl;
+  $('say').lang=l==='hi'?'hi':'en';
+}
+function gate(){$('start').disabled=!($('agree').checked&&$('name').value.trim().length>=2)}
+['agree','name','lang','gender'].forEach(i=>$(i).addEventListener('input',gate));
+$('lang').addEventListener('change',applyLang);
+try{const s=JSON.parse(localStorage.getItem('vk.setup')||'null');if(s){$('lang').value=s.lang;$('gender').value=s.gender;$('name').value=s.name||''}}catch(e){}
+gate();applyLang();
+
+$('start').addEventListener('click',async()=>{
+  const lang=$('lang').value,gender=$('gender').value,name=$('name').value.trim();
+  $('setup-msg').textContent='';
+  let list;
+  try{const r=await fetch(`sentences-${lang}-${gender}.txt`);if(!r.ok)throw 0;list=(await r.text()).split('\n').map(s=>s.trim()).filter(Boolean)}catch(e){$('setup-msg').className='msg bad';$('setup-msg').textContent='Could not load the sentence list.';return}
+  if(LIMIT)list=list.slice(0,LIMIT);
+  try{localStorage.setItem('vk.setup',JSON.stringify({lang,gender,name}))}catch(e){}
+  const consentDone=!!(await tget(`${lang}-${gender}-consent`));
+  S={lang,gender,name,sentences:list,idx:0,consentDone};
+  // the first step is always the spoken consent; the sentences follow
+  S.items=[{id:'consent',text:TXT[lang].consentLine(name),consent:true}].concat(list.map((t,i)=>({id:String(i+1).padStart(4,'0'),text:t})));
+  const done=await tkeys(`${lang}-${gender}-`);S.idx=Math.min(S.items.length-1,Math.max(0,S.items.findIndex(it=>!done.includes(`${lang}-${gender}-${it.id}`))));
+  if(S.idx<0)S.idx=0;
+  $('s-setup').hidden=true;$('s-rec').hidden=false;applyLang();show();
+});
+
+/* ---------- recording ---------- */
+async function show(){
+  const it=S.items[S.idx];pendingTake=null;
+  $('say').textContent=it.text;$('count').textContent=it.consent?'':`${S.idx} / ${S.items.length-1}`;$('t-prog').textContent=it.consent?TXT[S.lang].consentStep:(S.lang==='hi'?'वाक्य':'Sentence');
+  $('barfill').style.width=Math.round(100*S.idx/Math.max(1,S.items.length-1))+'%';
+  const have=await tget(`${S.lang}-${S.gender}-${it.id}`);
+  $('btn-play').disabled=!have;$('btn-keep').disabled=!have;$('level').style.width='0';
+  setMsg(have?(S.lang==='hi'?'यह वाक्य रिकॉर्ड हो चुका है। चाहें तो दोबारा रिकॉर्ड करें।':'Already recorded. Record again to replace it.'):'','good');
+  $('btn-prev').disabled=S.idx===0;
+}
+const setMsg=(m,k)=>{$('rec-msg').className='msg '+(k||'');$('rec-msg').textContent=m||''};
+async function startRec(){
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}
+  catch(e){setMsg(S.lang==='hi'?'माइक्रोफ़ोन की अनुमति नहीं मिली। ब्राउज़र की सेटिंग में माइक्रोफ़ोन चालू करें।':'The microphone is blocked. Allow it for this page in the browser settings.','bad');return}
+  ctx=new (window.AudioContext||window.webkitAudioContext)();src=ctx.createMediaStreamSource(stream);
+  proc=ctx.createScriptProcessor(4096,1,1);chunks=[];
+  proc.onaudioprocess=e=>{const d=e.inputBuffer.getChannelData(0);chunks.push(new Float32Array(d));let pk=0;for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}$('level').style.width=Math.min(100,pk*140)+'%'};
+  src.connect(proc);proc.connect(ctx.destination);recording=true;$('btn-rec').textContent=TXT[S.lang].stop;$('btn-rec').classList.remove('rec');$('btn-rec').classList.add('primary');setMsg(S.lang==='hi'?'रिकॉर्ड हो रहा है… पढ़ें।':'Recording… read the sentence.');
+  $('btn-play').disabled=true;$('btn-keep').disabled=true;
+}
+async function resample(f32,from,to){
+  if(from===to)return f32;
+  const off=new OfflineAudioContext(1,Math.max(1,Math.ceil(f32.length*to/from)),to),b=off.createBuffer(1,f32.length,from);b.copyToChannel(f32,0);
+  const s=off.createBufferSource();s.buffer=b;s.connect(off.destination);s.start();return (await off.startRendering()).getChannelData(0);
+}
+function trim(x){
+  const th=.012,pad=Math.round(.25*RATE);let a=0,b=x.length-1;
+  while(a<x.length&&Math.abs(x[a])<th)a++;while(b>a&&Math.abs(x[b])<th)b--;
+  return x.slice(Math.max(0,a-pad),Math.min(x.length,b+pad));
+}
+function wavBytes(f32,rate){
+  const n=f32.length,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-32768,Math.min(32767,Math.round(f32[i]*32767))),true);
+  return new Uint8Array(b);
+}
+async function stopRec(){
+  recording=false;try{proc.disconnect();src.disconnect();stream.getTracks().forEach(t=>t.stop())}catch(e){}
+  const from=ctx.sampleRate;try{await ctx.close()}catch(e){}
+  const len=chunks.reduce((a,c)=>a+c.length,0),all=new Float32Array(len);let o=0;for(const c of chunks){all.set(c,o);o+=c.length}
+  let x=trim(await resample(all,from,RATE));
+  $('btn-rec').textContent=TXT[S.lang].rec;$('btn-rec').classList.add('rec');$('btn-rec').classList.remove('primary');$('level').style.width='0';
+  let pk=0,clip=0;for(let i=0;i<x.length;i++){const a=Math.abs(x[i]);if(a>pk)pk=a;if(a>.99)clip++}
+  const secs=x.length/RATE,hi=S.lang==='hi';
+  if(secs<.6){setMsg(hi?'बहुत छोटी रिकॉर्डिंग। दोबारा कोशिश करें।':'That was too short. Try again.','bad');return}
+  if(secs>25){setMsg(hi?'बहुत लंबी रिकॉर्डिंग। दोबारा कोशिश करें।':'That was too long. Try again.','bad');return}
+  if(pk<.08){setMsg(hi?'आवाज़ बहुत धीमी है। माइक्रोफ़ोन के पास आकर दोबारा रिकॉर्ड करें।':'Too quiet. Move closer to the microphone and record again.','bad');return}
+  if(clip/x.length>.01){setMsg(hi?'आवाज़ फट रही है। थोड़ा दूर होकर दोबारा रिकॉर्ड करें।':'Too loud and distorted. Move a little further away and record again.','bad');return}
+  pendingTake=wavBytes(x,RATE);$('btn-play').disabled=false;$('btn-keep').disabled=false;
+  setMsg((hi?'ठीक है। ':'Good. ')+secs.toFixed(1)+(hi?' सेकंड। सुनकर देखें, फिर रखें।':' seconds. Play it back, then keep it.'),'good');
+}
+$('btn-rec').addEventListener('click',()=>{recording?stopRec():startRec()});
+let audioEl=null;
+$('btn-play').addEventListener('click',async()=>{
+  const it=S.items[S.idx];let bytes=pendingTake||await tget(`${S.lang}-${S.gender}-${it.id}`);if(!bytes)return;
+  if(audioEl){audioEl.pause()}audioEl=new Audio(URL.createObjectURL(new Blob([bytes],{type:'audio/wav'})));audioEl.play();
+});
+$('btn-keep').addEventListener('click',async()=>{
+  const it=S.items[S.idx];if(pendingTake)await tput(`${S.lang}-${S.gender}-${it.id}`,pendingTake);
+  if(S.idx<S.items.length-1){S.idx++;show()}else{setMsg(S.lang==='hi'?'सारे वाक्य पूरे हुए। नीचे से रिकॉर्डिंग डाउनलोड करें।':'All done. Download your recordings below.','good');$('barfill').style.width='100%'}
+});
+$('btn-prev').addEventListener('click',()=>{if(S.idx>0){S.idx--;show()}});
+$('btn-skip').addEventListener('click',()=>{if(S.items[S.idx].consent){setMsg(S.lang==='hi'?'सहमति वाला हिस्सा छोड़ा नहीं जा सकता।':'The consent step cannot be skipped.','bad');return}if(S.idx<S.items.length-1){S.idx++;show()}});
+
+/* ---------- download: a zip with the wavs, metadata.csv and the consent record ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return b=>{let c=~0;for(let i=0;i<b.length;i++)c=t[(c^b[i])&255]^(c>>>8);return (~c)>>>0}})();
+function zip(files){
+  const enc=new TextEncoder(),parts=[],cd=[];let off=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  for(const f of files){
+    const name=enc.encode(f.name),crc=CRC(f.data),h=new Uint8Array([0x50,0x4b,3,4,20,0,0,8,0,0,0,0,0x21,0,...u32(crc),...u32(f.data.length),...u32(f.data.length),...u16(name.length),0,0]);
+    parts.push(h,name,f.data);
+    cd.push(new Uint8Array([0x50,0x4b,1,2,20,0,20,0,0,8,0,0,0,0,0x21,0,...u32(crc),...u32(f.data.length),...u32(f.data.length),...u16(name.length),0,0,0,0,0,0,0,0,0,0,0,0,...u32(off)]),name);
+    off+=h.length+name.length+f.data.length;
+  }
+  const cdSize=cd.reduce((a,c)=>a+c.length,0);
+  parts.push(...cd,new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cdSize),...u32(off),0,0]));
+  return new Blob(parts,{type:'application/zip'});
+}
+$('btn-export').addEventListener('click',async()=>{
+  const p=`${S.lang}-${S.gender}-`,keys=(await tkeys(p)).sort(),enc=new TextEncoder(),files=[],rows=[];
+  const consent=await tget(p+'consent');
+  if(!consent){setMsg(S.lang==='hi'?'पहले सहमति वाला वाक्य रिकॉर्ड करें।':'Record the consent sentence first.','bad');return}
+  files.push({name:'consent/consent.wav',data:consent});
+  files.push({name:'consent/consent.json',data:enc.encode(JSON.stringify({speaker:S.name,language:S.lang,assistant_voice:S.gender==='male'?'Adi':'Anu',statement:TXT[S.lang].consentLine(S.name),recorded_at:new Date().toISOString(),note:'The consent audio is the speaker reading the statement aloud.'},null,2))});
+  for(const it of S.items){if(it.consent)continue;const d=await tget(p+it.id);if(d){files.push({name:`wavs/utt${it.id}.wav`,data:d});rows.push(`utt${it.id}.wav|${it.text.replace(/\|/g,' ')}`)}}
+  if(rows.length<20){setMsg(S.lang==='hi'?'कम से कम 20 वाक्य रिकॉर्ड करें। ज़्यादा हों तो आवाज़ बेहतर बनेगी (150 से ऊपर अच्छा है)।':'Record at least 20 sentences. More is better (over 150 is good).','bad');return}
+  files.push({name:'metadata.csv',data:enc.encode(rows.join('\n')+'\n')});
+  files.push({name:'README.txt',data:enc.encode(`Voice recordings for the Abhyashify study assistant.\nSpeaker: ${S.name}\nLanguage: ${S.lang}\nAssistant voice: ${S.gender==='male'?'Adi':'Anu'}\nSentences: ${rows.length}\nFormat: 22050 Hz, mono, 16-bit WAV. metadata.csv is "file|text" (the format Piper training expects).\nKeep consent/ together with the audio.\n`)});
+  const a=document.createElement('a');a.href=URL.createObjectURL(zip(files));a.download=`voice-${S.lang}-${S.gender}-${S.name.replace(/[^\w]+/g,'_')}.zip`;document.body.appendChild(a);a.click();a.remove();
+  setMsg((S.lang==='hi'?'डाउनलोड हो गया: ':'Downloaded: ')+rows.length+(S.lang==='hi'?' वाक्य।':' sentences.'),'good');
+});
+</script>
+</body>
+</html>

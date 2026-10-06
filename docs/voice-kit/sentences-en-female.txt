@@ -1,0 +1,247 @@
+Hello! I am Anu, your study assistant. This is how I sound.
+Okay.
+Done.
+Sure, I can do that.
+Good morning. Ready to study?
+Good evening. How did today go?
+You are welcome.
+Thank you.
+I did not understand that. Could you say it again?
+Which subject is it for?
+What time should I set it for?
+When should the test be?
+Your alarm is ringing.
+Your reminder.
+Time to start studying.
+Time is up. Take a short break.
+Your timer has started.
+Timer stopped.
+Undone. I put it back the way it was.
+I have changed the theme to dark mode.
+I have changed the theme to light mode.
+The accent colour is now green.
+The background is now midnight blue.
+You have no reminders or alarms set.
+You have no tests scheduled. Ask me to schedule one.
+I could not find a match for that.
+That reminder has been removed.
+All your alarms have been cleared.
+Your mock test has been scheduled.
+Your score has been saved.
+Great work today. Keep it up.
+You are a little behind the plan. Let us catch up tomorrow.
+You are ahead of the plan. Well done.
+Your exam is in a hundred and twenty days.
+Today you studied for two hours and thirty minutes.
+Your score this week is seventy two.
+You studied three hours of the four hours planned.
+I have added the subject to your plan.
+I have added a new study block.
+I have made a new weekly schedule for you.
+Do you want me to replace your current schedule?
+Please answer yes or no.
+Open the Plan tab to see your week.
+Open the Report tab to see how you are doing.
+Add your books and notes in the Materials tab.
+Tap the microphone to talk to me.
+I am listening.
+Alarms ring only while this page is open.
+Your data is saved on this device.
+You can export your plan at any time.
+Sign in with Google to sync your phone and laptop.
+Everything is saved and up to date.
+Revise the last chapter before you sleep.
+Solve ten practice questions on probability.
+Review your mistakes from the last mock test.
+Take a deep breath and start with the easiest topic.
+Drink some water and stretch for a minute.
+Linear algebra, probability, statistics and calculus are on your plan this week.
+Machine learning and databases come next.
+Python and data structures need more practice.
+Optimization is your weakest subject right now.
+Artificial intelligence is done for today.
+Alarm set for Thursday, nine in the morning.
+Alarm set for Friday, ten thirty at night.
+Alarm set for today, seven thirty in the morning.
+Alarm set for Sunday, seven thirty in the morning.
+Alarm set for Thursday, nine in the evening.
+Alarm set for today, seven forty five in the evening.
+Alarm set for Tuesday, six in the morning.
+Alarm set for tomorrow, four thirty in the afternoon.
+Alarm set for Friday, seven thirty in the morning.
+Alarm set for Tuesday, seven thirty in the morning.
+Alarm set for Sunday, four thirty in the afternoon.
+Alarm set for today, half past eight in the morning.
+Alarm set for tomorrow, ten fifteen in the morning.
+Alarm set for today, nine in the evening.
+Alarm set for Friday, six in the morning.
+Alarm set for Sunday, half past eight in the morning.
+Alarm set for Monday, noon.
+Alarm set for Friday, nine in the morning.
+Alarm set for Wednesday, seven forty five in the evening.
+Alarm set for Monday, seven thirty in the morning.
+Alarm set for Tuesday, two in the afternoon.
+Alarm set for tomorrow, seven forty five in the evening.
+Alarm set for tomorrow, nine in the evening.
+Alarm set for Tuesday, six in the evening.
+Alarm set for Thursday, six in the evening.
+Alarm set for Saturday, two in the afternoon.
+Alarm set for Wednesday, ten fifteen in the morning.
+Alarm set for Monday, eleven at night.
+Alarm set for Saturday, noon.
+Alarm set for tomorrow, seven thirty in the morning.
+Alarm set for Monday, five fifteen in the morning.
+Alarm set for Saturday, four thirty in the afternoon.
+Alarm set for today, ten thirty at night.
+Alarm set for tomorrow, five fifteen in the morning.
+Alarm set for Sunday, nine in the evening.
+Alarm set for Thursday, two in the afternoon.
+Alarm set for Saturday, nine in the evening.
+Alarm set for Saturday, seven thirty in the morning.
+Alarm set for tomorrow, noon.
+Alarm set for Saturday, eleven at night.
+Alarm set for tomorrow, six in the morning.
+Alarm set for Wednesday, ten thirty at night.
+Alarm set for Thursday, six in the morning.
+I will remind you to revise compiler design on Thursday, nine in the morning.
+I will remind you to revise calculus on Saturday, six in the morning.
+I will remind you to revise databases on Wednesday, nine in the morning.
+I will remind you to revise artificial intelligence on Friday, four thirty in the afternoon.
+I will remind you to revise operating systems on tomorrow, nine in the morning.
+I will remind you to revise compiler design on Friday, seven forty five in the evening.
+I will remind you to revise python on Monday, half past eight in the morning.
+I will remind you to revise the mock test on Sunday, noon.
+I will remind you to revise the mock test on Thursday, ten thirty at night.
+I will remind you to revise revision on Tuesday, nine in the morning.
+I will remind you to revise linear algebra on Monday, nine in the morning.
+I will remind you to revise artificial intelligence on Tuesday, six in the morning.
+I will remind you to revise operating systems on Monday, noon.
+I will remind you to revise data structures on today, nine in the morning.
+I will remind you to revise the mock test on Sunday, two in the afternoon.
+I will remind you to revise algorithms on Monday, eleven at night.
+I will remind you to revise statistics on Saturday, half past eight in the morning.
+I will remind you to revise revision on Friday, four thirty in the afternoon.
+I will remind you to revise revision on tomorrow, six in the evening.
+I will remind you to revise revision on today, ten fifteen in the morning.
+I will remind you to revise linear algebra on Tuesday, six in the evening.
+I will remind you to revise machine learning on tomorrow, two in the afternoon.
+I will remind you to revise statistics on tomorrow, six in the morning.
+I will remind you to revise optimization on Sunday, seven thirty in the morning.
+I will remind you to revise aptitude on today, seven thirty in the morning.
+I will remind you to revise databases on Friday, nine in the morning.
+I will remind you to revise python on Thursday, nine in the evening.
+I will remind you to revise aptitude on Saturday, seven thirty in the morning.
+I will remind you to revise calculus on Saturday, six in the evening.
+I will remind you to revise operating systems on Saturday, noon.
+Test scheduled for Monday, nine in the morning, for one hour.
+Test scheduled for Saturday, two in the afternoon, for three hours.
+Test scheduled for Thursday, half past eight in the morning, for two hours.
+Test scheduled for Friday, six in the morning, for two hours.
+Test scheduled for Friday, two in the afternoon, for two hours.
+Test scheduled for Saturday, seven forty five in the evening, for one hour.
+Test scheduled for Sunday, seven forty five in the evening, for three hours.
+Test scheduled for Saturday, half past eight in the morning, for one hour.
+Test scheduled for Saturday, half past eight in the morning, for three hours.
+Test scheduled for Wednesday, five fifteen in the morning, for two hours.
+Test scheduled for Friday, seven forty five in the evening, for three hours.
+Test scheduled for Saturday, ten fifteen in the morning, for two hours.
+Test scheduled for Sunday, ten fifteen in the morning, for ninety minutes.
+Test scheduled for Saturday, five fifteen in the morning, for two hours.
+Test scheduled for Tuesday, seven forty five in the evening, for ninety minutes.
+Test scheduled for Wednesday, eleven at night, for one hour.
+Test scheduled for Monday, five fifteen in the morning, for three hours.
+Test scheduled for Thursday, noon, for two hours.
+Test scheduled for Saturday, nine in the evening, for three hours.
+Test scheduled for Thursday, five fifteen in the morning, for three hours.
+Test scheduled for Wednesday, seven thirty in the morning, for two hours.
+Test scheduled for Monday, ten fifteen in the morning, for ninety minutes.
+Test scheduled for Tuesday, two in the afternoon, for two hours.
+Test scheduled for Thursday, nine in the evening, for one hour.
+Test scheduled for Thursday, ten thirty at night, for three hours.
+Test scheduled for Sunday, ten thirty at night, for one hour.
+Test scheduled for Thursday, five fifteen in the morning, for two hours.
+Test scheduled for Thursday, nine in the morning, for ninety minutes.
+Your exam date is the twenty eighth of June.
+Your exam date is the sixth of December.
+Your exam date is the twentieth of August.
+Your exam date is the twentieth of December.
+Your exam date is the tenth of March.
+Your exam date is the tenth of January.
+Your exam date is the tenth of October.
+Your exam date is the twentieth of November.
+Your exam date is the twenty first of August.
+Your exam date is the tenth of September.
+Your exam date is the twenty first of March.
+Your exam date is the sixth of January.
+Your exam date is the twenty eighth of November.
+Study probability for thirty minutes today.
+Study statistics for two hours today.
+Study linear algebra for forty five minutes today.
+Study calculus for one and a half hours today.
+Study optimization for forty five minutes today.
+Study machine learning for forty five minutes today.
+Study databases for thirty minutes today.
+Study artificial intelligence for one hour today.
+Study python for forty five minutes today.
+Study data structures for one hour today.
+Study algorithms for two hours today.
+Study aptitude for forty five minutes today.
+You scored 75 out of a hundred in python.
+You scored 90 out of a hundred in the mock test.
+You scored 61 out of a hundred in statistics.
+You scored 75 out of a hundred in compiler design.
+You scored 90 out of a hundred in optimization.
+You scored 90 out of a hundred in probability.
+You scored 85 out of a hundred in machine learning.
+You scored 40 out of a hundred in optimization.
+You scored 61 out of a hundred in optimization.
+You scored 85 out of a hundred in calculus.
+You scored 90 out of a hundred in statistics.
+You scored 75 out of a hundred in operating systems.
+You scored 52 out of a hundred in statistics.
+You scored 68 out of a hundred in databases.
+You scored 72 out of a hundred in statistics.
+You scored 52 out of a hundred in compiler design.
+Algorithms is next on your plan for an hour.
+Python is next on your plan for two hours.
+Operating systems is next on your plan for an hour.
+Python is next on your plan for an hour.
+Compiler design is next on your plan for an hour.
+The mock test is next on your plan for thirty minutes.
+Revision is next on your plan for two hours.
+Algorithms is next on your plan for thirty minutes.
+Artificial intelligence is next on your plan for two hours.
+Linear algebra is next on your plan for an hour.
+Data structures is next on your plan for thirty minutes.
+Optimization is next on your plan for ninety minutes.
+Optimization is next on your plan for two hours.
+Artificial intelligence is next on your plan for thirty minutes.
+I will remind you in five minutes.
+I will remind you in ten minutes.
+I will remind you in fifteen minutes.
+I will remind you in twenty minutes.
+I will remind you in twenty five minutes.
+I will remind you in thirty minutes.
+I will remind you in forty five minutes.
+The quick brown fox jumps over the lazy dog near the river bank.
+She sells sea shells by the sea shore, and the shells she sells are sea shells for sure.
+Preparation for a big exam is like a long journey; every small step matters.
+Please call Stella and ask her to bring these things with her from the store.
+When the sunlight strikes raindrops in the air, they act as a prism and form a rainbow.
+Would you like to take a short walk before we start the next lesson?
+The conference starts at nine, but registration opens an hour earlier.
+I think we should review the chapter on gradient descent once more.
+Can you explain why the variance of an estimator matters?
+A good night of sleep helps you remember what you studied during the day.
+Keep your phone away while you study, and take a break every fifty minutes.
+Consistency beats intensity when you prepare over many months.
+How many hours did you study yesterday, and how many are left for this week?
+Do not worry about one bad test; learn from it and move on.
+Let us begin with a quick revision of the formulas.
+Two plus two is four, and ten times ten is one hundred.
+The temperature is thirty four degrees and the sky is clear.
+Please send the report by Friday evening.
+He said he would arrive by noon, but the train was late.
+Where did you keep the notes that I gave you last week?
+Thank you so much for your help; it really made a difference.
+The library closes at eight, so plan to finish your practice sheet before that.

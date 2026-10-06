@@ -803,12 +803,14 @@ function pickVoice(){
 function speechText(s){
   return String(s||'').replace(/\*\*/g,'').replace(/https?:\/\/\S+/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'').replace(/\s*\n\s*/g,'. ').replace(/\s+/g,' ').trim();
 }
-function stopSpeaking(){speakGen++;speakingNow=false;try{SYN_&&SYN_.cancel()}catch(e){}}
+function stopSpeaking(){speakGen++;speakingNow=false;try{SYN_&&SYN_.cancel()}catch(e){}if(typeof cvStopAudio==='function')cvStopAudio()}
 function speak(text,done){
-  if(!SYN_||!window.SpeechSynthesisUtterance){done&&done();return}
   const clean=speechText(text).slice(0,600);if(!clean){done&&done();return}
+  const useC=cvUsable(ACFG.gender);
+  if(!useC&&(!SYN_||!window.SpeechSynthesisUtterance)){done&&done();return}
   stopSpeaking();const gen=speakGen,pv=pickVoice();
   const parts=clean.match(/[^.!?।]+[.!?।]*/g)||[clean];
+  if(useC){speakCustom(parts,gen,done,cvCfg(ACFG.gender),ACFG.gender);return}
   speakingNow=true;paintMic();
   parts.forEach((p,i)=>{
     const u=new SpeechSynthesisUtterance(p.trim());
@@ -940,6 +942,7 @@ function cfgHtml(){
     <label class="field">${H('Speed','गति')} ${(+ACFG.rate||1).toFixed(1)}×<input type="range" data-cfg="rate" min="0.7" max="1.4" step="0.1" value="${+ACFG.rate||1}"></label>
     <label class="field">${H('Voice','आवाज़')}<select data-cfg="voiceName"><option value="">${H('Automatic','अपने-आप')} (${ACFG.gender==='male'?H('male','पुरुष'):H('female','महिला')})</option>${vs.map(v=>`<option value="${esc(v.name)}"${ACFG.voiceName===v.name?' selected':''}>${esc(v.name)}${genderOf(v)?' · '+(genderOf(v)==='male'?H('male','पुरुष'):H('female','महिला')):''}</option>`).join('')}</select></label>
     <button type="button" class="btn ghost" data-asa="testvoice">${ic('volume')}${H('Test the voice','आवाज़ सुनकर देखें')}</button>
+    ${cvHtml()}
     <div class="stack" style="gap:8px;margin-top:6px"><span class="kick">${H('Smart mode (optional)','स्मार्ट मोड (वैकल्पिक)')}</span>
       <p class="small muted">${H('Without a key I use my built-in understanding, which handles the common requests and needs no account. For free-form requests, paste your own AI key. It is stored only on this device and sent only to the provider you choose. In Smart mode your messages and a short summary of your schedule go to that provider.','बिना API key के मैं अपनी बिल्ट-इन समझ से काम {करता|करती} हूँ, जो आम अनुरोध सँभाल लेती है और जिसके लिए कोई खाता नहीं चाहिए। खुले-ढंग के अनुरोधों के लिए अपनी AI key चिपकाएँ। वह सिर्फ़ इसी डिवाइस पर रहती है और सिर्फ़ आपके चुने प्रदाता को भेजी जाती है। स्मार्ट मोड में आपके संदेश और आपकी समय-सारणी का छोटा सार उसी प्रदाता को जाता है।')}</p>
       <label class="field">${H('Provider','प्रदाता')}<select data-cfg="provider"><option value="">${H('Off (built-in)','बंद (बिल्ट-इन)')}</option>${Object.keys(AI_PROVIDERS).map(k=>`<option value="${k}"${prov===k?' selected':''}>${esc(LANG==='hi'&&k==='gemini'?'Google Gemini (मुफ़्त की)':AI_PROVIDERS[k].label)}</option>`).join('')}</select></label>
