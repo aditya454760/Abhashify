@@ -119,6 +119,7 @@ function settingsForm(){
     <button class="btn lg" type="submit">Save settings</button>
     <button class="btn lg ghost" type="button" data-act="exportcsv">${ic('upload')}Export schedule for Google Calendar (CSV)</button>
     <p class="small muted">Import the file in Google Calendar on a computer. Your calendar's own notifications then work when this page is closed.</p>
+    ${installBtn()}
     <button class="btn lg ghost" type="button" data-act="exportjson">${ic('upload')}Download a backup (JSON)</button>`,fd=>{
     if(CL){const cn=(fd.get('cn')||'').trim();if(cn&&cn!==CL.name){CL.name=cn;const c=CL.courses.find(x=>x.id===CL.cid);if(c)c.name=cn;FB.updateDoc(courseRef(),{name:cn,updatedAt:FB.serverTimestamp()}).catch(()=>toast('Could not rename the course.'))}}
     p.examName=(fd.get('en')||'').trim();p.exam=fd.get('ex')||'';p.lead=Math.max(0,+fd.get('lead')||0);p.buffer=Math.max(0,+fd.get('buf')||0);
@@ -257,6 +258,7 @@ document.addEventListener('click',async e=>{
     case 'alarmstart':stopRing();startRun(d.b);break;
     case 'snooze':snoozes[ymd(new Date())+'|'+d.b]=Date.now()+5*60000;stopRing();toast('Snoozed for 5 minutes');break;
     case 'dismiss':stopRing();break;
+    case 'install':await installApp();break;
     case 'signin':await signIn();break;
     case 'local':lsSet('pl.mode','local');enterLocal();break;
     case 'acct':accountSheet();break;
@@ -304,8 +306,30 @@ function courseForm(){
     const id=await createCourse(name);CL.courses.push({id,name});closeSheet();await openCourse(id);toast('Course created');
   });
 }
+/* ---------- install as an app ---------- */
+let installEv=null;
+const isStandalone=()=>(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function installBtn(){
+  if(isStandalone())return '';
+  if(installEv)return `<button class="btn lg soft" type="button" data-act="install">${ic('upload')}Install Prep Ledger as an app</button>`;
+  if(isIOS())return `<p class="small muted">To install on iPhone or iPad: tap the Share button, then <b>Add to Home Screen</b>.</p>`;
+  return '';
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e;if(GATE==='signin')render(false)});
+window.addEventListener('appinstalled',()=>{installEv=null;toast('Prep Ledger is installed');if(GATE==='signin')render(false)});
+async function installApp(){
+  if(!installEv)return;
+  installEv.prompt();
+  try{await installEv.userChoice}catch(e){}
+  installEv=null;
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e));
+}
 function accountSheet(){
   const imp=`<input type="file" id="impf" accept=".json,application/json" hidden>
+    ${installBtn()}
     <button class="btn lg ghost" type="button" data-act="exportjson">${ic('upload')}Export all my data (JSON)</button>
     <button class="btn lg ghost" type="button" data-act="importjson">${ic('upload')}Import a backup (JSON)</button>`;
   if(!CL){

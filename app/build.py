@@ -11,7 +11,7 @@ overlap = open(os.path.join(root, 'sync', 'core', 'overlap.js'), encoding='utf-8
 page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
         '<meta name="theme-color" content="#4349C9">\n<meta name="referrer" content="no-referrer">\n'
-        '<link rel="manifest" href="manifest.webmanifest">\n<link rel="icon" href="icon.svg" type="image/svg+xml">\n'
+        '<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="apple-touch-icon.png">\n<meta name="mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="apple-mobile-web-app-title" content="Prep Ledger">\n<link rel="icon" href="icon.svg" type="image/svg+xml">\n'
         + head_part + '\n</head>\n<body>\n' + body_part +
         '\n<script>window.FBReady=new Promise(function(r){window.__fbResolve=r});</script>\n'
         '<script type="module">\n' + src('firebase-module.js') + '</script>\n'

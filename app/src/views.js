@@ -100,6 +100,7 @@ function paintGate(){
     <div class="stack"><h1>Prep Ledger</h1><p class="muted">Plan your study blocks, get alarms, log your hours and see how you did each week. Sign in and your progress follows you across phone, tablet and laptop.</p></div>
     <button class="btn lg" type="button" data-act="signin">Sign in with Google</button>
     <button class="btn lg ghost" type="button" data-act="local">Continue on this device only</button>
+    ${installBtn()}
     <p class="small muted">Your data is private to your account. Only you can read it.</p></section>`;
 }
 function render(anim){
