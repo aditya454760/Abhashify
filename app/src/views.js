@@ -112,7 +112,7 @@ function render(anim){
   paintTabs();paintMini();
   const v=document.getElementById('view');
   v.className='view';
-  v.innerHTML=({today:vToday,plan:vPlan,materials:vMaterials,report:vReport}[tab])()+`<p class="foot" id="savestat">${esc(saveText())}</p>`;
+  v.innerHTML=(tab==='today'?installCard():'')+({today:vToday,plan:vPlan,materials:vMaterials,report:vReport}[tab])()+`<p class="foot" id="savestat">${esc(saveText())}</p>`;
   if(anim){void v.offsetWidth;v.classList.add('enter')}
   animateIn(anim);tickTimer();
 }

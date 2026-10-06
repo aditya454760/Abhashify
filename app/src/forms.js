@@ -259,6 +259,8 @@ document.addEventListener('click',async e=>{
     case 'snooze':snoozes[ymd(new Date())+'|'+d.b]=Date.now()+5*60000;stopRing();toast('Snoozed for 5 minutes');break;
     case 'dismiss':stopRing();break;
     case 'install':await installApp();break;
+    case 'installhelp':installHelp();break;
+    case 'installno':lsSet('pl.instno','1');render(false);break;
     case 'signin':await signIn();break;
     case 'local':lsSet('pl.mode','local');enterLocal();break;
     case 'acct':accountSheet();break;
@@ -312,12 +314,30 @@ const isStandalone=()=>(window.matchMedia&&matchMedia('(display-mode: standalone
 const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function installBtn(){
   if(isStandalone())return '';
-  if(installEv)return `<button class="btn lg soft" type="button" data-act="install">${ic('upload')}Install Prep Ledger as an app</button>`;
-  if(isIOS())return `<p class="small muted">To install on iPhone or iPad: tap the Share button, then <b>Add to Home Screen</b>.</p>`;
-  return '';
+  return installEv
+    ?`<button class="btn lg soft" type="button" data-act="install">${ic('upload')}Install Prep Ledger as an app</button>`
+    :`<button class="btn lg soft" type="button" data-act="installhelp">${ic('upload')}How to install as an app</button>`;
 }
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e;if(GATE==='signin')render(false)});
-window.addEventListener('appinstalled',()=>{installEv=null;toast('Prep Ledger is installed');if(GATE==='signin')render(false)});
+function installCard(){
+  if(isStandalone()||lsGet('pl.instno',null)==='1')return '';
+  return `<div class="card" style="gap:10px"><div class="stack"><h2>Install Prep Ledger</h2>
+    <p class="muted">Add it to your home screen or desktop so it opens like a normal app, in its own window, and works offline.</p></div>
+    ${installEv?`<button class="btn lg" type="button" data-act="install">Install now</button>`:`<button class="btn lg" type="button" data-act="installhelp">Show me how</button>`}
+    <button class="btn ghost" type="button" data-act="installno">Not now</button></div>`;
+}
+function installHelp(){
+  const ua=navigator.userAgent;
+  const inApp=/FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|GSA\//i.test(ua);
+  let steps;
+  if(isIOS())steps=`<li>Open this page in <b>Safari</b> (not inside another app).</li><li>Tap the <b>Share</b> button.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>`;
+  else if(/android/i.test(ua))steps=`<li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>three dots</b> menu at the top right.</li><li>Tap <b>Install app</b> (some phones say <b>Add to Home screen</b>), then <b>Install</b>.</li>`;
+  else steps=`<li>Use <b>Chrome</b> or <b>Edge</b>.</li><li>Click the <b>install icon</b> at the right end of the address bar (a small monitor with a down arrow).</li><li>If you don't see it, open the browser menu and look for <b>Install Prep Ledger</b> (Chrome: Cast, save and share, then Install page as app).</li><li>Click <b>Install</b>.</li>`;
+  openSheet('Install as an app',`${inApp?`<p class="small" style="color:var(--warn)">This looks like a browser built into another app. Open the link in Chrome (or Safari on iPhone) first, since those are the ones that can install it.</p>`:''}
+    <ol class="muted" style="padding-left:20px;display:grid;gap:8px">${steps}</ol>
+    <p class="small muted">The browser decides when an install option shows up, so a prompt on its own is not guaranteed. If this page is already open as an app, there is nothing to install.</p>`,()=>{});
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e;if(GATE==='signin'||(!GATE&&tab==='today'&&sheetEl.hidden))render(false)});
+window.addEventListener('appinstalled',()=>{installEv=null;toast('Prep Ledger is installed');if(GATE||tab==='today')render(false)});
 async function installApp(){
   if(!installEv)return;
   installEv.prompt();
