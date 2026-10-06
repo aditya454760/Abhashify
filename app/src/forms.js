@@ -116,6 +116,7 @@ function matForm(m){
 function settingsForm(){
   const p=S.plan;
   openSheet('Settings',`${CL?`<label class="field">Course name<input type="text" name="cn" value="${esc(CL.name||'')}" maxlength="80" required></label>`:''}<div class="stack" style="gap:8px"><span class="kick">Appearance</span><div class="seg" id="themeseg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>`<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme===k}">${l}</button>`).join('')}</div></div>
+    <div class="stack" style="gap:8px"><span class="kick">Language</span>${langSeg()}</div>
     ${lookPickers()}
     <div class="grid2"><label class="field">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="field">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
     <div class="grid2"><label class="field">Alarm minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}" inputmode="numeric"></label><label class="field">Revision buffer (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}" inputmode="numeric"></label></div>
@@ -266,6 +267,7 @@ document.addEventListener('click',async e=>{
       try{await navigator.clipboard.writeText(reportText());toast('Report copied')}catch(err){toast('Copy was blocked by the browser')}
       break}
     case 'settings':settingsForm();break;
+    case 'lang':setLang(d.v);break;
     case 'lookacc':{const r=setLook({accent:d.v||null});if(r.err)toast(r.err);paintLookPickers();break}
     case 'lookbg':{const r=setLook({bg:d.v||null});if(r.err)toast(r.err);else if(r.note)toast(r.note.trim());paintLookPickers();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break}
     case 'theme':theme=d.v;lsSet('pl.theme',theme);applyTheme();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break;
@@ -350,9 +352,9 @@ function installHelp(){
   const ua=navigator.userAgent;
   const inApp=/FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|GSA\//i.test(ua);
   let steps;
-  if(isIOS())steps=`<li>Open this page in <b>Safari</b> (not inside another app).</li><li>Tap the <b>Share</b> button.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>`;
-  else if(/android/i.test(ua))steps=`<li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>three dots</b> menu at the top right.</li><li>Tap <b>Install app</b> (some phones say <b>Add to Home screen</b>), then <b>Install</b>.</li>`;
-  else steps=`<li>Use <b>Chrome</b> or <b>Edge</b>.</li><li>Click the <b>install icon</b> at the right end of the address bar (a small monitor with a down arrow).</li><li>If you don't see it, open the browser menu and look for <b>Install Abhyashify</b> (Chrome: Cast, save and share, then Install page as app).</li><li>Click <b>Install</b>.</li>`;
+  if(isIOS())steps=H(`<li>Open this page in <b>Safari</b> (not inside another app).</li><li>Tap the <b>Share</b> button.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>`,`<li>इस पेज को <b>Safari</b> में खोलें (किसी दूसरे ऐप के अंदर नहीं)।</li><li><b>Share</b> बटन दबाएँ।</li><li><b>Add to Home Screen</b> चुनें, फिर <b>Add</b> दबाएँ।</li>`);
+  else if(/android/i.test(ua))steps=H(`<li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>three dots</b> menu at the top right.</li><li>Tap <b>Install app</b> (some phones say <b>Add to Home screen</b>), then <b>Install</b>.</li>`,`<li>इस पेज को <b>Chrome</b> में खोलें।</li><li>ऊपर दाएँ कोने में <b>तीन बिंदुओं</b> वाला मेन्यू दबाएँ।</li><li><b>Install app</b> दबाएँ (कुछ फ़ोन में <b>Add to Home screen</b> लिखा होता है), फिर <b>Install</b> दबाएँ।</li>`);
+  else steps=H(`<li>Use <b>Chrome</b> or <b>Edge</b>.</li><li>Click the <b>install icon</b> at the right end of the address bar (a small monitor with a down arrow).</li><li>If you don't see it, open the browser menu and look for <b>Install Abhyashify</b> (Chrome: Cast, save and share, then Install page as app).</li><li>Click <b>Install</b>.</li>`,`<li><b>Chrome</b> या <b>Edge</b> इस्तेमाल करें।</li><li>एड्रेस बार के दाएँ सिरे पर <b>इंस्टॉल आइकन</b> दबाएँ (नीचे तीर वाला छोटा मॉनिटर)।</li><li>अगर वह न दिखे, तो ब्राउज़र का मेन्यू खोलकर <b>Install Abhyashify</b> खोजें (Chrome में: Cast, save and share, फिर Install page as app)।</li><li><b>Install</b> दबाएँ।</li>`);
   openSheet('Install as an app',`${inApp?`<p class="small" style="color:var(--warn)">This looks like a browser built into another app. Open the link in Chrome (or Safari on iPhone) first, since those are the ones that can install it.</p>`:''}
     <ol class="muted" style="padding-left:20px;display:grid;gap:8px">${steps}</ol>
     <p class="small muted">The browser decides when an install option shows up, so a prompt on its own is not guaranteed. If this page is already open as an app, there is nothing to install.</p>`,()=>{});
@@ -393,7 +395,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 /* ---------- boot ---------- */
 (async function boot(){
-  applyTheme();
+  applyTheme();trStart();applyLangToPage();
   FB=await Promise.race([window.FBReady,new Promise(r=>setTimeout(()=>r(null),10000))]);
   setInterval(tickTimer,1000);setInterval(alarmTick,5000);
   setInterval(()=>{paintHeader();if(!GATE&&tab==='today'&&sheetEl.hidden&&document.getElementById('alarm').hidden)render(false)},60000);

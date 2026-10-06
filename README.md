@@ -11,6 +11,7 @@ You can try it here: **https://aditya454760.github.io/Abhyashify/**
 - Lets me log a session by hand or run a timer, and gives me a weekly report.
 - Tracks study material (books, lecture playlists, problem sets) and how much of each I've finished.
 - Has a built-in assistant (the chat button at the bottom right). I can type or talk to it. It answers questions about how the app works, sets alarms and reminders, schedules tests and mock tests and records my scores, builds a new weekly schedule, adds subjects and study material, starts the timer, and changes the theme, accent colour and background. Everything it changes can be undone with one tap. It can talk back in a female or male voice.
+- Works in English and Hindi. The language switch is in Settings (and on the sign-in screen). It changes the whole app, the assistant's replies and the voice chat. The assistant is called **Anu** with the female voice and **Adi** with the male voice, and it understands Hindi (देवनागरी) and Hinglish commands as well as English.
 - Syncs through Google sign-in, so the phone, tablet and laptop all show the same data. If I study on my phone and my laptop at the same time for the same course, that overlap is counted once, not twice.
 
 ## Installing it like a normal app
@@ -23,6 +24,8 @@ It works out of the box with no account and no cost. Without a key it uses a bui
 
 Things worth knowing:
 
+- Language: switch in Settings, in the assistant's settings, or just say "हिन्दी में बोलो" or "switch to English". Hindi text, speech recognition and speech output all follow it. The Hindi in the app comes from a built-in dictionary plus the assistant's own Hindi answers. It is good for everyday use, but a few odd phrasings may still show in English, and your own names (subjects, books, test titles) are never translated. The Android usage-tracker app is not translated. The CSV export keeps English column headings so Google Calendar can read it.
+- Hindi voices depend on the device. Chrome on Android usually has one; many laptops don't, and then the assistant can't speak Hindi aloud even though the text works. Smart mode (your own key) understands free-form Hindi better than the built-in understanding does.
 - Alarms and reminders ring only while the page is open and the bell is on. A web page can't wake a closed phone. The Android wrapper (on the to-do list) is how that gets fixed.
 - A mock test is scheduled, timed with the study timer, and its score is saved and shown in the Report tab. There's no built-in question bank. In Smart mode I can ask it to quiz me in the chat.
 - Voice needs a browser with speech support (Chrome, Edge and Safari have it). Listening needs the internet and microphone permission, and Chrome sends the audio to Google to turn it into text. The male and female voices are the ones installed on the device. If the device has only one kind, the assistant shifts the pitch.
@@ -44,7 +47,7 @@ Things worth knowing:
 I'd rather say this up front than have you find out later.
 
 - The merging of overlapping study time has its own tests, and they pass.
-- The assistant passes 45 tests (understanding of requests, actions, undo, the chat window, colours, reminders ringing, and Smart mode against a stand-in network). The real microphone, real voices and real calls to Gemini or Anthropic haven't been tried yet, so those need a hand test.
+- The assistant passes 45 tests, and 33 more cover Hindi: switching the whole app and back, the names Adi and Anu, Hindi and Hinglish commands, Hindi replies, and the Hindi voice settings. A scan of the app in Hindi finds no English left over except names and brands. The Hindi was written by an AI, so someone fluent should still read through the app and fix any phrase that sounds wrong. (The English tests cover understanding of requests, actions, undo, the chat window, colours, reminders ringing, and Smart mode against a stand-in network.) The real microphone, real voices and real calls to Gemini or Anthropic haven't been tried yet, so those need a hand test.
 - The website's sync code passes 22 tests against a stand-in for Firestore, using two simulated devices. That is not the same as the real thing, so the real Google sign-in and real database still need to be tried by hand.
 - The Firestore security rules have tests (`npm run test:rules` inside `sync/`), but I haven't been able to run them yet. They need Node and Java and the Firebase emulator.
 - The Android project builds in Android Studio. I haven't run it on a phone yet.

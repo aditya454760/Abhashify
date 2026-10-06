@@ -55,17 +55,17 @@ function resolveBg(key,dark){
 // Returns a note when the theme had to change so the text stays readable.
 function setLook(p){
   let note='';
-  if('accent' in p){const c=p.accent?parseColour(p.accent):null;if(p.accent&&!c)return {err:'I do not know the colour "'+p.accent+'". Try a name like green or orange, or a hex code like #1D6FD8.'};LOOK.accent=c}
+  if('accent' in p){const c=p.accent?parseColour(p.accent):null;if(p.accent&&!c)return {err:H('I do not know the colour "'+p.accent+'". Try a name like green or orange, or a hex code like #1D6FD8.','मैं "'+p.accent+'" रंग नहीं {पहचानता|पहचानती}। हरा या नारंगी जैसा नाम, या #1D6FD8 जैसा हेक्स कोड बताएँ।')};LOOK.accent=c}
   if('bg' in p){
     let k=p.bg;
-    if(k&&!BGS[k]){const c=parseColour(k);if(!c)return {err:'I do not know the background "'+k+'". Pick one of: '+Object.keys(BGS).join(', ')+', or give a hex code.'};k=c}
+    if(k&&!BGS[k]){const c=parseColour(k);if(!c)return {err:H('I do not know the background "'+k+'". Pick one of: '+Object.keys(BGS).join(', ')+', or give a hex code.','मैं "'+k+'" पृष्ठभूमि नहीं {पहचानता|पहचानती}। इनमें से चुनें: '+Object.keys(BGS).map(x=>L(BGS[x].label)).join(', ')+', या हेक्स कोड दें।')};k=c}
     LOOK.bg=k||null;
     let wantDark=null;
     if(k&&BGS[k]&&BGS[k].tone==='dark')wantDark=true;
     else if(k&&hexOk(k)){wantDark=lumOf(k)<.3}
     if(wantDark!==null&&wantDark!==isDarkNow()){
       theme=wantDark?'dark':'light';lsSet('pl.theme',theme);
-      note=wantDark?' I switched to dark mode so the text stays readable on it.':' I switched to light mode so the text stays readable on it.';
+      note=wantDark?H(' I switched to dark mode so the text stays readable on it.',' लिखावट साफ़ पढ़ी जा सके, इसलिए मैंने गहरा मोड चालू कर दिया।'):H(' I switched to light mode so the text stays readable on it.',' लिखावट साफ़ पढ़ी जा सके, इसलिए मैंने हल्का मोड चालू कर दिया।');
     }
   }
   lsSet('pl.look',LOOK);applyTheme();

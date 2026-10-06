@@ -14,7 +14,7 @@
 <title>Abhyashify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one phone-width column, soft cards on a quiet ground. Sticky top bar, floating pill nav, a mini timer docked above it. */
 :root{
@@ -23,8 +23,8 @@
   --good:#1F8A57; --good-soft:#E3F4EA; --warn:#A5700C; --warn-soft:#FBF0D8; --bad:#C23B35; --bad-soft:#FBE6E4;
   --sl:46%; --scrim:rgba(14,20,26,.45);
   --shadow:0 1px 2px rgba(18,32,43,.06),0 12px 30px -16px rgba(18,32,43,.22);
-  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
-  --f-body:'Instrument Sans','Segoe UI',system-ui,sans-serif;
+  --f-display:'Bricolage Grotesque','Noto Sans Devanagari','Segoe UI',system-ui,sans-serif;
+  --f-body:'Instrument Sans','Noto Sans Devanagari','Segoe UI',system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -312,6 +312,12 @@ body.gate #asstfab{display:none}
 .sw[aria-pressed="true"]::after{content:'';position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 0 2.5px var(--ink)}
 .sw.bgsw{border-radius:10px;width:44px}
 .sw.bgsw[aria-pressed="true"]::after{border-radius:13px}
+
+/* ---------- Hindi ---------- */
+html[lang=hi] body{line-height:1.6}
+html[lang=hi] h1,html[lang=hi] h2,html[lang=hi] h3,html[lang=hi] .disp{letter-spacing:0;line-height:1.3}
+html[lang=hi] .kick{letter-spacing:.02em;text-transform:none}
+html[lang=hi] .btn,html[lang=hi] .seg button{letter-spacing:0}
 </style>
 </head>
 <body>
@@ -767,6 +773,267 @@ async function deleteCourseData(){
 function enterLocal(){
   GATE=null;loadLocal();firstApply=true;render();
 }
+/* ---------- language: English and Hindi ----------
+   The screens are written in English. When Hindi is on, every piece of text that lands on the page is
+   looked up in HI (exact text) or PAT (patterns with numbers or names in them) and swapped, and swapped
+   back when English is chosen. Text I write in code for the assistant uses H(english, hindi) directly. */
+let LANG=lsGet('pl.lang',null)||((navigator.language||'').toLowerCase().startsWith('hi')?'hi':'en');
+if(LANG!=='hi')LANG='en';
+const HG=s=>s.indexOf('{')<0?s:s.replace(/\{([^|}]*)\|([^}]*)\}/g,(m,a,b)=>(typeof ACFG!=='undefined'&&ACFG.gender==='male')?a:b);  // {masculine|feminine} forms follow the assistant's voice
+const H=(en,hi)=>LANG==='hi'?HG(hi):en;
+const LOC=()=>LANG==='hi'?'hi-IN':undefined;
+const HI={};   // filled by i18n-hi.js
+const PAT=[];  // [RegExp, template or function]
+const SEPS=[' · ',' / ',', ',': '];
+function periodHi(h24){return h24>=4&&h24<12?'सुबह':h24>=12&&h24<16?'दोपहर':h24>=16&&h24<20?'शाम':'रात'}
+function units(c){
+  return c.replace(/\b(\d{1,2}):(\d{2}) ?(AM|PM|am|pm)\b/g,(m,h,mi,ap)=>{let x=+h%12;if(/p/i.test(ap))x+=12;return periodHi(x)+' '+h+':'+mi})
+          .replace(/\b(\d+)h\b/g,'$1 घं').replace(/\b(\d+)m\b/g,'$1 मि');
+}
+function trCore(core){
+  if(Object.prototype.hasOwnProperty.call(HI,core))return HI[core];
+  for(let i=0;i<PAT.length;i++){
+    const m=core.match(PAT[i][0]);
+    if(m){const f=PAT[i][1];return typeof f==='function'?f.apply(null,m.slice(1)):core.replace(PAT[i][0],f)}
+  }
+  for(const sep of SEPS){
+    if(core.includes(sep)){
+      const parts=core.split(sep),out=parts.map(trCore);
+      if(out.some((o,i)=>o!==parts[i]))return out.join(sep);
+    }
+  }
+  return units(core);
+}
+function tr(s){
+  if(LANG!=='hi'||typeof s!=='string'||!/[A-Za-z]/.test(s))return s;
+  const core=s.trim();if(!core)return s;
+  const i=s.indexOf(core);
+  return s.slice(0,i)+HG(trCore(core))+s.slice(i+core.length);
+}
+const L=s=>LANG==='hi'?tr(String(s)):s;            // translate a known English word or phrase when Hindi is on
+const FD=m=>LANG==='hi'?units(fmtDur(m)):fmtDur(m);  // durations: 2h 30m / 2 घं 30 मि
+const TR_ATTRS=['aria-label','placeholder','title','alt'];
+const TR_ORIG=new WeakMap(),TR_AORIG=new WeakMap();
+function trText(n){
+  const v=n.data;let o=TR_ORIG.get(n);
+  if(!o||o.shown!==v){o={en:v,shown:v};TR_ORIG.set(n,o)}
+  const out=LANG==='hi'?tr(o.en):o.en;
+  if(out!==v){o.shown=out;n.data=out}
+}
+function trAttrs(el){
+  for(const a of TR_ATTRS){
+    if(!el.hasAttribute(a))continue;
+    const v=el.getAttribute(a);let m=TR_AORIG.get(el);if(!m){m={};TR_AORIG.set(el,m)}
+    let o=m[a];if(!o||o.shown!==v){o={en:v,shown:v};m[a]=o}
+    const out=LANG==='hi'?tr(o.en):o.en;
+    if(out!==v){o.shown=out;el.setAttribute(a,out)}
+  }
+}
+const trSkip=el=>el.nodeType===1&&(el.getAttribute('translate')==='no'||/^(SCRIPT|STYLE|TEXTAREA)$/.test(el.tagName));
+function trTree(root){
+  if(!root)return;
+  if(root.nodeType===3){if(!(root.parentNode&&root.parentNode.closest&&root.parentNode.closest('[translate=no]')))trText(root);return}
+  if(root.nodeType!==1||trSkip(root)||(root.closest&&root.closest('[translate=no]')&&root!==document.body))return;
+  trAttrs(root);
+  for(let c=root.firstChild;c;c=c.nextSibling){
+    if(c.nodeType===3)trText(c);
+    else if(c.nodeType===1&&!trSkip(c))trTree(c);
+  }
+}
+let trObs=null;
+function trStart(){
+  if(trObs||!window.MutationObserver)return;
+  trObs=new MutationObserver(list=>{
+    for(const m of list){
+      if(m.type==='characterData'){const p=m.target.parentNode;if(p&&p.closest&&!p.closest('[translate=no]'))trText(m.target)}
+      else if(m.type==='attributes'){if(!m.target.closest('[translate=no]'))trAttrs(m.target)}
+      else m.addedNodes.forEach(n=>{if(n.nodeType===3){const p=n.parentNode;if(p&&p.closest&&!p.closest('[translate=no]'))trText(n)}else trTree(n)});
+    }
+  });
+  trObs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:TR_ATTRS});
+}
+function applyLangToPage(){
+  document.documentElement.lang=LANG==='hi'?'hi':'en';
+  trTree(document.body);
+}
+const langSeg=()=>`<div class="seg" translate="no" role="group" aria-label="Language / भाषा">${[['en','English'],['hi','हिन्दी']].map(([k,l])=>`<button type="button" data-act="lang" data-v="${k}" aria-pressed="${LANG===k}">${l}</button>`).join('')}</div>`;
+function setLang(l){
+  l=l==='hi'?'hi':'en';if(l===LANG)return;
+  LANG=l;lsSet('pl.lang',LANG);
+  ACFG.lang=LANG==='hi'?'hi-IN':'en-IN';ACFG.voiceName='';saveAcfg();
+  stopSpeaking();
+  applyLangToPage();
+  try{render(false)}catch(e){}
+  document.querySelectorAll('[data-act=lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===LANG)));
+  if(typeof asstOpen!=='undefined'&&asstOpen)paintAssistant();
+  const fab=document.getElementById('asstfab');if(fab)fab.setAttribute('aria-label','Open assistant');
+  applyLangToPage();
+}
+/* ---------- Hindi text for the screens (see i18n.js) ---------- */
+Object.assign(HI,{
+/* sign-in, onboarding */
+'Abhyashify':'Abhyashify',
+'Plan your study blocks, get alarms, log your hours and see how you did each week. Sign in and your progress follows you across phone, tablet and laptop.':'अपने पढ़ाई के ब्लॉक की योजना बनाएँ, अलार्म पाएँ, अपने घंटे दर्ज करें और हर हफ़्ते देखें कि कैसा रहा। साइन इन करें, तो आपकी प्रगति फ़ोन, टैबलेट और लैपटॉप, सब पर साथ चलेगी।',
+'Sign in with Google':'Google से साइन इन करें',
+'Continue on this device only':'सिर्फ़ इसी डिवाइस पर जारी रखें',
+'Your data is private to your account. Only you can read it.':'आपका डेटा आपके खाते तक ही सीमित है। इसे सिर्फ़ आप पढ़ सकते हैं।',
+'Set up your schedule':'अपनी समय-सारणी बनाएँ',
+'Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.':'Abhyashify हर पढ़ाई के ब्लॉक पर अलार्म बजाता है, आपके असल पढ़े हुए घंटे दर्ज करता है, हर हफ़्ते उन्हें आपकी योजना से मिलाता है, और आपकी किताबों व शीट्स में कितना पूरा हुआ, इसका हिसाब रखता है।',
+'Start with the GATE DA 2027 template':'GATE DA 2027 टेम्पलेट से शुरू करें',
+'Start empty and build my own':'खाली शुरू करके अपनी बनाएँ',
+'The template sets the exam date to 6 February 2027 and adds a weekly timetable with nine subjects. Change anything afterwards.':'टेम्पलेट परीक्षा की तारीख़ 6 फ़रवरी 2027 रखता है और नौ विषयों की साप्ताहिक समय-सारणी जोड़ देता है। बाद में कुछ भी बदल सकते हैं।',
+/* header, tabs */
+'Today':'आज','Plan':'योजना','Materials':'सामग्री','Report':'रिपोर्ट','Sections':'अनुभाग',
+'Account':'खाता','Alarms':'अलार्म','Open assistant':'सहायक खोलें','Close':'बंद करें',
+'Alarms on. Tap to turn off':'अलार्म चालू हैं। बंद करने के लिए छुएँ','Alarms off. Tap to turn on':'अलार्म बंद हैं। चालू करने के लिए छुएँ',
+'Days of this week':'इस हफ़्ते के दिन',
+/* greetings, today */
+'Late night':'देर रात','Good morning':'सुप्रभात','Good afternoon':'नमस्कार','Good evening':'शुभ संध्या',
+'Due now':'अभी करना है','Up next':'अगला','Study next':'आगे क्या पढ़ें','Suggested order':'सुझाया गया क्रम',
+'Ordered by importance, your confidence, what is left and what needs to come first.':'क्रम इन पर आधारित है: महत्व, आपका आत्मविश्वास, कितना बाक़ी है और क्या पहले आना चाहिए।',
+'Start now':'अभी शुरू करें','Log time':'समय दर्ज करें','Log it now':'अभी दर्ज करें','Log an extra session':'एक अतिरिक्त सत्र दर्ज करें','Log extra session':'अतिरिक्त सत्र दर्ज करें',
+'Running':'चल रहा है','Planned':'योजना में','Session running':'सत्र चल रहा है','Review':'समीक्षा','Schedule':'समय-सारणी',
+'Free day':'खाली दिन','Nothing scheduled':'कुछ तय नहीं है','Nothing scheduled.':'कुछ तय नहीं है।',
+'Log an extra session if you study anyway.':'अगर फिर भी पढ़ें, तो एक अतिरिक्त सत्र दर्ज करें।',
+'Day complete':'दिन पूरा हुआ','All blocks done':'सभी ब्लॉक पूरे','Day wrapped up':'दिन समाप्त',
+'Log a missed block below to keep the report honest.':'रिपोर्ट सही रखने के लिए छूटा हुआ ब्लॉक नीचे दर्ज करें।',
+'Stop and log':'रोकें और दर्ज करें','Start the timer':'टाइमर शुरू करें','Start the test timer':'टेस्ट का टाइमर शुरू करें',
+'Turn on alarms':'अलार्म चालू करें','Turn off':'बंद करें',
+'On. The alarm rings on this screen at the start of each block.':'चालू। हर ब्लॉक की शुरुआत पर अलार्म इसी स्क्रीन पर बजेगा।',
+'Turn on to hear an alarm for each block while this page is open.':'यह पेज खुला रहने पर हर ब्लॉक के लिए अलार्म सुनने हेतु चालू करें।',
+'Test sound':'आवाज़ जाँचें',
+'A web page cannot see what you do in other apps, so this app counts what you log or time here. For alarms that ring when this page is closed, export the schedule to your calendar from Settings. Automatic tracking of other apps is done by the Android companion app.':'वेब पेज यह नहीं देख सकता कि आप दूसरे ऐप में क्या करते हैं, इसलिए यह ऐप वही गिनता है जो आप यहाँ दर्ज करते या टाइम करते हैं। पेज बंद होने पर भी बजने वाले अलार्म के लिए सेटिंग्स से समय-सारणी अपने कैलेंडर में एक्सपोर्ट करें। दूसरे ऐप का अपने-आप हिसाब Android साथी ऐप करता है।',
+/* plan */
+'Week at a glance':'पूरा हफ़्ता एक नज़र में','Subjects':'विषय','Subject':'विषय','Add':'जोड़ें','Add block':'ब्लॉक जोड़ें','Add subject':'विषय जोड़ें',
+'Importance and confidence decide what the planner puts first.':'महत्व और आत्मविश्वास तय करते हैं कि प्लानर किसे पहले रखे।',
+'Free day. Tap Add block to schedule something.':'खाली दिन। कुछ तय करने के लिए ब्लॉक जोड़ें दबाएँ।',
+'Importance':'महत्व','Confidence':'आत्मविश्वास','All':'सभी','Filter':'फ़िल्टर',
+/* materials */
+'Nothing here yet':'यहाँ अभी कुछ नहीं है','Nothing here.':'यहाँ कुछ नहीं है।','Add your first material':'अपनी पहली सामग्री जोड़ें',
+'Add books, PDFs, practice sheets or images. Set how many pages or questions each has, then update your progress as you go.':'किताबें, PDF, अभ्यास शीट या तस्वीरें जोड़ें। हर एक में कितने पेज या सवाल हैं, यह तय करें, फिर आगे बढ़ने पर अपनी प्रगति अपडेट करते रहें।',
+'Add material':'सामग्री जोड़ें','Update material':'सामग्री अपडेट करें','Mark complete':'पूरा करें','Left':'बाक़ी','Done':'पूरा','Open link':'लिंक खोलें',
+'Paste a Google Drive link to open it from here':'यहाँ से खोलने के लिए Google Drive का लिंक चिपकाएँ',
+'total not set':'कुल तय नहीं','pages':'पेज','sheets':'शीट','lectures':'लेक्चर','chapters':'अध्याय','questions':'सवाल',
+/* report */
+'Weekly report':'साप्ताहिक रिपोर्ट','Previous week':'पिछला हफ़्ता','Next week':'अगला हफ़्ता',
+'Add a schedule and log a session. The report compares your hours, sheets and start times with the plan.':'समय-सारणी जोड़ें और एक सत्र दर्ज करें। रिपोर्ट आपके घंटों, शीट्स और शुरू करने के समय की योजना से तुलना करती है।',
+'discipline':'अनुशासन','Half hours studied, a quarter practice sheets attempted, a quarter starting within 30 minutes of the plan.':'आधा हिस्सा पढ़े हुए घंटे, चौथाई अभ्यास शीट हल करना, और चौथाई योजना के 30 मिनट के अंदर शुरू करना।',
+'Hours per day':'रोज़ के घंटे','Planned and logged hours per day':'रोज़ के योजना और दर्ज किए घंटे','Dashed outline is planned, solid is logged.':'बिंदीदार रेखा योजना है, ठोस भाग दर्ज किया हुआ।','Dashed is when the plan puts study, solid is when you studied.':'बिंदीदार भाग योजना का पढ़ाई का समय है, ठोस भाग वह जब आपने पढ़ा।',
+'By subject':'विषय के अनुसार','Study time of day':'दिन में पढ़ाई का समय','Minutes studied by hour of day':'दिन के हर घंटे में पढ़े गए मिनट','Planned and actual start':'योजना और असल शुरुआत',
+'Day':'दिन','Actual':'असल','Shift':'अंतर','What to change':'क्या बदलें','Copy report as text':'रिपोर्ट को टेक्स्ट में कॉपी करें','Other':'अन्य',
+'Hours':'घंटे','Sheets':'शीट','On time':'समय पर','no timed sessions':'कोई टाइम किया सत्र नहीं','in progress':'जारी है','attempted of due':'हल की गई / कुल देय',
+'You are on plan. Keep the same blocks next week.':'आप योजना पर हैं। अगले हफ़्ते भी यही ब्लॉक रखें।',
+'Suggested':'सुझाव','Extra session':'अतिरिक्त सत्र',
+/* kinds */
+'Theory':'थ्योरी','Practice':'अभ्यास','Revision':'रिवीजन','Mock test':'मॉक टेस्ट','Sport / other':'खेल / अन्य','Theory / book':'थ्योरी / किताब','Practice sheet':'अभ्यास शीट','Notes / slides':'नोट्स / स्लाइड','Mock paper':'मॉक पेपर','Test':'टेस्ट','Reminder':'रिमाइंडर','Alarm':'अलार्म',
+/* days and months */
+'Mon':'सोम','Tue':'मंगल','Wed':'बुध','Thu':'गुरु','Fri':'शुक्र','Sat':'शनि','Sun':'रवि',
+'Monday':'सोमवार','Tuesday':'मंगलवार','Wednesday':'बुधवार','Thursday':'गुरुवार','Friday':'शुक्रवार','Saturday':'शनिवार','Sunday':'रविवार',
+'Tomorrow':'कल','Yesterday':'बीता कल',
+/* template subject names */
+'Probability & Statistics':'प्रायिकता और सांख्यिकी','Linear Algebra':'रैखिक बीजगणित','Calculus & Optimization':'कैलकुलस और ऑप्टिमाइज़ेशन','Python & DSA':'पायथन और DSA','Databases & Warehousing':'डेटाबेस और वेयरहाउसिंग','Machine Learning':'मशीन लर्निंग','Artificial Intelligence':'आर्टिफ़िशियल इंटेलिजेंस','General Aptitude':'सामान्य अभिक्षमता','Revision & full mocks':'रिवीजन और पूरे मॉक',
+/* forms: block, subject, log, material */
+'New block':'नया ब्लॉक','Edit block':'ब्लॉक बदलें','Save block':'ब्लॉक सहेजें','Delete block':'ब्लॉक हटाएँ','Days':'दिन','Start':'शुरू','Minutes':'मिनट','Type':'प्रकार','Practice sheets':'अभ्यास शीट','Name (optional)':'नाम (वैकल्पिक)',
+'Ring an alarm for this block':'इस ब्लॉक के लिए अलार्म बजाएँ','Pick at least one day.':'कम से कम एक दिन चुनें।','Add a subject first.':'पहले एक विषय जोड़ें।','Block saved':'ब्लॉक सहेजा गया','Block added':'ब्लॉक जुड़ गया','Block deleted':'ब्लॉक हटा दिया गया',
+'New subject':'नया विषय','Edit subject':'विषय बदलें','Save subject':'विषय सहेजें','Delete subject':'विषय हटाएँ','Subject saved':'विषय सहेजा गया','Name':'नाम','Importance (marks it carries)':'महत्व (कितने अंक आते हैं)','Confidence (5 is strong)':'आत्मविश्वास (5 यानी मज़बूत)',
+'Move or delete this subject’s blocks and materials first.':'पहले इस विषय के ब्लॉक और सामग्री हटाएँ या दूसरे विषय में ले जाएँ।',
+'Log session':'सत्र दर्ज करें','Minutes studied':'पढ़े गए मिनट','Started at':'कब शुरू किया','Practice sheets attempted':'हल की गई अभ्यास शीट','Material worked on':'किस सामग्री पर काम किया','None':'कोई नहीं','Pages or questions finished':'पूरे किए पेज या सवाल','Save log':'लॉग सहेजें','Session logged':'सत्र दर्ज हो गया','Enter a valid start time.':'शुरू होने का सही समय डालें।','Review the details and tap Save log.':'ब्योरा देख लें और लॉग सहेजें दबाएँ।',
+'Title':'शीर्षक','Link or file name (optional)':'लिंक या फ़ाइल का नाम (वैकल्पिक)','Kind':'क़िस्म','Counted in':'किसमें गिना जाए','Total':'कुल','Finished so far':'अब तक पूरा','Enter a title.':'शीर्षक डालें।','Enter a name.':'नाम डालें।','Give it a name.':'इसे कोई नाम दें।','Say what it is for.':'बताएँ कि यह किसलिए है।',
+'Save':'सहेजें','Saved':'सहेजा गया','Added':'जुड़ गया','Delete':'हटाएँ','Deleted':'हटा दिया गया','Marked complete':'पूरा चिह्नित किया','Completed:':'पूरा हुआ:',
+/* settings */
+'Settings':'सेटिंग्स','Exam date, appearance, exports':'परीक्षा की तारीख़, दिखावट, एक्सपोर्ट','Course name':'कोर्स का नाम','Appearance':'दिखावट','Auto':'अपने-आप','Light':'हल्का','Dark':'गहरा',
+'Accent colour':'मुख्य रंग','Background':'पृष्ठभूमि','Default':'डिफ़ॉल्ट','Exam name':'परीक्षा का नाम','Exam date':'परीक्षा की तारीख़','Alarm minutes early':'अलार्म कितने मिनट पहले','Revision buffer (days)':'रिवीजन के लिए बफ़र (दिन)','Save settings':'सेटिंग्स सहेजें','Settings saved':'सेटिंग्स सहेजी गईं',
+'Export schedule for Google Calendar (CSV)':'Google कैलेंडर के लिए समय-सारणी एक्सपोर्ट करें (CSV)',
+"Import the file in Google Calendar on a computer. Your calendar's own notifications then work when this page is closed.":'यह फ़ाइल कंप्यूटर पर Google कैलेंडर में इम्पोर्ट करें। फिर पेज बंद होने पर भी आपके कैलेंडर की अपनी सूचनाएँ काम करेंगी।',
+'Download a backup (JSON)':'बैकअप डाउनलोड करें (JSON)','Export all my data (JSON)':'मेरा पूरा डेटा एक्सपोर्ट करें (JSON)','Import a backup (JSON)':'बैकअप इम्पोर्ट करें (JSON)',
+'Language':'भाषा','The file could not be saved.':'फ़ाइल सहेजी नहीं जा सकी।','That file is too large for a backup.':'यह फ़ाइल बैकअप के लिए बहुत बड़ी है।','That file is not a Abhyashify backup.':'यह Abhyashify का बैकअप नहीं है।','Report copied':'रिपोर्ट कॉपी हो गई','Copy was blocked by the browser':'ब्राउज़र ने कॉपी रोक दी',
+'Template added':'टेम्पलेट जुड़ गया','Timer started':'टाइमर शुरू हो गया','Test timer started':'टेस्ट का टाइमर शुरू हो गया','Alarms on. Keep this page open.':'अलार्म चालू हैं। यह पेज खुला रखें।','Alarms off':'अलार्म बंद',
+'Snooze 5 min':'5 मिनट बाद फिर','Snooze 10 min':'10 मिनट बाद फिर','Dismiss':'बंद करें','Missed alarm':'छूटा अलार्म','Time to study':'पढ़ने का समय','Study alarm':'पढ़ाई का अलार्म','Mock test starting':'मॉक टेस्ट शुरू होने वाला है','Test starting':'टेस्ट शुरू होने वाला है',
+/* account */
+'Signed in as':'इस खाते से साइन इन:','Courses':'कोर्स','New course':'नया कोर्स','Create course':'कोर्स बनाएँ','Course created':'कोर्स बन गया','Course deleted':'कोर्स हटा दिया गया','My course':'मेरा कोर्स',
+'Delete this course and my data':'यह कोर्स और मेरा डेटा हटाएँ','Sign out':'साइन आउट',
+'Your data is stored in your account. Only you can read it. Study time from all your devices in the same course is merged, and overlapping time is counted once.':'आपका डेटा आपके खाते में रखा जाता है। इसे सिर्फ़ आप पढ़ सकते हैं। एक ही कोर्स में आपके सभी डिवाइस का पढ़ाई का समय मिला दिया जाता है, और एक-दूसरे पर चढ़ा हुआ समय सिर्फ़ एक बार गिना जाता है।',
+'You are using Abhyashify on this device only. Sign in to keep your plan and progress in sync on your phone, tablet and laptop.':'आप Abhyashify सिर्फ़ इसी डिवाइस पर इस्तेमाल कर रहे हैं। अपनी योजना और प्रगति फ़ोन, टैबलेट और लैपटॉप पर साथ रखने के लिए साइन इन करें।',
+'Sign-in is not available right now.':'साइन इन अभी उपलब्ध नहीं है।','Cloud sync is unavailable. Working on this device only.':'क्लाउड सिंक उपलब्ध नहीं है। अभी सिर्फ़ इसी डिवाइस पर काम हो रहा है।',
+'Something went wrong.':'कुछ गड़बड़ हो गई।',
+'Loading…':'लोड हो रहा है…','Saving…':'सहेजा जा रहा है…','Offline. Changes will sync when you reconnect.':'ऑफ़लाइन। दोबारा जुड़ने पर बदलाव सिंक हो जाएँगे।','Saved on this device only. Sign in to sync across devices.':'सिर्फ़ इसी डिवाइस पर सहेजा गया। सभी डिवाइस पर सिंक करने के लिए साइन इन करें।','Could not save. Check your connection and try again.':'सहेजा नहीं जा सका। कनेक्शन जाँचकर दोबारा कोशिश करें।','A change could not be saved, so it was undone.':'एक बदलाव सहेजा नहीं जा सका, इसलिए वापस ले लिया गया।','Untitled':'बिना नाम',
+'laptop or desktop':'लैपटॉप या डेस्कटॉप',
+/* install */
+'Install Abhyashify':'Abhyashify इंस्टॉल करें','Install as an app':'ऐप की तरह इंस्टॉल करें','Abhyashify is installed':'Abhyashify इंस्टॉल हो चुका है','How to install as an app':'ऐप की तरह इंस्टॉल कैसे करें',
+'Add it to your home screen or desktop so it opens like a normal app, in its own window, and works offline.':'इसे होम स्क्रीन या डेस्कटॉप पर जोड़ें, ताकि यह सामान्य ऐप की तरह अपनी अलग विंडो में खुले और ऑफ़लाइन भी चले।',
+'Install now':'अभी इंस्टॉल करें','Show me how':'तरीक़ा दिखाएँ','Not now':'अभी नहीं','Install':'इंस्टॉल',
+'The browser decides when an install option shows up, so a prompt on its own is not guaranteed. If this page is already open as an app, there is nothing to install.':'इंस्टॉल का विकल्प कब दिखे, यह ब्राउज़र तय करता है, इसलिए अपने-आप प्रॉम्प्ट आना पक्का नहीं है। अगर यह पेज पहले से ऐप के रूप में खुला है, तो कुछ इंस्टॉल करने की ज़रूरत नहीं।',
+'This looks like a browser built into another app. Open the link in Chrome (or Safari on iPhone) first, since those are the ones that can install it.':'यह किसी दूसरे ऐप के अंदर का ब्राउज़र लग रहा है। पहले लिंक को Chrome (iPhone पर Safari) में खोलें, क्योंकि इंस्टॉल वही कर सकते हैं।',
+'(Chrome: Cast, save and share, then Install page as app).':'(Chrome: कास्ट, सेव और शेयर, फिर पेज को ऐप की तरह इंस्टॉल करें)।',
+/* tests and reminders */
+'Coming up':'आने वाला','Tests and mock tests':'टेस्ट और मॉक टेस्ट','Schedule them, time yourself, then record the score.':'इन्हें तय करें, ख़ुद को टाइम करें, फिर स्कोर दर्ज करें।','No test scheduled.':'कोई टेस्ट तय नहीं है।','Test scores':'टेस्ट के स्कोर',
+'Reminders and alarms':'रिमाइंडर और अलार्म','One-off or repeating.':'एक बार या बार-बार।','None yet. You can also ask the assistant.':'अभी कोई नहीं। आप सहायक से भी कह सकते हैं।',
+'Taken':'दिया','Missed':'छूट गया','Add score':'स्कोर जोड़ें','Latest':'ताज़ा','How did it go?':'कैसा रहा?','Marks scored':'मिले अंक','Out of':'कुल अंक','Marks scored (leave empty if not taken)':'मिले अंक (टेस्ट न दिया हो तो ख़ाली छोड़ें)','Total marks':'कुल अंक','Save score':'स्कोर सहेजें','All subjects':'सभी विषय',
+'What for':'किसलिए','Date':'तारीख़','Time':'समय','Repeat':'दोहराव','Does not repeat':'दोहराया नहीं जाता','Every day':'हर दिन','Every weekday':'हर कार्यदिवस','Every week':'हर हफ़्ते',
+'It rings on this screen while the page is open and alarms are turned on.':'पेज खुला होने और अलार्म चालू होने पर यह इसी स्क्रीन पर बजेगा।',
+'New reminder or alarm':'नया रिमाइंडर या अलार्म','Edit reminder':'रिमाइंडर बदलें','New test or mock test':'नया टेस्ट या मॉक टेस्ट','Edit test':'टेस्ट बदलें','Ring an alarm before it starts':'शुरू होने से पहले अलार्म बजाएँ','Enter a valid date and time.':'सही तारीख़ और समय डालें।',
+/* assistant UI */
+'Assistant':'सहायक','Assistant settings':'सहायक की सेटिंग्स','Back to chat':'चैट पर वापस','Close assistant':'सहायक बंद करें','Send':'भेजें','Message':'संदेश','Ask or tell me something…':'कुछ पूछें या बताएँ…','Start voice chat':'आवाज़ वाली बातचीत शुरू करें','Stop voice chat':'आवाज़ वाली बातचीत रोकें','Read answers aloud':'जवाब बोलकर सुनाएँ','Thinking':'{सोच रहा|सोच रही} हूँ','Thinking…':'{सोच रहा|सोच रही} हूँ…',
+'Undo my last change':'मेरा पिछला बदलाव वापस करें','Voice':'आवाज़','Female':'महिला','Male':'पुरुष','Speed':'गति','Test the voice':'आवाज़ सुनकर देखें','Provider':'प्रदाता','Off (built-in)':'बंद (बिल्ट-इन)','Smart mode (optional)':'स्मार्ट मोड (वैकल्पिक)','Remove my key':'मेरी की हटाएँ','Clear this conversation':'यह बातचीत साफ़ करें','Key removed':'की हटा दी गई','Automatic':'अपने-आप','Model (optional)':'मॉडल (वैकल्पिक)','API key':'API key','Paste your key':'अपनी key चिपकाएँ',
+'Hi, I\'m your study assistant':'नमस्ते, मैं आपका पढ़ाई का सहायक हूँ',
+'This browser cannot speak answers aloud. Chrome, Edge or Safari can.':'यह ब्राउज़र जवाब बोलकर नहीं सुना सकता। Chrome, Edge या Safari सुना सकते हैं।',
+'Without a key I use my built-in understanding, which handles the common requests and needs no account. For free-form requests, paste your own AI key. It is stored only on this device and sent only to the provider you choose. In Smart mode your messages and a short summary of your schedule go to that provider.':'बिना API key के मैं अपनी बिल्ट-इन समझ से काम {करता|करती} हूँ, जो आम अनुरोध सँभाल लेती है और जिसके लिए कोई खाता नहीं चाहिए। खुले-ढंग के अनुरोधों के लिए अपनी AI key चिपकाएँ। वह सिर्फ़ इसी डिवाइस पर रहती है और सिर्फ़ आपके चुने प्रदाता को भेजी जाती है। स्मार्ट मोड में आपके संदेश और आपकी समय-सारणी का छोटा सार उसी प्रदाता को जाता है।',
+'Set an alarm for 6 am tomorrow':'कल सुबह 6 बजे का अलार्म लगाओ','Schedule a mock test on Sunday at 10':'रविवार को 10 बजे मॉक टेस्ट तय करो','Make a schedule for 5 hours a day':'रोज़ 5 घंटे की समय-सारणी बनाओ','What should I study next?':'आगे मुझे क्या पढ़ना चाहिए?','Make it dark with a green accent':'इसे गहरा करो और मुख्य रंग हरा करो','How do I log a session?':'सत्र कैसे दर्ज करूँ?',
+'blue accent':'नीला रंग','green accent':'हरा रंग','indigo accent':'नीला-बैंगनी रंग','orange accent':'नारंगी रंग','pink accent':'गुलाबी रंग','purple accent':'बैंगनी रंग','red accent':'लाल रंग','teal accent':'हरा-नीला रंग',
+'Paper background':'पेपर पृष्ठभूमि','Mint background':'मिंट पृष्ठभूमि','Sky background':'आसमानी पृष्ठभूमि','Blush background':'गुलाबी-सी पृष्ठभूमि','Lavender background':'लैवेंडर पृष्ठभूमि','Slate background':'स्लेट पृष्ठभूमि','Sunrise background':'सूर्योदय पृष्ठभूमि','Aurora background':'ध्रुवीय-ज्योति पृष्ठभूमि','Midnight background':'आधी रात पृष्ठभूमि','Black background':'काली पृष्ठभूमि',
+'Google Gemini (free key)':'Google Gemini (मुफ़्त की)','Anthropic Claude':'Anthropic Claude',
+'English (India)':'अंग्रेज़ी (भारत)','English (UK)':'अंग्रेज़ी (यूके)','English (US)':'अंग्रेज़ी (अमेरिका)','Hindi':'हिन्दी',
+'Chrome':'Chrome','Edge':'Edge','Safari':'Safari','Share':'शेयर','Add to Home Screen':'होम स्क्रीन पर जोड़ें','Install app':'ऐप इंस्टॉल करें','Add to Home screen':'होम स्क्रीन पर जोड़ें','three dots':'तीन बिंदु','install icon':'इंस्टॉल आइकन',
+});
+Object.assign(HI,{'so far':'अब तक','every day':'हर दिन','every weekday':'हर कार्यदिवस','every week':'हर हफ़्ते','no alarm':'अलार्म नहीं','today':'आज','off':'छुट्टी','run':'चलाया','sheet':'शीट','block':'ब्लॉक','blocks':'ब्लॉक','selected':'चुना गया','done':'पूरा','past':'बीता','upcoming':'आने वाला','days':'दिन','Exam':'परीक्षा','Latest':'ताज़ा'});
+const DN_EN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+PAT.push(
+ [/^(\d+ \S+) to (\d+ \S+)$/,(a,b)=>a+' से '+b],
+ [/^Account: (.+)$/,(a)=>'खाता: '+a],
+ [/^Add (\d+) (pages|sheets|lectures|chapters|questions|[a-z]+)$/,(n,u)=>n+' '+trCore(u)+' जोड़ें'],
+ [/^(\d+) of (\d+) blocks done$/,(a,b)=>b+' में से '+a+' ब्लॉक पूरे'],
+ [/^(\d+) of (\d+) complete$/,(a,b)=>b+' में से '+a+' पूरे'],
+ [/^(\d+) blocks?$/,(n)=>n+' ब्लॉक'],
+ [/^(\d+) days?$/,(n)=>n+' दिन'],
+ [/^(\d+) left\. The list below is ordered by what to study next\.$/,(n)=>n+' बाक़ी। नीचे की सूची इस क्रम में है कि आगे क्या पढ़ना है।'],
+ [/^(\d+) practice sheets? (?:is|are) still owed this week\. Do them before starting new theory\.$/,(n)=>'इस हफ़्ते '+n+' अभ्यास शीट अभी बाक़ी हैं। नई थ्योरी शुरू करने से पहले इन्हें करें।'],
+ [/^(\d+) taken$/,(n)=>n+' दिए'],
+ [/^average (\d+%)$/,(p)=>'औसत '+p],
+ [/^(.+) of overlapping time \(for example the same hour logged on two devices\) was counted once\.$/,(x)=>units(x)+' का एक-दूसरे पर चढ़ा हुआ समय (जैसे दो डिवाइस पर दर्ज एक ही घंटा) सिर्फ़ एक बार गिना गया।'],
+ [/^(.+) planned$/,(x)=>units(x)+' योजना में'],
+ [/^of (.+?)( due)?$/,(x,d)=>units(x)+(d?' में से देय':' में से')],
+ [/^Full week plan: (.+?) and (\d+) sheets?\. Blocks completed: (\d+) of (\d+) due\.$/,(h,s,a,b)=>'पूरे हफ़्ते की योजना: '+units(h)+' और '+s+' शीट। पूरे हुए ब्लॉक: '+b+' में से '+a+'।'],
+ [/^(\d+)\/(\d+) (sheets?|pages|lectures|chapters|questions)$/,(a,b,u)=>a+'/'+b+' '+(u.startsWith('sheet')?'शीट':trCore(u))],
+ [/^(\d+) sheets?$/,(n)=>n+' शीट'],
+ [/^Started (\d{1,2}:\d{2})$/,(t)=>'शुरू: '+t],
+ [/^planned (.+)$/,(x)=>'योजना '+units(x)],
+ [/^alarm (\d+) min early$/,(n)=>'अलार्म '+n+' मिनट पहले'],
+ [/^~(\d+) per session$/,(n)=>'लगभग '+n+' प्रति सत्र'],
+ [/^(\d+)\/(\d+) (pages|sheets|lectures|chapters|questions)$/,(a,b,u)=>a+'/'+b+' '+trCore(u)],
+ [/^Latest is (up|down) (\d+) points? on the one before\. Latest: (.+), (\d+%)\.$/,(d,n,t,p)=>'ताज़ा स्कोर पिछले से '+n+' अंक '+(d==='up'?'ऊपर':'नीचे')+' है। ताज़ा: '+t+', '+p+'।'],
+ [/^Most of your study this week happened around (\d{1,2}:\d{2})\. Put the hardest subject there\.$/,(t)=>'इस हफ़्ते आपकी ज़्यादातर पढ़ाई '+t+' के आसपास हुई। सबसे कठिन विषय वहीं रखें।'],
+ [/^You are (.+?) behind the plan so far\. The biggest gap is (.+), (.+?) short\.$/,(x,s,g)=>'अब तक आप योजना से '+units(x)+' पीछे हैं। सबसे बड़ा अंतर '+trCore(s)+' में है, '+units(g)+' कम।'],
+ [/^You are (.+?) ahead of the plan so far\.$/,(x)=>'अब तक आप योजना से '+units(x)+' आगे हैं।'],
+ [/^Synced to (.+)$/,(a)=>'सिंक हुआ: '+a],
+ [/^This device: (.+?)\. Synced to (.+)$/,(d,a)=>'यह डिवाइस: '+trCore(d)+'। सिंक हुआ: '+a],
+ [/^This device: (.+?)\.? (.+)$/,(d,r)=>'यह डिवाइस: '+trCore(d)+'। '+trCore(r)],
+ [new RegExp('^('+DN_EN.join('|')+') (\\d+)$'),(d,n)=>trCore(d)+' '+n],
+ [/^Speed ([\d.]+)×$/,(x)=>'गति '+x+'×'],
+ [/^(.+) background$/,(x)=>trCore(x+' background')],
+ [/^Saved for (.+)$/,(x)=>x+' के लिए सहेजा'],
+ [/^Scored (.+)$/,(x)=>'स्कोर '+x],
+ [/^Saved (.+)$/,(x)=>x+' सहेजा गया'],
+ [/^Could not delete: (.+)$/,(x)=>'हटाया नहीं जा सका: '+x],
+ [/^Could not load your account: (.+)$/,(x)=>'आपका खाता लोड नहीं हो सका: '+x],
+ [/^Sync problem: (.+)$/,(x)=>'सिंक में दिक़्क़त: '+x],
+ [/^Sign-in failed: (.+)$/,(x)=>'साइन इन नहीं हो सका: '+x],
+ [/^Synced$/,()=>'सिंक हो गया'],
+ [/^Add (.+?) (\d+)? ?(.*)$/,null]
+);
+PAT.pop();
+Object.assign(HI,{'Paper':'पेपर','Mint':'मिंट','Sky':'आसमानी','Blush':'गुलाबी-सी','Lavender':'लैवेंडर','Slate':'स्लेट','Sunrise':'सूर्योदय','Aurora':'अरोरा','Midnight':'आधी रात','Black':'काला'});
+const HI_COL={indigo:'नीला-बैंगनी',blue:'नीला',teal:'हरा-नीला',green:'हरा',lime:'हल्का हरा',yellow:'पीला',gold:'सुनहरा',orange:'नारंगी',red:'लाल',pink:'गुलाबी',magenta:'मैजेंटा',purple:'बैंगनी',violet:'जामुनी',brown:'भूरा',grey:'स्लेटी',gray:'स्लेटी',slate:'स्लेटी',cyan:'आसमानी-हरा',navy:'गहरा नीला',maroon:'मरून',white:'सफ़ेद',black:'काला',cream:'क्रीम',beige:'क्रीम'};
+const colName=n=>{n=String(n||'');if(LANG!=='hi')return n;const k=n.toLowerCase();if(HI_COL[k])return HI_COL[k];const c=k.charAt(0).toUpperCase()+k.slice(1);return HI[c]||n};
 /* ---------- look: accent colour and background, on top of light/dark ---------- */
 const ACCENTS={indigo:'#4349C9',blue:'#1D6FD8',teal:'#0F8B8D',green:'#1F8A57',lime:'#5B8A12',yellow:'#B8860B',gold:'#B8860B',orange:'#D9631A',red:'#C23B35',pink:'#C93C7C',magenta:'#B5389E',purple:'#7A3FC4',violet:'#6A45D1',brown:'#8A5A3C',grey:'#58677A',gray:'#58677A',slate:'#4A5B6A',cyan:'#0E87A8',navy:'#26407A',maroon:'#8E2B3A'};
 // Each background has a light and a dark version. tone 'dark' means it only makes sense in dark mode.
@@ -824,17 +1091,17 @@ function resolveBg(key,dark){
 // Returns a note when the theme had to change so the text stays readable.
 function setLook(p){
   let note='';
-  if('accent' in p){const c=p.accent?parseColour(p.accent):null;if(p.accent&&!c)return {err:'I do not know the colour "'+p.accent+'". Try a name like green or orange, or a hex code like #1D6FD8.'};LOOK.accent=c}
+  if('accent' in p){const c=p.accent?parseColour(p.accent):null;if(p.accent&&!c)return {err:H('I do not know the colour "'+p.accent+'". Try a name like green or orange, or a hex code like #1D6FD8.','मैं "'+p.accent+'" रंग नहीं {पहचानता|पहचानती}। हरा या नारंगी जैसा नाम, या #1D6FD8 जैसा हेक्स कोड बताएँ।')};LOOK.accent=c}
   if('bg' in p){
     let k=p.bg;
-    if(k&&!BGS[k]){const c=parseColour(k);if(!c)return {err:'I do not know the background "'+k+'". Pick one of: '+Object.keys(BGS).join(', ')+', or give a hex code.'};k=c}
+    if(k&&!BGS[k]){const c=parseColour(k);if(!c)return {err:H('I do not know the background "'+k+'". Pick one of: '+Object.keys(BGS).join(', ')+', or give a hex code.','मैं "'+k+'" पृष्ठभूमि नहीं {पहचानता|पहचानती}। इनमें से चुनें: '+Object.keys(BGS).map(x=>L(BGS[x].label)).join(', ')+', या हेक्स कोड दें।')};k=c}
     LOOK.bg=k||null;
     let wantDark=null;
     if(k&&BGS[k]&&BGS[k].tone==='dark')wantDark=true;
     else if(k&&hexOk(k)){wantDark=lumOf(k)<.3}
     if(wantDark!==null&&wantDark!==isDarkNow()){
       theme=wantDark?'dark':'light';lsSet('pl.theme',theme);
-      note=wantDark?' I switched to dark mode so the text stays readable on it.':' I switched to light mode so the text stays readable on it.';
+      note=wantDark?H(' I switched to dark mode so the text stays readable on it.',' लिखावट साफ़ पढ़ी जा सके, इसलिए मैंने गहरा मोड चालू कर दिया।'):H(' I switched to light mode so the text stays readable on it.',' लिखावट साफ़ पढ़ी जा सके, इसलिए मैंने हल्का मोड चालू कर दिया।');
     }
   }
   lsSet('pl.look',LOOK);applyTheme();
@@ -955,6 +1222,7 @@ function paintGate(){
     <button class="btn lg" type="button" data-act="signin">Sign in with Google</button>
     <button class="btn lg ghost" type="button" data-act="local">Continue on this device only</button>
     ${installBtn()}
+    ${langSeg()}
     <p class="small muted">Your data is private to your account. Only you can read it.</p></section>`;
 }
 function render(anim){
@@ -986,8 +1254,8 @@ function vToday(){
   const blocks=blocksOn(S.plan,sd),order=planner(S,now);
   const planned=blocks.reduce((x,b)=>x+b.m,0),logged=LG().filter(l=>l.d===ds).reduce((x,l)=>x+l.m,0);
   const hr=now.getHours(),greet=hr<5?'Late night':hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
-  const dateTxt=sd.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
-  let h=`<div class="stack" style="gap:2px"><h1>${isToday?greet:DAYS_LONG[selIdx]}</h1><p class="muted">${isToday?dateTxt:sd.toLocaleDateString(undefined,{day:'numeric',month:'long'})+(ds<today?' · past':' · upcoming')}</p></div>`;
+  const dateTxt=sd.toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long'});
+  let h=`<div class="stack" style="gap:2px"><h1>${isToday?greet:DAYS_LONG[selIdx]}</h1><p class="muted">${isToday?dateTxt:sd.toLocaleDateString(LOC(),{day:'numeric',month:'long'})+(ds<today?' · past':' · upcoming')}</p></div>`;
 
   h+=`<div class="strip" role="group" aria-label="Days of this week">`+DAYS.map((n,i)=>{
     const d=addDays(ws,i),k=ymd(d),bl=blocksOn(S.plan,d),P=bl.reduce((x,b)=>x+b.m,0),L=LG().filter(l=>l.d===k).reduce((x,l)=>x+l.m,0);
@@ -1081,7 +1349,7 @@ function vMaterials(){
 
 function vReport(){
   const now=new Date(),ws=addDays(weekStart(now),weekOffset*7),r=weekReport(VS(),ws,now),we=addDays(ws,6);
-  const f=d=>d.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  const f=d=>d.toLocaleDateString(LOC(),{day:'numeric',month:'short'});
   let h=`<div class="wk"><button class="icb" type="button" data-act="wk" data-v="-1" aria-label="Previous week" style="transform:rotate(180deg)">${ic('chev')}</button>
     <div class="mid"><h1 style="font-size:1.35rem">Weekly report</h1><p class="small muted">${f(ws)} to ${f(we)}${weekOffset===0?' · so far':''}</p></div>
     <button class="icb" type="button" data-act="wk" data-v="1" aria-label="Next week"${weekOffset>=0?' disabled style="opacity:.35"':''}>${ic('chev')}</button></div>`;
@@ -1159,10 +1427,10 @@ const PR=()=>S.plan.reminders||(S.plan.reminders=[]);
 const TKINDS={mock:'Mock test',test:'Test'};
 const REPS={'':'Does not repeat',daily:'Every day',weekdays:'Every weekday',weekly:'Every week'};
 const testStart=t=>{const d=new Date(t.date+'T'+(t.st||'09:00')+':00').getTime();return isNaN(d)?0:d};
-const timeTxt=d=>d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+const timeTxt=d=>LANG==='hi'?periodHi(d.getHours())+' '+(d.getHours()%12||12)+':'+pad(d.getMinutes()):d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 function whenTxt(ms){
   const d=new Date(ms),t0=parseYmd(ymd(new Date())),d0=parseYmd(ymd(d)),diff=Math.round((d0-t0)/864e5);
-  const day=diff===0?'Today':diff===1?'Tomorrow':diff===-1?'Yesterday':d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'});
+  const day=diff===0?H('Today','आज'):diff===1?H('Tomorrow','कल'):diff===-1?H('Yesterday','बीता कल'):d.toLocaleDateString(LOC(),{weekday:'short',day:'numeric',month:'short'});
   return day+', '+timeTxt(d);
 }
 function nextAt(at,rep){
@@ -1307,11 +1575,160 @@ function setArmed(on){
   else if(!on&&armed){armed=false;try{wakeLock&&wakeLock.release()}catch(e){}wakeLock=null}
   paintHeader();
 }
+/* ---------- assistant, Hindi side: answers about the app, and understanding Hindi / Hinglish commands ---------- */
+const KB_HI=[
+/*0 log*/'पढ़ाई का समय दर्ज करने के लिए किसी ब्लॉक पर **समय दर्ज करें** दबाएँ, या आज टैब पर **एक अतिरिक्त सत्र दर्ज करें** दबाएँ। मिनट, शुरू करने का समय, विषय, हल की गई अभ्यास शीट, और चाहें तो सामग्री और पूरे किए पेज भरें। आप मुझसे भी कह सकते हैं, जैसे "मैंने आज 90 मिनट प्रायिकता पढ़ी"।',
+/*1 timer*/'टाइमर चलाने के लिए किसी ब्लॉक पर **शुरू करें** (या आज टैब पर "अभी शुरू करें") दबाएँ। पूरा होने पर **रोकें और दर्ज करें** दबाएँ और ब्योरा जाँच लें। चलता हुआ टाइमर दूसरी स्क्रीन पर टैब के ऊपर एक पट्टी में दिखता है।',
+/*2 alarm*/'हर ब्लॉक की शुरुआत पर (सेटिंग्स में तय किए कुछ मिनट पहले) अलार्म स्क्रीन पर बजता है। ऊपर की घंटी के आइकन से इन्हें चालू करें। ये सिर्फ़ तब बजते हैं जब यह पेज खुला हो, क्योंकि वेब पेज अपने-आप आपका फ़ोन नहीं जगा सकता। पेज बंद होने पर भी चलने वाले अलार्म के लिए सेटिंग्स से समय-सारणी एक्सपोर्ट करके Google कैलेंडर में इम्पोर्ट करें।',
+/*3 not ringing*/'अगर अलार्म नहीं बजा: जाँचें कि घंटी का आइकन चालू है, पेज खुला था और आवाज़ बंद नहीं है। ब्राउज़र पेज पर कुछ छूने के बाद ही आवाज़ चलने देते हैं, इसलिए ऐप खोलने के बाद घंटी एक बार दबा दें। स्क्रीन चालू रहना मदद करता है; अलार्म चालू होने पर ऐप इसके लिए कहता है।',
+/*4 blocks*/'आपकी साप्ताहिक समय-सारणी ब्लॉक से बनी है। **योजना** टैब खोलें, कोई दिन चुनें और **ब्लॉक जोड़ें** दबाएँ। दिन, शुरू का समय, मिनट, विषय और प्रकार चुनें, और तय करें कि अलार्म बजे या नहीं। बदलने या हटाने के लिए किसी भी ब्लॉक को दबाएँ। आप मुझसे भी ब्लॉक जोड़ने या पूरी नई समय-सारणी बनाने को कह सकते हैं।',
+/*5 subjects*/'हर विषय का एक **महत्व** होता है (कितने अंक आते हैं) और एक **आत्मविश्वास** (आप कितना मज़बूत महसूस करते हैं, 5 यानी मज़बूत)। प्लानर महत्वपूर्ण और कमज़ोर विषयों को पहले रखता है। इन्हें योजना टैब में विषय के नीचे बदलें।',
+/*6 materials*/'**सामग्री** टैब में किताबें, नोट्स, अभ्यास शीट या मॉक पेपर जोड़ें, साथ में कितने पेज या सवाल हैं यह भी। प्रगति +बटन से या सत्र दर्ज करते समय अपडेट करें। "सुझाया गया क्रम" उन्हें इस आधार पर सजाता है कि आगे क्या पढ़ना है।',
+/*7 study next*/'"आगे क्या पढ़ें" का क्रम इस पर तय होता है: विषय कितना ज़रूरी है, उसमें आप कितने अनिश्चित हैं, सामग्री कितनी बाक़ी है, और क्या पहले आना चाहिए (अभ्यास शीट से पहले थ्योरी)। परीक्षा 45 दिन से कम दूर होने पर मॉक पेपर ऊपर आ जाते हैं।',
+/*8 report*/'साप्ताहिक रिपोर्ट का स्कोर आधा **योजना के मुक़ाबले पढ़े घंटों** से बनता है, चौथाई **हल की गई अभ्यास शीट** से, और चौथाई **तय समय के 30 मिनट के अंदर शुरू करने** से। यह रोज़ के घंटे, विषय के अनुसार, दिन का समय, और क्या बदलें इसके सुझाव भी दिखाती है।',
+/*9 overlap*/'अगर एक ही कोर्स के दो सत्र समय में एक-दूसरे पर चढ़ते हैं (जैसे एक ही घंटा फ़ोन और लैपटॉप दोनों पर दर्ज हुआ), तो वह समय सिर्फ़ एक बार गिना जाता है। अलग-अलग कोर्स के सत्र कभी नहीं मिलाए जाते। रिपोर्ट बताती है कि कितना समय एक बार गिना गया।',
+/*10 sync*/'Google से साइन इन करें (ऊपर दाएँ खाता बटन), तो आपकी योजना, सामग्री और लॉग फ़ोन, टैबलेट और लैपटॉप पर साथ-साथ सिंक होते हैं। साइन इन के बिना डेटा सिर्फ़ इसी डिवाइस पर रहता है।',
+/*11 courses*/'हर कोर्स की अपनी योजना, सामग्री और लॉग होते हैं। साइन इन होने पर कोर्स बदलने या नया बनाने के लिए खाता शीट खोलें, या मुझसे कहें।',
+/*12 install*/'इंस्टॉल करने के लिए: Chrome या Edge में एड्रेस बार का इंस्टॉल आइकन या ब्राउज़र मेन्यू, फिर Install app। iPhone पर Safari में Share, फिर Add to Home Screen। आज टैब पर भी एक इंस्टॉल कार्ड है।',
+/*13 offline*/'पहली बार खोलने के बाद ऐप ऑफ़लाइन भी खुलता है। साइन इन होने पर ऑफ़लाइन किए बदलाव आपके डिवाइस पर सहेजे जाते हैं और दोबारा जुड़ने पर सिंक हो जाते हैं।',
+/*14 backup*/'सेटिंग्स में Google कैलेंडर के लिए **समय-सारणी एक्सपोर्ट (CSV)** और **बैकअप डाउनलोड (JSON)** है। खाता शीट से आपका पूरा डेटा एक्सपोर्ट और बैकअप इम्पोर्ट हो सकता है, पुराने वर्ज़न से डेटा लाने का तरीक़ा भी यही है।',
+/*15 privacy*/'आपका डेटा आपके अपने खाते में रहता है और सिर्फ़ आप उसे पढ़ सकते हैं। एक कोर्स साझा करने वाले लोग एक-दूसरे के पढ़ाई के मिनट देख सकते हैं, पर पढ़ने की प्रगति निजी रहती है। डेटा ट्रांज़िट और स्टोरेज में एन्क्रिप्टेड है, पर एंड-टू-एंड एन्क्रिप्टेड नहीं। खाता शीट से सब कुछ एक्सपोर्ट या हटाया जा सकता है।',
+/*16 delete*/'खाता शीट खोलें और **यह कोर्स और मेरा डेटा हटाएँ** दबाएँ, इससे कोर्स और उसकी हर चीज़ हट जाएगी। साइन आउट करने से इस डिवाइस की स्थानीय कॉपी साफ़ हो जाती है।',
+/*17 exam*/'परीक्षा का नाम और तारीख़ **सेटिंग्स** में तय करें (योजना टैब, फिर "परीक्षा की तारीख़, दिखावट, एक्सपोर्ट")। उलटी गिनती ऐप के ऊपर दिखती है। आप मुझे तारीख़ बता भी सकते हैं।',
+/*18 tests*/'टेस्ट और मॉक टेस्ट **योजना, टेस्ट और मॉक टेस्ट** में जोड़ें, या मुझसे कहें, जैसे "रविवार को सुबह 10 बजे 3 घंटे का मॉक टेस्ट तय करो"। शुरू होने पर टेस्ट का टाइमर चलाएँ, रोकने पर मैं आपका स्कोर {पूछूँगा|पूछूँगी}। स्कोर रिपोर्ट टैब में ट्रेंड के साथ दिखते हैं।',
+/*19 reminders*/'रिमाइंडर **योजना, रिमाइंडर और अलार्म** में जोड़ें, या मुझसे कहें, जैसे "कल शाम 6 बजे ML दोहराने की याद दिलाओ" या "रोज़ रात 9 बजे घंटे दर्ज करने की याद दिलाओ"। अलार्म की तरह ये भी पेज खुला रहने पर बजते हैं।',
+/*20 theme*/'मुझसे कहें, जैसे "डार्क मोड", "मुख्य रंग हरा करो" या "बैकग्राउंड मिंट करो"। सेटिंग्स में भी चुन सकते हैं। पहले जैसा करने के लिए "लुक रीसेट करो" कहें।',
+/*21 voice*/'मुझसे बात करने के लिए इस चैट में माइक्रोफ़ोन दबाएँ, मैं ज़ोर से जवाब {दूँगा|दूँगी}। स्लाइडर वाले आइकन में महिला (अनु) या पुरुष (आदि) आवाज़, गति और भाषा चुनें। आवाज़ पहचानना आपके ब्राउज़र पर निर्भर है (Chrome या Edge सबसे अच्छे चलते हैं)।',
+/*22 smart*/'आम अनुरोध मैं बिना API key और बिना ख़र्च के ख़ुद समझ {लेता|लेती} हूँ। खुले सवालों और अनुरोधों के लिए सहायक की सेटिंग्स में अपनी AI की चिपकाकर **स्मार्ट मोड** चालू कर सकते हैं (Google Gemini की मुफ़्त की चलती है)। की इसी डिवाइस पर रहती है।',
+/*23 android*/'वेब पेज यह नहीं देख सकता कि आप दूसरे कौन-से ऐप चलाते हैं। एक अलग Android साथी ऐप आपके चुने पढ़ाई वाले ऐप का समय नापकर आपको JSON देता है। उस JSON को साप्ताहिक रिपोर्ट में पढ़ना अभी बना नहीं है।',
+/*24 about*/'Abhyashify GATE DA 2027 के लिए एक पढ़ाई का प्लानर है। यह आपकी साप्ताहिक समय-सारणी बनाता है, अलार्म बजाता है, पढ़ाई का समय दर्ज करता है, सामग्री और टेस्ट का हिसाब रखता है, और हफ़्ते की रिपोर्ट देता है जो आपके किए की योजना से तुलना करती है।',
+/*25 signout*/'खाता शीट (ऊपर दाएँ) खोलें और **साइन आउट** दबाएँ। इससे इस डिवाइस की स्थानीय कॉपी भी साफ़ हो जाती है।'
+];
+
+/* ---------- understanding Hindi and Hinglish: turn it into the plain English the parser already knows ---------- */
+const nk=s=>String(s).normalize('NFD').replace(/़/g,'').normalize('NFC');   // drop the nukta dot so ज़/ज and फ़/फ match
+const HI_MONTHS0={'जनवरी':'jan','फरवरी':'feb','मार्च':'mar','अप्रैल':'apr','मई':'may','जून':'jun','जुलाई':'jul','अगस्त':'aug','सितंबर':'sep','सितम्बर':'sep','अक्टूबर':'oct','अक्तूबर':'oct','नवंबर':'nov','नवम्बर':'nov','दिसंबर':'dec','दिसम्बर':'dec',
+ 'january':'jan','farvari':'feb','janvari':'jan','agast':'aug','sitambar':'sep','sitamber':'sep','aktubar':'oct','navambar':'nov','disambar':'dec'};
+const HI_MONTHS={};for(const k of Object.keys(HI_MONTHS0))HI_MONTHS[nk(k)]=HI_MONTHS0[k];
+const HI_WORDS=nkMap({
+ /* days */
+ 'आज':'today','आज रात':'tonight','कल':'tomorrow','परसों':'day after tomorrow','बीते कल':'yesterday','गुज़रे कल':'yesterday','अगले':'next','इस':'this',
+ 'सोमवार':'monday','मंगलवार':'tuesday','बुधवार':'wednesday','गुरुवार':'thursday','बृहस्पतिवार':'thursday','वीरवार':'thursday','शुक्रवार':'friday','शनिवार':'saturday','रविवार':'sunday','इतवार':'sunday',
+ 'हर रोज़':'every day','रोज़':'every day','रोज':'every day','रोजाना':'every day','प्रतिदिन':'every day','हर दिन':'every day','हर हफ्ते':'every week','हर सप्ताह':'every week','हर कार्यदिवस':'every weekday','सोमवार से शुक्रवार':'monday to friday',
+ 'हफ्ते':'week','हफ़्ते':'week','सप्ताह':'week','महीने':'month','पिछले हफ्ते':'last week','इस हफ्ते':'this week','इस महीने':'this month',
+ /* things */
+ 'अलार्म':'alarm','एलार्म':'alarm','रिमाइंडर':'reminder','टेस्ट':'test','टैस्ट':'test','मॉक':'mock','मोक':'mock','परीक्षा की तारीख':'exam date','परीक्षा':'exam','एग्जाम':'exam','एग्ज़ाम':'exam','गेट':'gate',
+ 'स्कोर':'score','अंक':'marks','नंबर':'marks','टाइमर':'timer','स्टॉपवॉच':'timer','सत्र':'session','सेशन':'session','ब्लॉक':'block','विषय':'subject','सब्जेक्ट':'subject','सामग्री':'material','मैटेरियल':'material','किताब':'book','नोट्स':'notes','शीट':'sheet','कोर्स':'course','पाठ्यक्रम':'course',
+ 'समय सारणी':'schedule','समयसारणी':'schedule','टाइम टेबल':'schedule','टाइमटेबल':'schedule','शेड्यूल':'schedule','रूटीन':'routine','योजना':'plan','प्लान':'plan','सेटिंग्स':'settings','सेटिंग':'settings','रिपोर्ट':'report','खाता':'account','अकाउंट':'account',
+ 'डार्क मोड':'dark mode','डार्क':'dark','नाइट मोड':'dark mode','गहरा मोड':'dark mode','लाइट मोड':'light mode','हल्का मोड':'light mode','उजला मोड':'light mode','लाइट':'light','मोड':'mode','थीम':'theme','रंग':'colour','कलर':'colour','मुख्य रंग':'accent colour','एक्सेंट':'accent','बैकग्राउंड':'background','पृष्ठभूमि':'background','वॉलपेपर':'wallpaper','लुक':'look','रीसेट':'reset','डिफ़ॉल्ट':'default','डिफॉल्ट':'default','पहले जैसा':'default',
+ 'हरा':'green','हरे':'green','हरी':'green','नीला':'blue','नीले':'blue','नीली':'blue','लाल':'red','पीला':'yellow','पीले':'yellow','नारंगी':'orange','ऑरेंज':'orange','संतरी':'orange','गुलाबी':'pink','बैंगनी':'purple','जामुनी':'violet','पर्पल':'purple','भूरा':'brown','सफेद':'white','काला':'black','काले':'black','काली':'black','आसमानी':'sky','पुदीना':'mint','मिंट':'mint','अरोरा':'aurora','सूर्योदय':'sunrise','आधी रात':'midnight','मिडनाइट':'midnight','स्लेट':'slate','लैवेंडर':'lavender','क्रीम':'cream','टील':'teal','इंडिगो':'indigo','गुलाबी-सी':'blush','ब्लश':'blush','पेपर':'paper',
+ /* subjects */
+ 'प्रायिकता':'probability','प्रोबेबिलिटी':'probability','सांख्यिकी':'statistics','स्टैटिस्टिक्स':'statistics','रैखिक बीजगणित':'linear algebra','लीनियर अलजेब्रा':'linear algebra','लीनियर एल्जेब्रा':'linear algebra','कैलकुलस':'calculus','ऑप्टिमाइज़ेशन':'optimization','ऑप्टिमाइजेशन':'optimization','पायथन':'python','डेटाबेस':'databases','मशीन लर्निंग':'machine learning','आर्टिफिशियल इंटेलिजेंस':'artificial intelligence','अभिक्षमता':'aptitude','एप्टीट्यूड':'aptitude','रिवीजन':'revision','थ्योरी':'theory','प्रैक्टिस':'practice','अभ्यास':'practice',
+ /* verbs and glue (stems end with *) */
+ 'लगा*':'set','सेट*':'set','तय*':'set','रख*':'set','जोड़*':'add','जोड*':'add','बना*':'make','बदल*':'change','शुरू*':'start','शुरु*':'start','रोक*':'stop','बंद*':'stop','खत्म*':'stop','हटा*':'delete','मिटा*':'delete','डिलीट*':'delete','रद्द*':'cancel','खोल*':'open','दिखा*':'show','चालू*':'on','ऑन':'on','ऑफ':'off',
+ 'करो':'make','कर दो':'make','कीजिए':'make','कीजिये':'make','कर दीजिए':'make','कर दीजिये':'make','करिए':'make','करें':'make','करना':'make','कर दें':'make','कर':'',
+ 'भाषा':'language','अंग्रेज़ी':'english','अंग्रेजी':'english','इंग्लिश':'english','हिंदी':'hindi','हिन्दी':'hindi','सब':'all','सारे':'all','सारी':'all','सभी':'all','sab':'all','sabhi':'all','saare':'all','देना':'','दीजिए':'','दीजिये':'','दें':'','dena':'','dijiye':'','के लिए':'for','के बाद':'after','और':'and','मेरा':'my','मेरी':'my','मेरे':'my','मुझे':'','मैंने':'i','मैं':'i','कृपया':'','प्लीज़':'','प्लीज':'','जी':'','ज़रा':'','जरा':'',
+ 'पढ़ी':'studied','पढ़ा':'studied','पढ़े':'studied','पढी':'studied','पढा':'studied','पढे':'studied','पढ़ाई':'study','पढ़ना':'study','पढ़ने':'study','पढ़ूँ':'study','पढूं':'study','पढ़ूं':'study','पढ़ें':'study',
+ 'ओवरलैप':'overlap','सिंक':'sync','इंस्टॉल':'install','बैकअप':'backup','ऑफलाइन':'offline','प्राइवेसी':'privacy','निजी':'private','सुरक्षित':'secure','आवाज':'voice','माइक':'mic','असिस्टेंट':'assistant','सहायक':'assistant','एंड्रॉइड':'android','डिवाइस':'devices','लैपटॉप':'laptop','फोन':'phone','टैबलेट':'tablet','गूगल':'google','साइन आउट':'sign out','साइन इन':'sign','लॉगिन':'login','प्राथमिकता':'importance','महत्व':'importance','आत्मविश्वास':'confidence','बज*':'ring','नहीं':'not','बैटरी':'battery','डेटा':'data',
+ 'की':'','का':'','के':'','को':'','है':'','हैं':'','से':'','पर':'','ने':'','तो':'','भी':'','ही':'','वाला':'','वाली':'','वाले':'','होता':'','होती':'','ki':'','ka':'','ke':'','ko':'','hai':'','hain':'','wala':'','wali':'','wale':'',
+ 'कैसे':'how','क्यों':'why','क्या':'what','कब':'when','कितने':'how many','कितना':'how many','कितनी':'how many','कौन सा':'which','कौन-सा':'which','कौन सी':'which','बाकी':'left','बचे':'left','बचा':'left','बची':'left',
+ /* Hinglish */
+ 'kal':'tomorrow','aaj':'today','aaj raat':'tonight','parso':'day after tomorrow','somvar':'monday','mangalvar':'tuesday','budhvar':'wednesday','guruvar':'thursday','veervar':'thursday','shukravar':'friday','shanivar':'saturday','ravivar':'sunday','itvar':'sunday',
+ 'roz':'every day','roj':'every day','rozana':'every day','har din':'every day','har hafte':'every week','agle':'next','is':'this',
+ 'ghante':'hours','ghanta':'hours','ghantey':'hours','ghanta':'hours','minute':'minutes','minat':'minutes','ank':'marks',
+ 'yaad dilana':'remind me','yaad dilao':'remind me','yaad dila do':'remind me','yaad dilaye':'remind me','jagana':'wake me up','jaga do':'wake me up','jaga dena':'wake me up',
+ 'laga do':'set','lagao':'set','laga':'set','lagana':'set','set karo':'set','set kar do':'set','rakho':'set','rakh do':'set','tay karo':'set','tay kar do':'set','banao':'make','bana do':'make','banana':'make','jodo':'add','jod do':'add','add karo':'add','badlo':'change','badal do':'change','badalna':'change',
+ 'shuru karo':'start','shuru kar do':'start','shuru':'start','band karo':'stop','band kar do':'stop','band':'stop','roko':'stop','hatao':'delete','mita do':'delete','delete karo':'delete','cancel karo':'cancel','khologe':'open','kholo':'open','dikhao':'show','batao':'tell','chalu karo':'on','chalu kar do':'on','chalu':'on','on karo':'on',
+ 'karo':'make','kar do':'make','kijiye':'make','kar dijiye':'make','kare':'make','kar':'',
+ 'mera':'my','meri':'my','mere':'my','mujhe':'','main':'i','maine':'i','ke liye':'for','ke baad':'after','aur':'and','please':'',
+ 'padha':'studied','padhi':'studied','padhe':'studied','padhai':'study','padhna':'study','padhu':'study','padhun':'study',
+ 'kaise':'how','kyun':'why','kyu':'why','kya':'what','kab':'when','kitne':'how many','kitna':'how many','kitni':'how many','kaun sa':'which','kaun si':'which','baaki':'left','bache':'left','bacha':'left','bachi':'left',
+ 'rang':'colour','hara':'green','neela':'blue','laal':'red','peela':'yellow','narangi':'orange','gulabi':'pink','baingani':'purple','bhura':'brown','safed':'white','kala':'black','aasmani':'sky',
+ 'samay sarani':'schedule','time table':'schedule','timetable':'schedule','yojana':'plan','vishay':'subject','kitab':'book','pariksha':'exam','pariksha ki tarikh':'exam date','tarikh':'date',
+});
+function nkMap(o){const m={};for(const k of Object.keys(o))m[nk(k).toLowerCase()]=o[k];return m}
+const HI_STEMS=Object.keys(HI_WORDS).filter(k=>k.endsWith('*')).map(k=>[k.slice(0,-1),HI_WORDS[k]]).sort((a,b)=>b[0].length-a[0].length);
+const HI_PHR=Object.keys(HI_WORDS).filter(k=>!k.endsWith('*'));
+const HI_MAXN=Math.max.apply(null,HI_PHR.map(k=>k.split(' ').length));
+const HI_YES=new Set(['हां','हाँ','हा','जी हां','जी हाँ','ठीक है','ठीक','ओके','सही','बिल्कुल','haan','han','ha','ji','ji haan','theek hai','theek','ok','okay','kar do']);
+const HI_NO=new Set(['नहीं','नही','ना','नहीं नहीं','रहने दो','मत करो','nahi','nahin','na','rehne do','mat karo']);
+function hiNorm(text){
+  let s=String(text||'');
+  const hasDev=/[ऀ-ॿ]/.test(s);
+  const hing=/\b(mein|bolo|awaaz|chahiye|kal|aaj|subah|shaam|raat|dopahar|baje|yaad|dilao|dilana|laga|lagao|karo|batao|mujhe|mera|meri|ghante|ghanta|nahi|haan|kitne|kaise|kya|chalu|badlo|banao|jodo|roz|rang|shuru|roko|hatao|padha|padhu|dhanyavaad|shukriya|namaste)\b/i.test(s);
+  if(!hasDev&&!hing)return s;
+  s=nk(s).toLowerCase().replace(/[०-९]/g,d=>'०१२३४५६७८९'.indexOf(d)).replace(/[।॥]/g,'.').replace(/[?,!;]/g,' ').replace(/\s+/g,' ').trim();
+  const flat=s.replace(/[.\s]+/g,' ').trim();
+  // whole-message answers
+  const first=flat.split(' ').slice(0,2).join(' ');
+  if(HI_YES.has(flat)||HI_YES.has(flat.split(' ')[0]) && flat.split(' ').length<=3)return 'yes';
+  if(HI_NO.has(flat)||HI_NO.has(flat.split(' ')[0]) && flat.split(' ').length<=3)return 'no';
+  if(/(धन्यवाद|शुक्रिया|थैंक्स|थैंक यू|dhanyavaad|dhanyawad|shukriya|thanks)/.test(flat)&&flat.split(' ').length<=5)return 'thanks';
+  if(/^(नमस्ते|नमस्कार|हैलो|हेलो|हाय|सुप्रभात|namaste|namaskar|hello|hi)(?=\s|$)/.test(flat)&&flat.split(' ').length<=3)return 'hello';
+  if(/(पूर्ववत|अनडू|वापस (करो|कर दो|लो|ले लो)|पिछला (बदलाव|काम) (वापस|रद्द)|पिछला बदलाव|wapas karo|wapas kar do|undo)/.test(flat)&&flat.split(' ').length<=8)return 'undo';
+  if(/(क्या क्या कर सकत|क्या कर सकत|मदद|सहायता|हेल्प|madad|kya kya kar sakte|kya kar sakte)/.test(flat)&&!/(अलार्म|टेस्ट|बनाओ)/.test(flat))return 'what can you do';
+  // time and quantity phrases, before words are swapped
+  const R=[
+   [/(?:रोज|हर दिन|प्रतिदिन|roz|rozana|har din) (\d+(?:\.\d+)?) (?:घंटे|घंटा|घण्टे|ghante|ghanta)/g,'$1 hours a day'],
+   [/(\d+(?:\.\d+)?) (?:घंटे|घंटा|घण्टे|ghante|ghanta) (?:रोज|रोजाना|हर दिन|roz|rozana)/g,'$1 hours a day'],
+   [/(?:आगे|अब|आज) क्या (?:पढ़|पढ|करना|करूं|करूँ)\S*/g,'what should i study next'],[/क्या पढ़\S* चाहिए/g,'what should i study next'],[/(?:aage|ab|aaj) kya (?:padhu|padhun|padhna|karu)\S*/g,'what should i study next'],
+   [/(?:परीक्षा|एग्जाम|pariksha|exam)\S* (?:में|mein|me)? ?कितने दिन (?:बचे|बाकी|बचा)\S*/g,'how many days left'],[/(?:pariksha|exam)\S* (?:mein|me) kitne din (?:bache|baaki)\S*/g,'how many days left'],
+   [/(?:कितने|kitne) (?:घंटे|घण्टे|ghante) (?:पढ़|padh)\S*/g,'how many hours studied'],
+   [/आधे घंटे/g,'30 minutes'],[/आधा घंटा/g,'30 minutes'],[/डेढ़ घंटे|डेढ घंटे|डेढ़ घंटा/g,'90 minutes'],[/ढाई घंटे|ढाई घंटा/g,'150 minutes'],[/adhe ghante|aadha ghanta/g,'30 minutes'],
+   [/साढे (\d{1,2})/g,'$1:30'],[/सवा (\d{1,2})/g,'$1:15'],[/पौने (\d{1,2})/g,(m,n)=>((+n+10)%12+1)+':45'],[/डेढ़ बजे|डेढ बजे|der baje/g,'1:30'],[/ढाई बजे|dhai baje/g,'2:30'],
+   [/(?:सुबह|सवेरे|भोर|subah|savere) (\d{1,2})(?::(\d\d))?(?: बजे| baje)?/g,(m,h,mi)=>h+(mi?':'+mi:'')+' am'],
+   [/(\d{1,2})(?::(\d\d))?(?: बजे| baje) (?:सुबह|सवेरे|subah)/g,(m,h,mi)=>h+(mi?':'+mi:'')+' am'],
+   [/(?:दोपहर|dopahar) (\d{1,2})(?::(\d\d))?(?: बजे| baje)?/g,(m,h,mi)=>h+(mi?':'+mi:'')+' pm'],
+   [/(\d{1,2})(?::(\d\d))?(?: बजे| baje) (?:दोपहर|dopahar)/g,(m,h,mi)=>h+(mi?':'+mi:'')+' pm'],
+   [/(?:शाम|shaam|sham) (\d{1,2})(?::(\d\d))?(?: बजे| baje)?/g,(m,h,mi)=>h+(mi?':'+mi:'')+' pm'],
+   [/(\d{1,2})(?::(\d\d))?(?: बजे| baje) (?:शाम|shaam|sham)/g,(m,h,mi)=>h+(mi?':'+mi:'')+' pm'],
+   [/(?:रात|raat) (\d{1,2})(?::(\d\d))?(?: बजे| baje)?/g,(m,h,mi)=>h+(mi?':'+mi:'')+(+h>=6&&+h<=11?' pm':+h===12||+h<=5?' am':' pm')],
+   [/(\d{1,2})(?::(\d\d))?(?: बजे| baje) (?:रात|raat)/g,(m,h,mi)=>h+(mi?':'+mi:'')+(+h>=6&&+h<=11?' pm':+h===12||+h<=5?' am':' pm')],
+   [/(\d{1,2})(:\d\d)? ?(?:बजे|baje)/g,'at $1$2'],
+   [/(\d+) (?:मिनट|मिनिट|minute|minat|minutes|min) (?:में|बाद|के बाद|mein|me|baad|ke baad)/g,'in $1 minutes'],
+   [/(\d+(?:\.\d+)?) (?:घंटे|घंटा|घण्टे|घण्टा|ghante|ghanta) (?:में|बाद|के बाद|mein|me|baad|ke baad)/g,'in $1 hours'],
+   [/(\d+(?:\.\d+)?) (?:घंटे|घंटा|घण्टे|घण्टा|ghante|ghanta|ghantey)/g,'$1 hours'],
+   [/(\d+) (?:मिनट|मिनिट|minat)/g,'$1 minutes'],
+   [/(\d+) (?:में से|mein se|me se) (\d+)(?: (?:अंक|नंबर|ank))?(?: (?:मिले|मिला|आए|आये|आया|रहा|रहे|mile|mila|aaye|aaya))?/g,'scored $2 out of $1'],
+   [/(\d+) (?:अंक|नंबर|ank)(?: (?:मिले|मिला|आए|आये|आया|रहा|रहे|mile|mila|aaye|aaya))/g,'scored $1'],
+   [/स्कोर (\d+(?:\.\d+)?)(?: (?:रहा|है|था))?/g,'score was $1'],[/score (\d+)/g,'score was $1'],
+   [/(\d+) (?:अंक|ank)/g,'$1 marks'],
+   [/(?:अगले|agle) (सोमवार|मंगलवार|बुधवार|गुरुवार|शुक्रवार|शनिवार|रविवार|somvar|mangalvar|budhvar|guruvar|shukravar|shanivar|ravivar)/g,'next $1'],
+   [/(\d{1,2}) (जनवरी|फरवरी|मार्च|अप्रैल|मई|जून|जुलाई|अगस्त|सितंबर|सितम्बर|अक्टूबर|अक्तूबर|नवंबर|नवम्बर|दिसंबर|दिसम्बर)/g,(m,d,mo)=>d+' '+HI_MONTHS[mo]],
+   [/(जनवरी|फरवरी|मार्च|अप्रैल|मई|जून|जुलाई|अगस्त|सितंबर|सितम्बर|अक्टूबर|अक्तूबर|नवंबर|नवम्बर|दिसंबर|दिसम्बर) (\d{1,2})/g,(m,mo,d)=>HI_MONTHS[mo]+' '+d],
+   [/(\d{1,2}) (janvari|farvari|march|april|may|june|july|agast|sitambar|sitamber|aktubar|navambar|disambar)/g,(m,d,mo)=>d+' '+(HI_MONTHS[mo]||mo)],
+   [/(हिंदी|हिन्दी|hindi|हिंग्लिश) (?:में|mein|me)? ?(?:बोल|बात|जवाब|बताओ|bol|baat)\S*/g,'switch to hindi'],[/(अंग्रेज़ी|अंग्रेजी|इंग्लिश|english) (?:में|mein|me)? ?(?:बोल|बात|जवाब|बताओ|bol|baat)\S*/g,'switch to english'],
+   [/आदि (?:से|की आवाज़|की आवाज|आवाज़|आवाज|जैसी)\S*|पुरुष (?:की )?आवाज\S*|मेल वॉइस|male awaaz|purush awaaz/g,'switch to male voice'],[/अनु (?:से|की आवाज़|की आवाज|आवाज़|आवाज|जैसी)\S*|महिला (?:की )?आवाज\S*|फीमेल वॉइस|female awaaz|mahila awaaz/g,'switch to female voice'],
+   [/(?:मुझे )?(.+?) (?:की )?याद दिला\S*/g,'remind me $1'],[/याद दिला\S*/g,'remind me'],[/जगा\S*/g,'wake me up'],
+  ];
+  for(const [re0,rep] of R)s=s.replace(new RegExp(nk(re0.source),re0.flags),rep);
+  // word by word, longest phrase first
+  const keepLabelVerbs=/remind me/.test(s);
+  const toks=s.split(' '),out=[];
+  for(let i=0;i<toks.length;){
+    let done=false;
+    for(let n=Math.min(HI_MAXN,toks.length-i);n>=1&&!done;n--){
+      const ph=toks.slice(i,i+n).join(' ');
+      if(Object.prototype.hasOwnProperty.call(HI_WORDS,ph)&&!ph.endsWith('*')){out.push(HI_WORDS[ph]);i+=n;done=true}
+    }
+    if(done)continue;
+    const w=toks[i];let hit=null;
+    if(/[ऀ-ॿ]/.test(w))for(const [st,rep] of HI_STEMS){if(keepLabelVerbs&&/^(बना|रख|लगा|सेट|तय)/.test(st))continue;if(w.startsWith(st)){hit=rep;break}}
+    out.push(hit!==null?hit:w);i++;
+  }
+  let r=out.join(' ').replace(/\s+/g,' ').trim();
+  r=r.replace(/\b(start|stop|open|show|delete|cancel|add|change|tell) make$/,'$1');
+  r=r.replace(/^(.+?) (show|tell|open|start|stop|delete|cancel)$/,(m,a,v)=>/^(show|tell|open|start|stop|delete|cancel|add|set|make|remind|i |my )?/.test(a)&&/^(show|tell|open|start|stop|delete|cancel)\b/.test(a)?m:v+' '+a);
+  r=r.replace(/^subject add (.+)$/,'add subject $1').replace(/^(book|material|notes) add (.+)$/,'add $1 $2');
+  return r;
+}
 /* ---------- assistant: settings, chat history ---------- */
 let ACFG=Object.assign({gender:'female',rate:1,lang:'en-IN',voiceName:'',speak:false,provider:'',key:'',model:''},lsGet('pl.asst',{}));
 let CHAT=lsGet('pl.chat',[]);
 let PENDING=null,LASTSNAP=null;
+ACFG.lang=LANG==='hi'?'hi-IN':'en-IN';
 const saveAcfg=()=>lsSet('pl.asst',ACFG);
+const asstName=()=>ACFG.gender==='male'?H('Adi','आदि'):H('Anu','अनु');
 const saveChat=()=>lsSet('pl.chat',CHAT.slice(-40));
 
 /* ---------- reading dates, times and durations out of a sentence ---------- */
@@ -1350,7 +1767,7 @@ function parseWhen(raw,nowArg){
   // explicit dates
   const mon='(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*';
   if(m=cut(/\b(\d{4})-(\d{2})-(\d{2})\b/)){o.date=new Date(+m[1],+m[2]-1,+m[3])}
-  else if(m=cut(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?(?: of)? '+mon+'(?:,? (\\d{4}))?\\b'))){o.date=new Date(m[3]?+m[3]:now.getFullYear(),MONTHS.indexOf(m[2]),+m[1])}
+  else if(m=cut(new RegExp('\\b(3[01]|[12]\\d|0?[1-9])(?:st|nd|rd|th)?(?: of)? (?!marks?\\b)'+mon+'(?:,? (\\d{4}))?\\b'))){o.date=new Date(m[3]?+m[3]:now.getFullYear(),MONTHS.indexOf(m[2]),+m[1])}
   else if(m=cut(new RegExp('\\b'+mon+' (\\d{1,2})(?:st|nd|rd|th)?(?:,? (\\d{4}))?\\b'))){o.date=new Date(m[3]?+m[3]:now.getFullYear(),MONTHS.indexOf(m[1]),+m[2])}
   else if(m=cut(/\b(\d{1,2})[\/.](\d{1,2})(?:[\/.](\d{2,4}))?\b(?!\s*(?:hours?|marks?))/)){const y=m[3]?(+m[3]<100?2000+ +m[3]:+m[3]):now.getFullYear();o.date=new Date(y,+m[2]-1,+m[1])}
   if(o.date&&!m3(o.date))o.date=null;
@@ -1430,11 +1847,12 @@ function findSubject(text){
   return bs>=4?best:null;
 }
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+const restoreCase=(label,orig)=>{const m=new Map();String(orig||'').split(/\s+/).forEach(w=>{const k=w.replace(/^[^\w\u0900-\u097F]+|[^\w\u0900-\u097F]+$/g,'');if(k&&k!==k.toLowerCase())m.set(k.toLowerCase(),k)});return String(label||'').split(' ').map(w=>m.get(w)||w).join(' ').replace(/\b(ml|ai|dsa|gate|pdf|da|cs|it|os|dbms|sql|nlp|dl)\b/g,x=>x.toUpperCase())};
 function cleanLabel(rest,drop){
   let t=' '+rest+' ';
   t=t.replace(/\b(please|can you|could you|would you|kindly|hey|hi|abhyashify|assistant)\b/g,' ');
   t=t.replace(/\b(set|create|add|make|schedule|put|book|plan|give)( me)?( a| an| the| my| new)*\b/g,' ');
-  t=t.replace(/\b(remind me|remind|reminder|alarm|wake me up|wake me|mock test|mock|test)\b/g,' ');
+  t=t.replace(/\b(remind me|remind|reminder|alarm|wake me up|wake me|mock test|mock|test|cancel|delete|remove|clear)\b/g,' ');
   t=t.replace(/\b(for|to|about|of|on|at|by|that|me|my|a|an|the|every|each|called|named|titled|it|is|and)\b/g,w=>w);
   t=t.replace(/^[\s,.:;-]+|[\s,.:;-]+$/g,'').replace(/\s+/g,' ');
   t=t.replace(/^(to|for|about|that|of|on|at|a|an|the|me|my)\s+/,'').replace(/\s+(to|for|about|that|of|on|at|a|an|the|and)$/,'');
@@ -1448,12 +1866,12 @@ const MUTATES=new Set(['set_reminder','cancel_reminder','schedule_test','record_
 const NEEDS_SURE=new Set(['new_schedule','clear_schedule']);
 const snap=()=>({plan:JSON.stringify(S.plan),mats:JSON.stringify(S.materials),logs:JSON.stringify(S.logs),look:JSON.stringify(LOOK),theme});
 function undoLast(){
-  const s=LASTSNAP;if(!s)return 'There is nothing to undo.';
+  const s=LASTSNAP;if(!s)return H('There is nothing to undo.','वापस करने के लिए कुछ नहीं है।');
   const cur=snap();
   S.plan=Object.assign(defaultPlan(),JSON.parse(s.plan));S.materials=JSON.parse(s.mats);S.logs=JSON.parse(s.logs);
   LOOK=JSON.parse(s.look);theme=s.theme;lsSet('pl.look',LOOK);lsSet('pl.theme',theme);applyTheme();
   if(cur.plan!==s.plan)mark('plan');if(cur.mats!==s.mats)mark('materials');if(cur.logs!==s.logs)mark('logs');
-  LASTSNAP=null;render(false);return 'Undone. Everything is back as it was before my last change.';
+  LASTSNAP=null;render(false);return H('Undone. Everything is back as it was before my last change.','वापस कर दिया। सब कुछ मेरे पिछले बदलाव से पहले जैसा हो गया है।');
 }
 function parseLocal(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]).getTime():NaN}
 function parseDay(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const d=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(d)?null:ymd(d)}
@@ -1470,8 +1888,8 @@ function dayList(v){
   }
   return [...out].sort((a,b)=>a-b);
 }
-const dayNames=a=>a.length===7?'every day':a.join(',')==='0,1,2,3,4'?'Monday to Friday':a.map(i=>DAYS[i]).join(', ');
-function tokensOf(s){return normText(s).split(/[^a-z0-9]+/).filter(w=>w.length>=3&&!['the','and','for','mock','test','reminder','alarm','all'].includes(w))}
+const dayNames=a=>a.length===7?H('every day','हर दिन'):a.join(',')==='0,1,2,3,4'?H('Monday to Friday','सोमवार से शुक्रवार'):a.map(i=>L(DAYS[i])).join(', ');
+function tokensOf(s){return normText(s).split(/[^a-z0-9\u0900-\u097F]+/).filter(w=>w.length>=3&&!['the','and','for','mock','test','reminder','alarm','all'].includes(w))}
 function bestMatch(list,textOf,q){
   const qs=tokensOf(q);if(!qs.length)return null;
   let best=null,bs=0;
@@ -1479,7 +1897,7 @@ function bestMatch(list,textOf,q){
   return bs?best:null;
 }
 function buildSchedule(o){
-  const subs=S.plan.subjects;if(!subs.length)throw new Error('There are no subjects yet.');
+  const subs=S.plan.subjects;if(!subs.length)throw new Error(H('There are no subjects yet.','अभी कोई विषय नहीं है।'));
   const hours=Math.min(14,Math.max(1,+o.hours||4)),start=parseHM(o.start)||'06:00',days=dayList(o.days);const ds=days.length?days:[0,1,2,3,4,5,6];
   const D=Math.round(hours*60),blocks=[],weights=Object.fromEntries(subs.map(s=>[s.id,Math.max(.5,s.w*(6-s.c))]));
   const slots=[];
@@ -1515,143 +1933,160 @@ function buildSchedule(o){
 
 const AX={
   set_reminder(a){
-    const at=parseLocal(a.at);if(isNaN(at))throw new Error('I need a date and time for that.');
-    if(at<Date.now()-60000)throw new Error('That time has already passed.');
-    if(PR().length>=200)throw new Error('You have too many reminders. Delete a few first.');
+    const at=parseLocal(a.at);if(isNaN(at))throw new Error(H('I need a date and time for that.','इसके लिए मुझे तारीख़ और समय चाहिए।'));
+    if(at<Date.now()-60000)throw new Error(H('That time has already passed.','वह समय बीत चुका है।'));
+    if(PR().length>=200)throw new Error(H('You have too many reminders. Delete a few first.','आपके पास बहुत ज़्यादा रिमाइंडर हैं। पहले कुछ हटाएँ।'));
     const kind=a.kind==='alarm'?'alarm':'reminder',rep=['daily','weekdays','weekly'].includes(a.repeat)?a.repeat:null;
     const text=String(a.text||'').trim().slice(0,120)||(kind==='alarm'?'Alarm':'Reminder');
     PR().push({id:uid(),text,at,kind,rep,done:false});mark('plan');
     const was=armed;setArmed(true);
-    return {msg:`${kind==='alarm'?'Alarm':'Reminder'} set for ${whenTxt(at)}${rep?' ('+REPS[rep].toLowerCase()+')':''}: ${text}.${was?'':' I turned your alarm bell on. Keep this page open so it can ring.'}`};
+    const shown=(text==='Alarm'||text==='Reminder')?L(text):text,rp=rep?' ('+L(REPS[rep]).toLowerCase()+')':'';
+    return {msg:H(`${kind==='alarm'?'Alarm':'Reminder'} set for ${whenTxt(at)}${rp}: ${shown}.${was?'':' I turned your alarm bell on. Keep this page open so it can ring.'}`,
+      `${kind==='alarm'?'अलार्म':'रिमाइंडर'} ${whenTxt(at)}${rp} के लिए सेट हो गया: ${shown}।${was?'':' मैंने आपकी अलार्म की घंटी चालू कर दी है। इसे बजने देने के लिए यह पेज खुला रखें।'}`)};
   },
   cancel_reminder(a){
     const q=String(a.match||'').trim().toLowerCase(),list=PR().filter(r=>!r.done);
-    if(!list.length)return {msg:'You have no active reminders or alarms.'};
+    if(!list.length)return {msg:H('You have no active reminders or alarms.','आपका कोई चालू रिमाइंडर या अलार्म नहीं है।')};
     let del;
     if(!q||q==='all'||q==='everything')del=list;
     else{const m=bestMatch(list,r=>r.text,q)||list.find(r=>q.includes(whenTxt(r.at).toLowerCase().split(', ')[1]||'zzz'));del=m?[m]:[]}
-    if(!del.length)throw new Error('I could not find one that matches "'+q+'".');
+    if(!del.length)throw new Error(H('I could not find one that matches "'+q+'".','"'+q+'" से मेल खाता कोई नहीं मिला।'));
     const ids=new Set(del.map(r=>r.id));S.plan.reminders=PR().filter(r=>!ids.has(r.id));mark('plan');
-    return {msg:del.length===1?'Removed: '+del[0].text+' ('+whenTxt(del[0].at)+').':'Removed '+del.length+' reminders and alarms.'};
+    return {msg:del.length===1?H('Removed: '+del[0].text+' ('+whenTxt(del[0].at)+').','हटा दिया: '+del[0].text+' ('+whenTxt(del[0].at)+')।'):H('Removed '+del.length+' reminders and alarms.',del.length+' रिमाइंडर और अलार्म हटा दिए।')};
   },
   schedule_test(a){
-    const date=parseDay(a.date),time=parseHM(a.time)||'10:00';if(!date)throw new Error('I need a date for the test.');
+    const date=parseDay(a.date),time=parseHM(a.time)||'10:00';if(!date)throw new Error(H('I need a date for the test.','टेस्ट के लिए मुझे तारीख़ चाहिए।'));
     const kind=a.kind==='test'?'test':'mock',sub=a.subject?subjectFrom(a.subject):null;
     const m=Math.min(360,Math.max(10,Math.round(+a.minutes||(kind==='mock'?180:60)))),marks=Math.min(1000,Math.max(1,Math.round(+a.marks||100)));
-    const t={id:uid(),title:String(a.title||'').trim().slice(0,80)||(sub?sub.name+' '+TKINDS[kind].toLowerCase():'Full '+TKINDS[kind].toLowerCase()),kind,subj:sub?sub.id:'',date,st:time,m,marks,al:true,score:null};
-    if(testStart(t)<Date.now()-60000)throw new Error('That time has already passed.');
-    if(PT().length>=200)throw new Error('You have too many tests. Delete a few first.');
+    const title=String(a.title||'').trim().slice(0,80)||(sub&&kind==='mock'&&/mock/i.test(sub.name)?L(sub.name):sub?H(sub.name+' '+TKINDS[kind].toLowerCase(),L(sub.name)+' '+L(TKINDS[kind])):H('Full '+TKINDS[kind].toLowerCase(),'पूरा '+L(TKINDS[kind])));
+    const t={id:uid(),title,kind,subj:sub?sub.id:'',date,st:time,m,marks,al:true,score:null};
+    if(testStart(t)<Date.now()-60000)throw new Error(H('That time has already passed.','वह समय बीत चुका है।'));
+    if(PT().length>=200)throw new Error(H('You have too many tests. Delete a few first.','आपके पास बहुत ज़्यादा टेस्ट हैं। पहले कुछ हटाएँ।'));
     PT().push(t);mark('plan');const was=armed;setArmed(true);
-    return {msg:`${TKINDS[kind]} scheduled: ${t.title}, ${whenTxt(testStart(t))}, ${fmtDur(m)}, ${marks} marks.${was?'':' I turned your alarm bell on so it can ring while this page is open.'}`};
+    return {msg:H(`${TKINDS[kind]} scheduled: ${t.title}, ${whenTxt(testStart(t))}, ${fmtDur(m)}, ${marks} marks.${was?'':' I turned your alarm bell on so it can ring while this page is open.'}`,
+      `${L(TKINDS[kind])} तय हो गया: ${t.title}, ${whenTxt(testStart(t))}, ${FD(m)}, ${marks} अंक।${was?'':' मैंने आपकी अलार्म की घंटी चालू कर दी है, ताकि पेज खुला रहने पर यह बज सके।'}`)};
   },
   record_score(a){
-    const score=+a.score;if(isNaN(score)||score<0)throw new Error('I need the marks you scored.');
-    const all=PT().slice().sort((x,y)=>testStart(x)-testStart(y));if(!all.length)throw new Error('You have no tests yet. Schedule one first.');
+    const score=+a.score;if(isNaN(score)||score<0)throw new Error(H('I need the marks you scored.','मुझे आपके मिले हुए अंक चाहिए।'));
+    const all=PT().slice().sort((x,y)=>testStart(x)-testStart(y));if(!all.length)throw new Error(H('You have no tests yet. Schedule one first.','आपका अभी कोई टेस्ट नहीं है। पहले एक तय करें।'));
     let t=a.match&&!/^(last|latest|recent|previous|my)$/i.test(a.match)?bestMatch(all,x=>x.title+' '+TKINDS[x.kind]+' '+(x.subj?subjName(x.subj):''),a.match):null;
     if(!t)t=all.filter(x=>testStart(x)<=Date.now()+3600000).pop()||all[all.length-1];
     if(+a.marks>0)t.marks=Math.min(1000,Math.round(+a.marks));
     t.score=Math.min(t.marks,score);mark('plan');
-    return {msg:`Saved ${t.score} out of ${t.marks} (${pctTxt(t)}) for ${t.title}.`};
+    return {msg:H(`Saved ${t.score} out of ${t.marks} (${pctTxt(t)}) for ${t.title}.`,`${t.title} के लिए ${t.marks} में से ${t.score} (${pctTxt(t)}) सहेज लिए।`)};
   },
   cancel_test(a){
-    const all=PT(),q=String(a.match||'');if(!all.length)return {msg:'You have no tests.'};
+    const all=PT(),q=String(a.match||'');if(!all.length)return {msg:H('You have no tests.','आपका कोई टेस्ट नहीं है।')};
     const up=all.filter(t=>t.score==null).sort((x,y)=>testStart(x)-testStart(y));
     const t=(q&&bestMatch(all,x=>x.title,q))||(/all/.test(q)?null:up[0]);
-    if(/\ball\b/.test(q)){const n=up.length;S.plan.tests=all.filter(x=>x.score!=null);mark('plan');return {msg:'Removed '+n+' upcoming tests.'}}
-    if(!t)throw new Error('I could not find that test.');
-    S.plan.tests=all.filter(x=>x.id!==t.id);mark('plan');return {msg:'Removed '+t.title+'.'};
+    if(/\ball\b/.test(q)){const n=up.length;S.plan.tests=all.filter(x=>x.score!=null);mark('plan');return {msg:H('Removed '+n+' upcoming tests.','आने वाले '+n+' टेस्ट हटा दिए।')}}
+    if(!t)throw new Error(H('I could not find that test.','वह टेस्ट मुझे नहीं मिला।'));
+    S.plan.tests=all.filter(x=>x.id!==t.id);mark('plan');return {msg:H('Removed '+t.title+'.',t.title+' हटा दिया।')};
   },
   start_test(a){
     const up=PT().filter(t=>t.score==null).sort((x,y)=>testStart(x)-testStart(y));
     const t=(a.match&&bestMatch(up,x=>x.title,a.match))||up.find(x=>testStart(x)<=Date.now()+864e5)||up[0];
-    if(!t)throw new Error('There is no test to start. Ask me to schedule one first.');
-    startTest(t);return {msg:`Started the timer for ${t.title} (${fmtDur(t.m)}). Stop it when you finish and I will ask for your score.`,close:true};
+    if(!t)throw new Error(H('There is no test to start. Ask me to schedule one first.','शुरू करने के लिए कोई टेस्ट नहीं है। पहले मुझसे एक तय करवाएँ।'));
+    startTest(t);return {msg:H(`Started the timer for ${t.title} (${fmtDur(t.m)}). Stop it when you finish and I will ask for your score.`,`${t.title} (${FD(t.m)}) का टाइमर शुरू हो गया। ख़त्म होने पर इसे रोकें, मैं आपसे आपका स्कोर {पूछूँगा|पूछूँगी}।`),close:true};
   },
   set_theme(a){
-    const m=['auto','light','dark'].includes(a.mode)?a.mode:null;if(!m)throw new Error('Pick auto, light or dark.');
-    theme=m;lsSet('pl.theme',theme);applyTheme();return {msg:m==='auto'?'Theme now follows your device setting.':'Switched to '+m+' mode.'};
+    const m=['auto','light','dark'].includes(a.mode)?a.mode:null;if(!m)throw new Error(H('Pick auto, light or dark.','अपने-आप, हल्का या गहरा चुनें।'));
+    theme=m;lsSet('pl.theme',theme);applyTheme();return {msg:m==='auto'?H('Theme now follows your device setting.','थीम अब आपके डिवाइस की सेटिंग के अनुसार चलेगी।'):H('Switched to '+m+' mode.',m==='dark'?'गहरा मोड चालू हो गया।':'हल्का मोड चालू हो गया।')};
   },
-  set_accent(a){const r=setLook({accent:a.color});if(r.err)throw new Error(r.err);return {msg:'Accent colour changed to '+a.color+'.'+r.note}},
+  set_accent(a){const r=setLook({accent:a.color});if(r.err)throw new Error(r.err);return {msg:H('Accent colour changed to '+a.color+'.'+r.note,'मुख्य रंग बदलकर '+colName(a.color)+' कर दिया।'+r.note)}},
   set_background(a){
     const v=String(a.background||a.color||'').toLowerCase().trim();
     const alias={cream:'paper',beige:'paper',yellow:'paper',pink:'blush',purple:'lavender',violet:'lavender',green:'mint',blue:'sky',gray:'slate',grey:'slate',gradient:'sunrise',orange:'sunrise',night:'midnight',dark:'midnight',teal:'aurora',white:'#FFFFFF',red:'blush'};
     const key=BGS[v]?v:alias[v]||v;
-    const r=setLook({bg:key});if(r.err)throw new Error(r.err);return {msg:'Background changed to '+v+'.'+r.note};
+    const r=setLook({bg:key});if(r.err)throw new Error(r.err);return {msg:H('Background changed to '+v+'.'+r.note,'पृष्ठभूमि बदलकर '+colName(v)+' कर दी।'+r.note)};
   },
-  reset_look(){resetLook();return {msg:'Colours and background are back to the default.'}},
+  reset_look(){resetLook();return {msg:H('Colours and background are back to the default.','रंग और पृष्ठभूमि पहले जैसे डिफ़ॉल्ट हो गए।')}},
   add_block(a){
-    const sub=subjectFrom(a.subject);if(!sub)throw new Error('Which subject is it for? You have: '+S.plan.subjects.map(s=>s.name).join(', ')+'.');
-    const days=dayList(a.days);if(!days.length)throw new Error('Which days should it repeat on?');
-    const st=parseHM(a.time);if(!st)throw new Error('What time should it start?');
+    const sub=subjectFrom(a.subject);if(!sub)throw new Error(H('Which subject is it for? You have: '+S.plan.subjects.map(s=>s.name).join(', ')+'.','यह किस विषय के लिए है? आपके विषय: '+S.plan.subjects.map(s=>L(s.name)).join(', ')+'।'));
+    const days=dayList(a.days);if(!days.length)throw new Error(H('Which days should it repeat on?','यह किन दिनों में दोहराया जाए?'));
+    const st=parseHM(a.time);if(!st)throw new Error(H('What time should it start?','यह किस समय शुरू हो?'));
     const k=KINDS[a.kind]&&a.kind!=='other'?a.kind:(KINDS[a.kind]?a.kind:'theory'),m=Math.min(600,Math.max(5,Math.round(+a.minutes||90)));
-    if(S.plan.blocks.length>=300)throw new Error('You have too many blocks.');
+    if(S.plan.blocks.length>=300)throw new Error(H('You have too many blocks.','आपके पास बहुत ज़्यादा ब्लॉक हैं।'));
     S.plan.blocks.push({id:uid(),days,st,m,s:sub.id,k,sh:Math.max(0,Math.min(20,Math.round(+a.sheets||0))),al:a.alarm!==false,t:''});mark('plan');
-    return {msg:`Added a ${KINDS[k].toLowerCase()} block for ${sub.name}: ${dayNames(days)} at ${st} for ${fmtDur(m)}.`};
+    return {msg:H(`Added a ${KINDS[k].toLowerCase()} block for ${sub.name}: ${dayNames(days)} at ${st} for ${fmtDur(m)}.`,`${L(sub.name)} के लिए ${L(KINDS[k])} ब्लॉक जोड़ दिया: ${dayNames(days)}, ${st} बजे से, ${FD(m)} के लिए।`)};
   },
   new_schedule(a){
     const hasSubs=S.plan.subjects.length>0;
     if(a.mode==='template'||!hasSubs){
       const T=gateTemplate(),keep={tests:S.plan.tests||[],reminders:S.plan.reminders||[]};
       S.plan=Object.assign(T,keep);mark('plan');
-      return {msg:'Loaded the GATE DA 2027 template: nine subjects and a weekly timetable. Your tests and reminders are untouched. Change anything in the Plan tab.'};
+      return {msg:H('Loaded the GATE DA 2027 template: nine subjects and a weekly timetable. Your tests and reminders are untouched. Change anything in the Plan tab.','GATE DA 2027 टेम्पलेट लग गया: नौ विषय और साप्ताहिक समय-सारणी। आपके टेस्ट और रिमाइंडर जैसे थे वैसे हैं। कुछ भी बदलना हो तो योजना टैब में बदलें।')};
     }
     const r=buildSchedule(a);S.plan.blocks=r.blocks;mark('plan');
-    const top=Object.entries(r.got).sort((x,y)=>y[1]-x[1]).slice(0,4).map(([id,m])=>subjName(id)+' '+fmtDur(m)+'/week').join(', ');
-    return {msg:`New schedule built: about ${r.hours} hours a day, ${dayNames(r.ds)}, starting at ${r.start}. More time goes to the subjects that carry more marks and where you are less confident (${top}). Sunday afternoon is a 3-hour mock when you study that day.`};
+    const top=Object.entries(r.got).sort((x,y)=>y[1]-x[1]).slice(0,4).map(([id,m])=>H(subjName(id)+' '+fmtDur(m)+'/week',L(subjName(id))+' '+FD(m)+'/हफ़्ता')).join(', ');
+    return {msg:H(`New schedule built: about ${r.hours} hours a day, ${dayNames(r.ds)}, starting at ${r.start}. More time goes to the subjects that carry more marks and where you are less confident (${top}). Sunday afternoon is a 3-hour mock when you study that day.`,
+      `नई समय-सारणी बन गई: रोज़ लगभग ${r.hours} घंटे, ${dayNames(r.ds)}, ${r.start} बजे से शुरू। ज़्यादा अंकों वाले और कम आत्मविश्वास वाले विषयों को ज़्यादा समय मिला है (${top})। जिस दिन आप पढ़ते हैं, उस रविवार की दोपहर बाद 3 घंटे का मॉक रखा गया है।`)};
   },
-  clear_schedule(){const n=S.plan.blocks.length;S.plan.blocks=[];mark('plan');return {msg:'Removed all '+n+' blocks from your schedule.'}},
+  clear_schedule(){const n=S.plan.blocks.length;S.plan.blocks=[];mark('plan');return {msg:H('Removed all '+n+' blocks from your schedule.','आपकी समय-सारणी से सभी '+n+' ब्लॉक हटा दिए।')}},
   add_subject(a){
-    const name=String(a.name||'').trim().slice(0,40);if(!name)throw new Error('What is the subject called?');
-    if(S.plan.subjects.some(s=>s.name.toLowerCase()===name.toLowerCase()))throw new Error(name+' is already in your subjects.');
-    if(S.plan.subjects.length>=60)throw new Error('You have too many subjects.');
+    const name=String(a.name||'').trim().slice(0,40);if(!name)throw new Error(H('What is the subject called?','विषय का नाम क्या है?'));
+    if(S.plan.subjects.some(s=>s.name.toLowerCase()===name.toLowerCase()))throw new Error(H(name+' is already in your subjects.',name+' आपके विषयों में पहले से है।'));
+    if(S.plan.subjects.length>=60)throw new Error(H('You have too many subjects.','आपके पास बहुत ज़्यादा विषय हैं।'));
     const w=Math.min(5,Math.max(1,Math.round(+a.importance||3))),c=Math.min(5,Math.max(1,Math.round(+a.confidence||3)));
-    S.plan.subjects.push({id:uid(),name,w,c});mark('plan');return {msg:`Added the subject ${name} (importance ${w}, confidence ${c}).`};
+    S.plan.subjects.push({id:uid(),name,w,c});mark('plan');return {msg:H(`Added the subject ${name} (importance ${w}, confidence ${c}).`,`विषय ${name} जोड़ दिया (महत्व ${w}, आत्मविश्वास ${c})।`)};
   },
   add_material(a){
-    const title=String(a.title||'').trim().slice(0,120);if(!title)throw new Error('What is the material called?');
-    const sub=subjectFrom(a.subject)||S.plan.subjects[0];if(!sub)throw new Error('Add a subject first.');
+    const title=String(a.title||'').trim().slice(0,120);if(!title)throw new Error(H('What is the material called?','सामग्री का नाम क्या है?'));
+    const sub=subjectFrom(a.subject)||S.plan.subjects[0];if(!sub)throw new Error(H('Add a subject first.','पहले एक विषय जोड़ें।'));
     const kind=MKINDS[a.kind]?a.kind:'theory',unit=['pages','chapters','questions','sheets','lectures'].includes(a.unit)?a.unit:(kind==='sheet'?'questions':'pages');
     S.materials.push({id:uid(),title,subj:sub.id,kind,unit,total:Math.max(0,Math.round(+a.total||0)),done:0,file:null,asset:null,added:ymd(new Date())});mark('materials');
-    return {msg:`Added ${title} under ${sub.name}${+a.total>0?' ('+a.total+' '+unit+')':''}.`};
+    return {msg:H(`Added ${title} under ${sub.name}${+a.total>0?' ('+a.total+' '+unit+')':''}.`,`${title} को ${L(sub.name)} के तहत जोड़ दिया${+a.total>0?' ('+a.total+' '+L(unit)+')':''}।`)};
   },
   set_exam(a){
-    const d=parseDay(a.date);if(!d)throw new Error('I need the exam date.');
+    const d=parseDay(a.date);if(!d)throw new Error(H('I need the exam date.','मुझे परीक्षा की तारीख़ चाहिए।'));
     S.plan.exam=d;if(a.name)S.plan.examName=String(a.name).trim().slice(0,30);mark('plan');
-    const left=Math.round((parseYmd(d)-parseYmd(ymd(new Date())))/864e5);return {msg:`Exam set to ${parseYmd(d).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}${left>=0?', '+left+' days from now':''}.`};
+    const left=Math.round((parseYmd(d)-parseYmd(ymd(new Date())))/864e5),ds=parseYmd(d).toLocaleDateString(LOC(),{day:'numeric',month:'long',year:'numeric'});
+    return {msg:H(`Exam set to ${ds}${left>=0?', '+left+' days from now':''}.`,`परीक्षा की तारीख़ ${ds}${left>=0?' तय की, यानी अब से '+left+' दिन बाद':' तय की'}।`)};
   },
   log_session(a){
-    const sub=subjectFrom(a.subject)||S.plan.subjects[0];if(!sub)throw new Error('Add a subject first.');
-    const m=Math.round(+a.minutes);if(!(m>=1&&m<=720))throw new Error('How many minutes did you study? (1 to 720)');
+    const sub=subjectFrom(a.subject)||S.plan.subjects[0];if(!sub)throw new Error(H('Add a subject first.','पहले एक विषय जोड़ें।'));
+    const m=Math.round(+a.minutes);if(!(m>=1&&m<=720))throw new Error(H('How many minutes did you study? (1 to 720)','आपने कितने मिनट पढ़ा? (1 से 720)'));
     const now=new Date(),d=parseDay(a.date)||ymd(now);let st=parseHM(a.time);
     if(!st)st=d===ymd(now)?fromMin(Math.max(0,now.getHours()*60+now.getMinutes()-m)):'09:00';
-    const t0=new Date(d+'T'+st+':00').getTime();if(isNaN(t0))throw new Error('That date does not look right.');
+    const t0=new Date(d+'T'+st+':00').getTime();if(isNaN(t0))throw new Error(H('That date does not look right.','यह तारीख़ सही नहीं लग रही।'));
     S.logs.push({id:uid(),d,b:null,s:sub.id,st,ps:null,pm:null,m,q:0,mid:null,mu:0,t0,t1:t0+m*60000,dev:deviceId(),src:'manual',tz:tzOff()});
     if(S.logs.length>1800)S.logs=S.logs.slice(-1800);mark('logs');
-    return {msg:`Logged ${fmtDur(m)} of ${sub.name} on ${d===ymd(now)?'today':parseYmd(d).toLocaleDateString([],{weekday:'long',day:'numeric',month:'short'})} from ${st}.`};
+    const day=d===ymd(now)?H('today','आज'):parseYmd(d).toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'short'});
+    return {msg:H(`Logged ${fmtDur(m)} of ${sub.name} on ${day} from ${st}.`,`${day} ${st} बजे से ${L(sub.name)} के ${FD(m)} दर्ज कर दिए।`)};
   },
   start_timer(a){
-    if(run)throw new Error('A timer is already running.');
+    if(run)throw new Error(H('A timer is already running.','एक टाइमर पहले से चल रहा है।'));
     const sub=subjectFrom(a.subject);startRun(null);if(sub){run.s=sub.id;lsSet('pl.run',run);render(false)}
-    return {msg:'Timer started'+(sub?' for '+sub.name:'')+'. Say "stop the timer" when you finish.',close:true};
+    return {msg:H('Timer started'+(sub?' for '+sub.name:'')+'. Say "stop the timer" when you finish.','टाइमर शुरू हो गया'+(sub?' ('+L(sub.name)+')':'')+'। पढ़ाई पूरी होने पर "टाइमर रोको" कहें।'),close:true};
   },
-  stop_timer(){if(!run)throw new Error('No timer is running.');logForm(run.b);return {msg:'Review the details and tap Save log.',close:true}},
+  stop_timer(){if(!run)throw new Error(H('No timer is running.','कोई टाइमर नहीं चल रहा।'));logForm(run.b);return {msg:H('Review the details and tap Save log.','ब्योरा देख लें और लॉग सहेजें दबाएँ।'),close:true}},
   navigate(a){
     const to=String(a.to||'');
     if(['today','plan','materials','report'].includes(to)){tab=to;render();window.scrollTo({top:0})}
-    else if(to==='settings')settingsForm();else if(to==='account')accountSheet();else throw new Error('I can open Today, Plan, Materials, Report, Settings or Account.');
-    return {msg:'Opened '+to+'.',close:true};
+    else if(to==='settings')settingsForm();else if(to==='account')accountSheet();else throw new Error(H('I can open Today, Plan, Materials, Report, Settings or Account.','मैं आज, योजना, सामग्री, रिपोर्ट, सेटिंग्स या खाता खोल {सकता|सकती} हूँ।'));
+    const nm={today:'आज',plan:'योजना',materials:'सामग्री',report:'रिपोर्ट',settings:'सेटिंग्स',account:'खाता'}[to];
+    return {msg:H('Opened '+to+'.',nm+' खोल दिया।'),close:true};
   },
-  alarms_on(a){setArmed(a.on!==false);return {msg:armed?'Alarms are on. Keep this page open for them to ring.':'Alarms are off.'}},
+  set_language(a){
+    const l=a.lang==='hi'||/hindi|हिंदी|हिन्दी/i.test(String(a.lang||''))?'hi':'en';setLang(l);
+    return {msg:H('Okay, I will talk in English now.','ठीक है, अब मैं हिन्दी में बात {करूँगा|करूँगी}।')};
+  },
+  set_voice(a){
+    const g=a.gender==='male'?'male':'female';ACFG.gender=g;ACFG.voiceName='';saveAcfg();
+    const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();
+    return {msg:H(`Okay, this is ${asstName()} now, with a ${g} voice.`,`ठीक है, अब मैं ${asstName()} हूँ, ${g==='male'?'पुरुष':'महिला'} आवाज़ में।`)};
+  },
+  alarms_on(a){setArmed(a.on!==false);return {msg:armed?H('Alarms are on. Keep this page open for them to ring.','अलार्म चालू हैं। बजने के लिए यह पेज खुला रखें।'):H('Alarms are off.','अलार्म बंद हैं।')}},
   async create_course(a){
-    if(!CL)throw new Error('Separate courses need sign-in so each one keeps its own data. Sign in from the Account button, then ask me again.');
-    const name=String(a.name||'').trim().slice(0,80);if(!name)throw new Error('What should the course be called?');
+    if(!CL)throw new Error(H('Separate courses need sign-in so each one keeps its own data. Sign in from the Account button, then ask me again.','अलग-अलग कोर्स के लिए साइन इन ज़रूरी है, ताकि हर कोर्स का अपना डेटा रहे। खाता बटन से साइन इन करें, फिर मुझसे दोबारा कहें।'));
+    const name=String(a.name||'').trim().slice(0,80);if(!name)throw new Error(H('What should the course be called?','कोर्स का नाम क्या रखें?'));
     const id=await createCourse(name);CL.courses.push({id,name});await openCourse(id);
-    return {msg:`Created the course "${name}" and switched to it. Ask me to load the GATE DA template or build a schedule for it.`};
+    return {msg:H(`Created the course "${name}" and switched to it. Ask me to load the GATE DA template or build a schedule for it.`,`"${name}" कोर्स बना दिया और उसी पर आ गया। मुझसे GATE DA टेम्पलेट लगाने या इसकी समय-सारणी बनाने को कहें।`)};
   },
   async open_course(a){
-    if(!CL)throw new Error('Sign in to switch between courses.');
-    const c=bestMatch(CL.courses,x=>x.name,a.name||'');if(!c)throw new Error('I could not find that course. You have: '+CL.courses.map(x=>x.name).join(', ')+'.');
-    await openCourse(c.id);return {msg:'Switched to '+c.name+'.'};
+    if(!CL)throw new Error(H('Sign in to switch between courses.','कोर्स बदलने के लिए साइन इन करें।'));
+    const c=bestMatch(CL.courses,x=>x.name,a.name||'');if(!c)throw new Error(H('I could not find that course. You have: '+CL.courses.map(x=>x.name).join(', ')+'.','वह कोर्स मुझे नहीं मिला। आपके कोर्स: '+CL.courses.map(x=>x.name).join(', ')+'।'));
+    await openCourse(c.id);return {msg:H('Switched to '+c.name+'.',c.name+' पर आ गया।')};
   }
 };
 const SPEC_TYPES=new Set([...Object.keys(AX)]);
@@ -1661,7 +2096,7 @@ async function runActions(list,opts){
   if(!opts.confirmed&&list.some(a=>NEEDS_SURE.has(a.type))&&(S.plan.blocks.length||list.some(a=>a.type==='new_schedule'&&a.mode==='template'&&S.plan.subjects.length))){
     PENDING={actions:list};
     const n=S.plan.blocks.length;
-    return {msgs:[`This will replace your ${n} schedule block${n===1?'':'s'}. Your subjects, materials, tests and reminders stay. Go ahead? (yes or no)`],pending:true,close:false};
+    return {msgs:[H(`This will replace your ${n} schedule block${n===1?'':'s'}. Your subjects, materials, tests and reminders stay. Go ahead? (yes or no)`,`इससे आपके ${n} ब्लॉक बदल जाएँगे। आपके विषय, सामग्री, टेस्ट और रिमाइंडर वैसे ही रहेंगे। आगे बढ़ूँ? (हाँ या नहीं)`)],pending:true,close:false};
   }
   const before=snap();let changed=false;
   for(const a of list){
@@ -1669,7 +2104,7 @@ async function runActions(list,opts){
       const r=await AX[a.type](a.args||a);
       if(r&&r.msg)msgs.push(r.msg);if(r&&r.close)close=true;
       if(MUTATES.has(a.type))changed=true;
-    }catch(e){errs.push(e&&e.message?e.message:'That did not work.')}
+    }catch(e){errs.push(e&&e.message?e.message:H('That did not work.','यह नहीं हो सका।'))}
   }
   if(changed&&JSON.stringify(snap())!==JSON.stringify(before)){LASTSNAP=before;render(false)}
   return {msgs:msgs.concat(errs),close,changed};
@@ -1713,7 +2148,7 @@ function askKB(q){
     for(const w of qs)if(ks.some(x=>x===w||(w.length>=4&&x.length>=4&&(x.startsWith(w.slice(0,4))&&Math.abs(x.length-w.length)<=3))))sc++;
     if(sc>bs){bs=sc;best=e}
   }
-  return bs>=1?best.a:null;
+  return bs>=1?(LANG==='hi'&&KB_HI[KB.indexOf(best)]?HG(KB_HI[KB.indexOf(best)]):best.a):null;
 }
 
 /* ---------- questions about your own data ---------- */
@@ -1722,37 +2157,37 @@ function dataAnswer(t){
   const now=new Date(),today=ymd(now),ws=weekStart(now);
   if(/\bhow (many|much)\b.*\b(hours?|time|minutes?|long)\b/.test(t)&&/\b(studi|log|did i|have i|spent)/.test(t)){
     let m,label;
-    if(/\byesterday\b/.test(t)){const y=ymd(addDays(now,-1));m=studiedIn(y,y);label='yesterday'}
-    else if(/\blast week\b/.test(t)){const a=addDays(ws,-7);m=studiedIn(ymd(a),ymd(addDays(a,6)));label='last week'}
-    else if(/\bthis month\b/.test(t)){const a=ymd(new Date(now.getFullYear(),now.getMonth(),1));m=studiedIn(a,today);label='this month'}
-    else if(/\btoday\b/.test(t)){m=studiedIn(today,today);label='today'}
-    else{m=studiedIn(ymd(ws),ymd(addDays(ws,6)));label='this week'}
-    return m?`You have logged ${fmtDur(m)} ${label}.`:`Nothing logged ${label} yet.`;
+    if(/\byesterday\b/.test(t)){const y=ymd(addDays(now,-1));m=studiedIn(y,y);label=H('yesterday','बीते कल')}
+    else if(/\blast week\b/.test(t)){const a=addDays(ws,-7);m=studiedIn(ymd(a),ymd(addDays(a,6)));label=H('last week','पिछले हफ़्ते')}
+    else if(/\bthis month\b/.test(t)){const a=ymd(new Date(now.getFullYear(),now.getMonth(),1));m=studiedIn(a,today);label=H('this month','इस महीने')}
+    else if(/\btoday\b/.test(t)){m=studiedIn(today,today);label=H('today','आज')}
+    else{m=studiedIn(ymd(ws),ymd(addDays(ws,6)));label=H('this week','इस हफ़्ते')}
+    return m?H(`You have logged ${fmtDur(m)} ${label}.`,`आपने ${label} ${FD(m)} दर्ज किए हैं।`):H(`Nothing logged ${label} yet.`,`${label} अभी कुछ दर्ज नहीं हुआ।`);
   }
   if(/\b(days? left|how many days|countdown|when is (the |my )?(exam|gate))\b/.test(t)){
-    if(!S.plan.exam)return 'No exam date is set. Tell me the date, for example "my exam is on 6 February 2027".';
+    if(!S.plan.exam)return H('No exam date is set. Tell me the date, for example "my exam is on 6 February 2027".','परीक्षा की तारीख़ तय नहीं है। मुझे तारीख़ बताएँ, जैसे "मेरी परीक्षा 6 फ़रवरी 2027 को है"।');
     const d=Math.round((parseYmd(S.plan.exam)-parseYmd(today))/864e5);
-    return d>=0?`${S.plan.examName||'The exam'} is on ${parseYmd(S.plan.exam).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}, which is ${d} days away.`:'The exam date has passed.';
+    const exd=parseYmd(S.plan.exam).toLocaleDateString(LOC(),{day:'numeric',month:'long',year:'numeric'});return d>=0?H(`${S.plan.examName||'The exam'} is on ${exd}, which is ${d} days away.`,`${S.plan.examName||'परीक्षा'} ${exd} को है, यानी ${d} दिन बाक़ी हैं।`):H('The exam date has passed.','परीक्षा की तारीख़ बीत चुकी है।');
   }
   if(/\b(what|which)\b.*\b(next|now|should i (study|do)|to study|on today|today)\b|\bwhat'?s (next|on today)\b/.test(t)&&!/\b(test|mock|reminder|alarm)s?\b/.test(t)){
     const blocks=blocksOn(S.plan,now),nm=now.getHours()*60+now.getMinutes(),nb=blocks.find(b=>toMin(b.st)+b.m>nm);
     const order=planner(S,now),seen=new Set(),nx=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,2);
-    let s=nb?`Next block: ${blockTitle(nb)} at ${nb.st} for ${fmtDur(nb.m)}.`:blocks.length?'You have no more blocks today.':'Nothing is scheduled today.';
-    if(nx.length)s+=' Study next: '+nx.map(o=>o.m.title+(o.chunk?' (about '+unitN(o.chunk,o.m.unit)+')':'')).join(', then ')+'.';
+    let s=nb?H(`Next block: ${blockTitle(nb)} at ${nb.st} for ${fmtDur(nb.m)}.`,`अगला ब्लॉक: ${L(blockTitle(nb))}, ${nb.st} बजे, ${FD(nb.m)} के लिए।`):blocks.length?H('You have no more blocks today.','आज अब कोई ब्लॉक नहीं बचा।'):H('Nothing is scheduled today.','आज कुछ तय नहीं है।');
+    if(nx.length)s+=H(' Study next: ',' आगे पढ़ें: ')+nx.map(o=>L(o.m.title)+(o.chunk?H(' (about ',' (लगभग ')+unitN(o.chunk,o.m.unit)+')':'')).join(H(', then ',', फिर '))+H('.','।');
     return s;
   }
   if(/\b(my (score|report)|how am i doing|how('?s| is) my (week|progress))\b/.test(t)){
     const r=weekReport(VS(),ws,now);
-    return r.score===null?'There is not enough data yet for a score this week. Log a session and ask again.':`Your score this week is ${r.score}. You studied ${fmtDur(r.ta)} of ${fmtDur(r.td)} due so far, with ${r.shA} of ${r.shD} sheets attempted.`;
+    return r.score===null?H('There is not enough data yet for a score this week. Log a session and ask again.','इस हफ़्ते स्कोर के लिए अभी पर्याप्त डेटा नहीं है। एक सत्र दर्ज करें और फिर पूछें।'):H(`Your score this week is ${r.score}. You studied ${fmtDur(r.ta)} of ${fmtDur(r.td)} due so far, with ${r.shA} of ${r.shD} sheets attempted.`,`इस हफ़्ते आपका स्कोर ${r.score} है। अब तक देय ${FD(r.td)} में से आपने ${FD(r.ta)} पढ़ा, और ${r.shD} में से ${r.shA} शीट हल कीं।`);
   }
-  if(/\b(when|what|which|show|list|any|upcoming|next)\b.*\b(tests?|mock)/.test(t)||/\b(my )?(tests?|mocks?)\b.*\b(coming|upcoming|scheduled)\b/.test(t)){
+  if(/\b(when|what|which|show|list|any|upcoming)\b.*\b(tests?|mock)/.test(t)||/\b(my )?(tests?|mocks?)\b.*\b(coming|upcoming|scheduled)\b/.test(t)){
     const up=PT().filter(x=>x.score==null).sort((a,b)=>testStart(a)-testStart(b));
-    if(!up.length){const done=PT().filter(x=>x.score!=null);return done.length?'No upcoming tests. Your last score was '+pctTxt(done[done.length-1])+'.':'You have no tests scheduled. Ask me to schedule one.'}
-    return 'Upcoming: '+up.slice(0,5).map(x=>`${x.title}, ${whenTxt(testStart(x))} (${fmtDur(x.m)})`).join('; ')+'.';
+    if(!up.length){const done=PT().filter(x=>x.score!=null);return done.length?H('No upcoming tests. Your last score was '+pctTxt(done[done.length-1])+'.','कोई आने वाला टेस्ट नहीं है। आपका पिछला स्कोर '+pctTxt(done[done.length-1])+' था।'):H('You have no tests scheduled. Ask me to schedule one.','आपका कोई टेस्ट तय नहीं है। मुझसे एक तय करने को कहें।')}
+    return H('Upcoming: ','आने वाले: ')+up.slice(0,5).map(x=>`${x.title}, ${whenTxt(testStart(x))} (${FD(x.m)})`).join('; ')+H('.','।');
   }
   if(/\b(reminders?|alarms?)\b/.test(t)&&/\b(what|which|show|list|any|do i have|my|upcoming)\b/.test(t)&&!/\b(set|create|add|remind me|cancel|delete|remove|turn)\b/.test(t)){
     const rs=PR().filter(r=>!r.done).sort((a,b)=>a.at-b.at);
-    return rs.length?'Active: '+rs.slice(0,6).map(r=>`${r.text} (${whenTxt(r.at)}${r.rep?', '+REPS[r.rep].toLowerCase():''})`).join('; ')+'.':'You have no reminders or alarms set.';
+    return rs.length?H('Active: ','चालू: ')+rs.slice(0,6).map(r=>`${(r.text==='Alarm'||r.text==='Reminder')?L(r.text):r.text} (${whenTxt(r.at)}${r.rep?', '+L(REPS[r.rep]).toLowerCase():''})`).join('; ')+H('.','।'):H('You have no reminders or alarms set.','आपका कोई रिमाइंडर या अलार्म सेट नहीं है।');
   }
   return null;
 }
@@ -1794,13 +2229,14 @@ function nameAfter(t,words){
   return m?m[1].replace(/^(a|an|the|new)\s+/,'').replace(/[.?!]+$/,'').trim():'';
 }
 async function brain(text){
+  const originalText=text;text=hiNorm(text);
   const t=normText(text).trim(),T=' '+t+' ',now=new Date();
-  if(!t)return {reply:'I did not catch that.'};
+  if(!t)return {reply:H('I did not catch that.','मैं समझ नहीं पाया।')};
   // answering my own question (yes/no) or filling a missing detail
   if(PENDING){
     if(/^(yes|yeah|yep|yup|sure|ok|okay|do it|confirm|go ahead|please do|haan|ha)\b/.test(t)){const p=PENDING;PENDING=null;return doActs(p.actions,'',{confirmed:true})}
     PENDING=null;
-    if(/^(no|nope|nah|cancel|don'?t|dont|stop|never ?mind|nahi)\b/.test(t))return {reply:'Okay, I left everything as it was.'};
+    if(/^(no|nope|nah|cancel|don'?t|dont|stop|never ?mind|nahi)\b/.test(t))return {reply:H('Okay, I left everything as it was.','ठीक है, मैंने सब कुछ जैसा था वैसा ही रहने दिया।')};
   }
   if(AWAIT){
     const a=AWAIT;AWAIT=null;
@@ -1817,9 +2253,14 @@ async function brain(text){
     }
   }
   if(/^(undo|revert|take (that|it) back|go back)\b/.test(t))return {reply:undoLast()};
-  if(/^(thanks|thank you|thx|ty|thanks a lot)\b/.test(t))return {reply:'Anytime. Good luck with the prep.'};
-  if(/^(hi|hello|hey|hii+|namaste|yo|good (morning|afternoon|evening))\b[\s!.]*$/.test(t))return {reply:'Hi! I can set alarms and reminders, schedule tests and mock tests, build a new study schedule, change the colours, or answer questions about the app. What would you like?',chips:true};
-  if(/\b(what can you do|help me|^help\b|your (features|abilities|skills)|how can you help|what do you do)\b/.test(t))return {reply:'I can: set alarms and reminders (one-off or repeating); schedule tests and mock tests and record your scores; build a new weekly schedule or add a block; add subjects and materials; log a session or start the timer; change dark/light mode, accent colour and background; answer how the app works; and tell you your hours, score, countdown and what to study next. I can also talk: tap the microphone.',chips:true};
+  {const lm=t.match(/\b(?:switch|change|speak|talk|reply|answer|set|use)\b.*\b(hindi|english)\b/)||t.match(/\blanguage\b.*\b(hindi|english)\b/)||t.match(/\b(hindi|english) (?:language|mode)\b/);
+   if(lm&&!/\b(voice|accent)\b/.test(t))return doActs([ex_('set_language',{lang:lm[1]==='hindi'?'hi':'en'})],'');
+   const vm=t.match(/\b(male|female) voice\b|\b(?:switch to|talk to|speak to|use|call you|be) (adi|anu)\b|\bvoice (?:to )?(male|female)\b/);
+   if(vm)return doActs([ex_('set_voice',{gender:(vm[1]||vm[3]||(vm[2]==='adi'?'male':'female'))})],'');}
+  if(!PENDING&&/^(yes|no)$/.test(t))return {reply:H('Okay.','ठीक है।')};
+  if(/^(thanks|thank you|thx|ty|thanks a lot)\b/.test(t))return {reply:H('Anytime. Good luck with the prep.','कभी भी। तैयारी के लिए शुभकामनाएँ।')};
+  if(/^(hi|hello|hey|hii+|namaste|yo|good (morning|afternoon|evening))\b[\s!.]*$/.test(t))return {reply:H('Hi! I can set alarms and reminders, schedule tests and mock tests, build a new study schedule, change the colours, or answer questions about the app. What would you like?','नमस्ते! मैं '+asstName()+' हूँ। मैं अलार्म और रिमाइंडर लगा {सकता|सकती} हूँ, टेस्ट और मॉक टेस्ट तय कर {सकता|सकती} हूँ, नई समय-सारणी बना {सकता|सकती} हूँ, रंग बदल {सकता|सकती} हूँ, और ऐप के बारे में सवालों के जवाब दे {सकता|सकती} हूँ। बताइए, क्या करूँ?'),chips:true};
+  if(/\b(what can you do|help me|^help\b|your (features|abilities|skills)|how can you help|what do you do)\b/.test(t))return {reply:H('I can: set alarms and reminders (one-off or repeating); schedule tests and mock tests and record your scores; build a new weekly schedule or add a block; add subjects and materials; log a session or start the timer; change dark/light mode, accent colour and background; answer how the app works; and tell you your hours, score, countdown and what to study next. I can also talk: tap the microphone.','मैं ये कर {सकता|सकती} हूँ: अलार्म और रिमाइंडर लगाना (एक बार या दोहराने वाले); टेस्ट और मॉक टेस्ट तय करना और आपके स्कोर दर्ज करना; नई साप्ताहिक समय-सारणी बनाना या ब्लॉक जोड़ना; विषय और सामग्री जोड़ना; सत्र दर्ज करना या टाइमर चलाना; गहरा/हल्का मोड, मुख्य रंग और पृष्ठभूमि बदलना; ऐप कैसे चलता है यह बताना; और आपके घंटे, स्कोर, उलटी गिनती और आगे क्या पढ़ना है यह बताना। मैं बात भी कर {सकता|सकती} हूँ: माइक्रोफ़ोन दबाइए।'),chips:true};
 
   /* look and theme */
   const lookTalk=/\b(theme|dark mode|light mode|night mode|colou?rs?|accent|background|wallpaper|appearance|look)\b/.test(t)||/\b(make|turn|switch|change|set|use|go)\b.*\b(dark|light)\b/.test(t);
@@ -1834,14 +2275,14 @@ async function brain(text){
     if(/\b(theme|background|wallpaper)\b/.test(t)&&!/\b(accent|button)\b/.test(t)&&col&&BGS[col]&&col!=='default'&&!ACCENTS[col])return doActs([ex_('set_background',{background:col})],'');
     if(/\b(background|wallpaper)\b/.test(t)){
       if(col)return doActs([ex_('set_background',{background:col})],'');
-      return {reply:'Which background? Try: '+Object.keys(BGS).join(', ')+', or a hex code such as #102030.',chips:false};
+      return {reply:H('Which background? Try: '+Object.keys(BGS).join(', ')+', or a hex code such as #102030.','कौन-सी पृष्ठभूमि? ये आज़माएँ: '+Object.keys(BGS).map(k=>L(BGS[k].label)).join(', ')+', या #102030 जैसा हेक्स कोड।'),chips:false};
     }
     if(/\b(accent|colou?r|button|primary)\b/.test(t)&&col)return doActs([ex_('set_accent',{color:col})],'');
     if(col&&/\b(make|turn|change|set|switch)\b/.test(t)&&!/\b(dark|light) mode\b/.test(t))return doActs([ex_('set_accent',{color:col})],'');
     if(/\b(auto|system|device)\b/.test(t))return doActs([ex_('set_theme',{mode:'auto'})],'');
     if(/\bdark\b|\bnight\b/.test(t))return doActs([ex_('set_theme',{mode:'dark'})],'');
     if(/\blight\b|\bbright\b|\bday\b/.test(t))return doActs([ex_('set_theme',{mode:'light'})],'');
-    return {reply:'I can switch dark, light or auto mode, change the accent colour (for example "make it green") and the background (for example "background mint"). Which one?'};
+    return {reply:H('I can switch dark, light or auto mode, change the accent colour (for example "make it green") and the background (for example "background mint"). Which one?','मैं गहरा, हल्का या अपने-आप मोड बदल {सकता|सकती} हूँ, मुख्य रंग बदल {सकता|सकती} हूँ (जैसे "हरा करो") और पृष्ठभूमि भी (जैसे "बैकग्राउंड मिंट करो")। कौन-सा करूँ?')};
   }
 
   /* tests and mock tests */
@@ -1857,13 +2298,13 @@ async function brain(text){
     if(/\b(cancel|delete|remove|drop|clear)\b/.test(t))return doActs([ex_('cancel_test',{match:/\ball\b/.test(t)?'all':cleanLabel(t)})],'');
     const dq=dataAnswer(t);if(dq&&!/\b(schedule|set|add|create|book|plan|arrange)\b/.test(t)&&!(/\d/.test(t)&&/\b(am|pm|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|at)\b/.test(t)))return {reply:dq};
     const pw0=parseWhen(text);
-    if(/\b(schedule|set|add|create|book|plan|put|arrange|need|want|have|take|new|fix)\b/.test(t)||(pw0.when&&(pw0.hasTime||pw0.hasDate)&&!/\b(when|list|show|next|upcoming|what)\b/.test(t))){
+    if(/\b(schedule|set|add|create|book|plan|put|arrange|need|want|have|take|new|fix)\b/.test(t)||(pw0.when&&(pw0.hasTime||pw0.hasDate)&&!/\b(when|list|show|upcoming|what)\b|\bnext (tests?|mocks?)\b/.test(t))){
       const pw=pw0,kind=/\bmock/.test(t)?'mock':'test',sub=findSubject(pw.rest);
       let label=cleanLabel(pw.rest);
       if(sub){const st=new Set(tokensOf(sub.name).concat([String(sub.id).toLowerCase()]));if(tokensOf(label).every(w=>[...st].some(x=>x.startsWith(w.slice(0,4))||w.startsWith(x.slice(0,4)))))label=''}
       label=label.replace(/\b(paper|exam)\b/g,'').trim();
       const draft={type:'schedule_test',title:label?cap(label):'',subject:sub?sub.id:'',kind,minutes:pw.dur,marks:pw.marks};
-      if(!pw.when){AWAIT={kind:'when',draft};return {reply:`When should the ${kind==='mock'?'mock test':'test'} be? For example "Sunday at 10 am" or "12 October, 4 pm".`}}
+      if(!pw.when){AWAIT={kind:'when',draft};return {reply:H(`When should the ${kind==='mock'?'mock test':'test'} be? For example "Sunday at 10 am" or "12 October, 4 pm".`,`${kind==='mock'?'मॉक टेस्ट':'टेस्ट'} कब रखें? जैसे "रविवार सुबह 10 बजे" या "12 अक्टूबर, शाम 4 बजे"।`)}}
       return doActs([ex_('schedule_test',Object.assign(draft,{date:ymd(pw.when),time:pw.hasTime?pad(pw.when.getHours())+':'+pad(pw.when.getMinutes()):'10:00'}))],'');
     }
   }
@@ -1876,12 +2317,13 @@ async function brain(text){
     }
     if(/\b(turn|switch) (the )?(bell|alarms?) (on|off)\b|\b(enable|disable) (the )?(alarms?|bell)\b/.test(t))return doActs([ex_('alarms_on',{on:/\b(on|enable)\b/.test(t)})],'');
     const dq=dataAnswer(t);if(dq)return {reply:dq};
-    if(/\b(set|create|add|make|remind|wake|new|put|give|schedule)\b/.test(t)){
-      const pw=parseWhen(text),isAlarm=/\b(alarm|wake me)\b/.test(t)&&!/\bremind/.test(t);
-      let label=cleanLabel(pw.rest);
-      if(!label&&/\bwake me\b/.test(t))label='Wake up';
+    const pwr=parseWhen(text);
+    if(/\b(set|create|add|make|remind|wake|new|put|give|schedule)\b/.test(t)||(pwr.when&&(pwr.hasTime||pwr.hasDate)&&!/\b(what|which|how|when|why|show|list|any|do i have)\b/.test(t))){
+      const pw=pwr,isAlarm=/\b(alarm|wake me)\b/.test(t)&&!/\bremind/.test(t);
+      let label=restoreCase(cleanLabel(pw.rest),originalText);
+      if(!label&&/\bwake me\b/.test(t))label=H('Wake up','उठना');
       const draft={type:'set_reminder',text:label,kind:isAlarm?'alarm':'reminder',repeat:pw.rep};
-      if(!pw.when||(!pw.hasTime&&!pw.hasDate)){AWAIT={kind:'when',draft};return {reply:`What time should I ${isAlarm?'set the alarm':'remind you'}? For example "6 pm" or "tomorrow at 7:30 am".`}}
+      if(!pw.when||(!pw.hasTime&&!pw.hasDate)){AWAIT={kind:'when',draft};return {reply:H(`What time should I ${isAlarm?'set the alarm':'remind you'}? For example "6 pm" or "tomorrow at 7:30 am".`,`${isAlarm?'अलार्म':'याद दिलाना'} किस समय रखूँ? जैसे "शाम 6 बजे" या "कल सुबह 7:30 बजे"।`)}}
       let w=pw.when;if(!pw.hasTime){w=new Date(w);w.setHours(9,0,0,0)}
       return doActs([ex_('set_reminder',Object.assign(draft,{at:fmtLocal(w),text:label||(isAlarm?'Alarm':'Reminder')}))],'');
     }
@@ -1891,8 +2333,8 @@ async function brain(text){
   if(/\b(add|create|put|schedule|set up|make|insert)\b/.test(t)&&/\b(block|slot|session|class)\b/.test(t)&&!/\b(log|logged)\b/.test(t)&&!/\bstart\b/.test(t)){
     const pw=parseWhen(text),sub=findSubject(text),days=extractDays(t);
     const kind=/\bmock\b/.test(t)?'mock':/\brevision|revise\b/.test(t)?'revision':/\bpractice|practise|problems|questions\b/.test(t)?'practice':'theory';
-    if(!sub)return {reply:'Which subject is the block for? You have: '+S.plan.subjects.map(s=>s.name).join(', ')+'.'};
-    if(!pw.hasTime)return {reply:'What time should the block start? For example "at 6 am".'};
+    if(!sub)return {reply:H('Which subject is the block for? You have: '+S.plan.subjects.map(s=>s.name).join(', ')+'.','यह ब्लॉक किस विषय के लिए है? आपके विषय: '+S.plan.subjects.map(s=>L(s.name)).join(', ')+'।')};
+    if(!pw.hasTime)return {reply:H('What time should the block start? For example "at 6 am".','ब्लॉक किस समय शुरू हो? जैसे "सुबह 6 बजे"।')};
     return doActs([ex_('add_block',{subject:sub.id,days:days.length?days:[dow(pw.when||now)],time:pad(pw.h)+':'+pad(pw.m),minutes:pw.dur||90,kind,sheets:kind==='practice'?1:0})],'');
   }
   if(/\b(schedule|timetable|routine|study plan|plan)\b/.test(t)&&/\b(new|make|create|build|generate|prepare|design|set up|setup|replace|reset|redo|fresh|load|use|start with|apply)\b/.test(t)&&!/^(how|what is|why)\b/.test(t)){
@@ -1907,7 +2349,7 @@ async function brain(text){
   if(/\b(add|create|new)\b.*\bsubject\b/.test(t)){
     const name=nameAfter(text.toLowerCase().replace(/\s+/g,' '),'subject|called|named');
     const imp=(t.match(/importance (?:of |is |to )?(\d)/)||[])[1],conf=(t.match(/confidence (?:of |is |to )?(\d)/)||[])[1];
-    if(!name)return {reply:'What is the subject called?'};
+    if(!name)return {reply:H('What is the subject called?','विषय का नाम क्या है?')};
     return doActs([ex_('add_subject',{name:cap(name),importance:imp,confidence:conf})],'');
   }
   if(/\b(add|create|new|upload)\b.*\b(book|pdf|material|notes|sheet|paper|lecture|lectures|playlist|resource|course material|textbook)\b/.test(t)&&!/\b(mock test|reminder|alarm)\b/.test(t)){
@@ -1915,7 +2357,7 @@ async function brain(text){
     const kind=/\b(sheet|questions|problems|practice)\b/.test(t)?'sheet':/\b(notes|slides)\b/.test(t)?'notes':/\b(mock|paper)\b/.test(t)?'mock':'theory';
     let title=nameAfter(text.replace(/\s+/g,' '),'book|pdf|material|notes|sheet|paper|textbook|called|named|titled');
     title=title.replace(/\s+(for|in|on|with)\b.*$/i,'').replace(/\b\d+ ?(pages?|chapters?|questions?|sheets?|lectures?|videos?)\b/gi,'').trim();
-    if(!title)return {reply:'What is the material called?'};
+    if(!title)return {reply:H('What is the material called?','सामग्री का नाम क्या है?')};
     const unit=tot?(tot[2].replace(/s$/,'')==='video'?'lectures':tot[2].replace(/s$/,'')+'s'):undefined;
     return doActs([ex_('add_material',{title,subject:sub?sub.id:null,kind,total:tot?+tot[1]:0,unit})],'');
   }
@@ -1928,11 +2370,11 @@ async function brain(text){
   if(/\bcourse\b/.test(t)){
     if(/\b(new|create|add|start|make)\b/.test(t)&&!/\b(material|how)\b/.test(t)){
       const nm=nameAfter(text.replace(/\s+/g,' '),'called|named|titled|course for|course on|course');
-      if(!nm||/^(new|a|another|one)$/i.test(nm)){AWAIT={kind:'coursename'};return {reply:'What should the course be called?'}}
+      if(!nm||/^(new|a|another|one)$/i.test(nm)){AWAIT={kind:'coursename'};return {reply:H('What should the course be called?','कोर्स का नाम क्या रखें?')}}
       return doActs([ex_('create_course',{name:cap(nm)})],'');
     }
     if(/\b(switch|open|go to|change to|move to)\b/.test(t)){const nm=nameAfter(text,'course|to');return doActs([ex_('open_course',{name:nm})],'')}
-    if(/\b(list|which|what|my|show)\b/.test(t))return {reply:CL?'Your courses: '+CL.courses.map(c=>c.name).join(', ')+'.':'You are using one plan on this device. Sign in to keep several courses.'};
+    if(/\b(list|which|what|my|show)\b/.test(t))return {reply:CL?H('Your courses: ','आपके कोर्स: ')+CL.courses.map(c=>c.name).join(', ')+H('.','।'):H('You are using one plan on this device. Sign in to keep several courses.','आप इस डिवाइस पर एक ही योजना इस्तेमाल कर रहे हैं। कई कोर्स रखने के लिए साइन इन करें।')};
   }
 
   /* timer, logging, navigation */
@@ -1949,7 +2391,7 @@ async function brain(text){
   /* questions about your own data, then about the app */
   const dq=dataAnswer(t);if(dq)return {reply:dq};
   const kb=askKB(text);if(kb)return {reply:kb};
-  return {reply:'I am not sure I understood that. Try something like "set an alarm for 6 am tomorrow", "schedule a mock test on Sunday at 10", "remind me to revise ML at 8 pm", "make a schedule for 5 hours a day", "dark mode", or "how do I log a session?"'+(ACFG.provider&&ACFG.key?'':' For free-form requests, switch on Smart mode in the gear menu.'),chips:true};
+  return {reply:H('I am not sure I understood that. Try something like "set an alarm for 6 am tomorrow", "schedule a mock test on Sunday at 10", "remind me to revise ML at 8 pm", "make a schedule for 5 hours a day", "dark mode", or "how do I log a session?"'+(ACFG.provider&&ACFG.key?'':' For free-form requests, switch on Smart mode in the gear menu.'),'मैं ठीक से समझ नहीं पाया। कुछ ऐसा कहें: "कल सुबह 6 बजे का अलार्म लगाओ", "रविवार को 10 बजे मॉक टेस्ट तय करो", "रात 8 बजे ML दोहराने की याद दिलाओ", "रोज़ 5 घंटे की समय-सारणी बनाओ", "डार्क मोड", या "सत्र कैसे दर्ज करूँ?"'+(ACFG.provider&&ACFG.key?'':' खुले-ढंग के अनुरोधों के लिए गियर मेन्यू में स्मार्ट मोड चालू करें।')),chips:true};
 }
 
 /* ---------- optional smart mode: your own AI key, called straight from this device ---------- */
@@ -1976,7 +2418,8 @@ log_session {subject, minutes (required), date, time}
 start_timer {subject}   stop_timer {}
 create_course {name}   open_course {name}
 navigate {to:"today"|"plan"|"materials"|"report"|"settings"|"account"}
-alarms_on {on:true|false}`;
+alarms_on {on:true|false}
+set_language {lang:"en"|"hi"}   set_voice {gender:"male"|"female"}`;
 function stateSummary(){
   const now=new Date(),ws=weekStart(now),r=weekReport(VS(),ws,now);
   return JSON.stringify({
@@ -1993,7 +2436,7 @@ function stateSummary(){
 }
 function aiSystem(){
   const now=new Date();
-  return `You are the assistant inside Abhyashify, a study-planner web app used by a student preparing for GATE DA 2027 (Data Science and AI). Be warm, brief and practical.
+  return `Your name is ${asstName()} (${ACFG.gender==='male'?'a male':'a female'} voice). The app language is ${LANG==='hi'?'Hindi: write "reply" in Hindi using Devanagari script, in a friendly spoken style, and use '+(ACFG.gender==='male'?'masculine':'feminine')+' verb forms for yourself':'English'}. The student may write in English, Hindi or Hinglish.\nYou are the assistant inside Abhyashify, a study-planner web app used by a student preparing for GATE DA 2027 (Data Science and AI). Be warm, brief and practical.
 Reply with ONE JSON object and nothing else: {"reply": string, "actions": [ ... ]}.
 - "reply" is plain text, at most 3 short sentences, no markdown (it may be read aloud). When you quiz the student, ask one question at a time and check their answer.
 - "actions" is a list (often empty) of things for the app to do. Use only the action types below. You cannot delete courses, materials or account data; tell the user to do that in the app.
@@ -2089,7 +2532,7 @@ function speak(text,done){
   if(!SYN_||!window.SpeechSynthesisUtterance){done&&done();return}
   const clean=speechText(text).slice(0,600);if(!clean){done&&done();return}
   stopSpeaking();const gen=speakGen,pv=pickVoice();
-  const parts=clean.match(/[^.!?]+[.!?]*/g)||[clean];
+  const parts=clean.match(/[^.!?।]+[.!?।]*/g)||[clean];
   speakingNow=true;paintMic();
   parts.forEach((p,i)=>{
     const u=new SpeechSynthesisUtterance(p.trim());
@@ -2102,7 +2545,7 @@ function speak(text,done){
 window.AsstSpeak=t=>{if(ACFG.speak)speak(t)};
 function stopListening(){try{rec&&(rec.onend=null,rec.abort())}catch(e){}rec=null;listening=false;paintMic()}
 function startListening(){
-  if(!SR){asstAdd('a','Voice input is not supported in this browser. Chrome, Edge or Safari work. You can still type, and I can read my answers aloud.');voiceChat=false;paintMic();return}
+  if(!SR){asstAdd('a',H('Voice input is not supported in this browser. Chrome, Edge or Safari work. You can still type, and I can read my answers aloud.','इस ब्राउज़र में आवाज़ से बोलना काम नहीं करता। Chrome, Edge या Safari चलते हैं। आप फिर भी लिख सकते हैं, और मैं जवाब बोलकर सुना {सकता|सकती} हूँ।'));voiceChat=false;paintMic();return}
   stopSpeaking();stopListening();
   const r=new SR();rec=r;r.lang=ACFG.lang||'en-IN';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
   let finalT='',err=null;const box=document.getElementById('as-text');
@@ -2111,11 +2554,11 @@ function startListening(){
   r.onerror=e=>{err=e.error};
   r.onend=()=>{
     if(rec!==r)return;rec=null;listening=false;paintMic();
-    if(err==='not-allowed'||err==='service-not-allowed'){voiceChat=false;paintMic();asstAdd('a','The microphone is blocked. Allow microphone access for this site in your browser settings, then tap the mic again.');return}
-    if(err==='network'){voiceChat=false;paintMic();asstAdd('a','Voice recognition needs an internet connection. You can type instead.');return}
+    if(err==='not-allowed'||err==='service-not-allowed'){voiceChat=false;paintMic();asstAdd('a',H('The microphone is blocked. Allow microphone access for this site in your browser settings, then tap the mic again.','माइक्रोफ़ोन बंद है। ब्राउज़र की सेटिंग्स में इस साइट को माइक्रोफ़ोन की अनुमति दें, फिर माइक दोबारा दबाएँ।'));return}
+    if(err==='network'){voiceChat=false;paintMic();asstAdd('a',H('Voice recognition needs an internet connection. You can type instead.','आवाज़ पहचानने के लिए इंटरनेट चाहिए। आप इसके बजाय लिख सकते हैं।'));return}
     const txt=finalT.trim();
     if(txt){noSpeech=0;asstSend(txt,true)}
-    else if(voiceChat){noSpeech++;if(noSpeech>=2){voiceChat=false;noSpeech=0;paintMic();asstAdd('a','I stopped listening because I did not hear anything. Tap the microphone to talk again.')}else setTimeout(()=>{if(voiceChat&&!listening&&!speakingNow)startListening()},250)}
+    else if(voiceChat){noSpeech++;if(noSpeech>=2){voiceChat=false;noSpeech=0;paintMic();asstAdd('a',H('I stopped listening because I did not hear anything. Tap the microphone to talk again.','कुछ सुनाई नहीं दिया, इसलिए मैंने सुनना बंद कर दिया। फिर बात करने के लिए माइक्रोफ़ोन दबाएँ।'))}else setTimeout(()=>{if(voiceChat&&!listening&&!speakingNow)startListening()},250)}
   };
   try{r.start()}catch(e){voiceChat=false;paintMic()}
 }
@@ -2125,15 +2568,15 @@ function toggleMic(){
 }
 
 /* ---------- assistant panel ---------- */
-const SUGGEST=['Set an alarm for 6 am tomorrow','Schedule a mock test on Sunday at 10','Make a schedule for 5 hours a day','What should I study next?','Make it dark with a green accent','How do I log a session?'];
+const suggestions=()=>LANG==='hi'?['कल सुबह 6 बजे का अलार्म लगाओ','रविवार को 10 बजे मॉक टेस्ट तय करो','रोज़ 5 घंटे की समय-सारणी बनाओ','आगे मुझे क्या पढ़ना चाहिए?','डार्क मोड और मुख्य रंग हरा करो','सत्र कैसे दर्ज करूँ?']:['Set an alarm for 6 am tomorrow','Schedule a mock test on Sunday at 10','Make a schedule for 5 hours a day','What should I study next?','Make it dark with a green accent','How do I log a session?'];
 let asstOpen=false,asstView='chat',asstBusy=false,asstChips=true;
 const asEl=()=>document.getElementById('asst');
 const fmtMsg=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
 function asstAdd(role,text){
-  CHAT.push({r:role,t:String(text||''),ts:Date.now()});if(CHAT.length>80)CHAT=CHAT.slice(-80);saveChat();
+  CHAT.push({r:role,t:role==='a'?HG(String(text||'')):String(text||''),ts:Date.now()});if(CHAT.length>80)CHAT=CHAT.slice(-80);saveChat();
   paintChat();
 }
-function modeLabel(){return (aiReady()?'Smart mode':'Built-in')+' · '+(ACFG.gender==='male'?'male':'female')+' voice'}
+function modeLabel(){return asstName()+' · '+(aiReady()?H('Smart mode','स्मार्ट मोड'):H('Built-in','बिल्ट-इन'))+' · '+(ACFG.gender==='male'?H('male voice','पुरुष आवाज़'):H('female voice','महिला आवाज़'))}
 function paintMic(){
   const b=document.getElementById('as-mic');if(!b)return;
   const on=listening||voiceChat;
@@ -2141,22 +2584,22 @@ function paintMic(){
   b.setAttribute('aria-pressed',on?'true':'false');
   b.setAttribute('aria-label',on?'Stop voice chat':'Start voice chat');
   const st=document.getElementById('as-state');
-  if(st)st.textContent=listening?'Listening…':speakingNow?'Speaking…':asstBusy?'Thinking…':voiceChat?'Voice chat on':'';
+  if(st)st.textContent=listening?H('Listening…','{सुन रहा|सुन रही} हूँ…'):speakingNow?H('Speaking…','{बोल रहा|बोल रही} हूँ…'):asstBusy?H('Thinking…','{सोच रहा|सोच रही} हूँ…'):voiceChat?H('Voice chat on','आवाज़ वाली बातचीत चालू'):'';
 }
 function paintChat(){
   const box=document.getElementById('as-msgs');if(!box||asstView!=='chat')return;
   const stick=box.scrollHeight-box.scrollTop-box.clientHeight<80;
   let h='';
-  if(!CHAT.length)h+=`<div class="as-hello"><span class="logo">${ic('spark')}</span><b>Hi, I'm your study assistant</b><p class="muted small">I can set alarms, reminders and tests, build schedules, change the look of the app and answer questions about it. Type, or tap the mic and talk.</p></div>`;
-  h+=CHAT.slice(-40).map(m=>`<div class="as-m ${m.r==='u'?'u':'a'}">${fmtMsg(m.t)}</div>`).join('');
-  if(asstBusy)h+='<div class="as-m a dots" aria-label="Thinking"><i></i><i></i><i></i></div>';
+  if(!CHAT.length)h+=`<div class="as-hello" translate="no"><span class="logo">${ic('spark')}</span><b>${H("Hi, I'm "+asstName()+", your study assistant",'नमस्ते, मैं '+asstName()+' हूँ, आपकी पढ़ाई की सहायक')}</b><p class="muted small">${H('I can set alarms, reminders and tests, build schedules, change the look of the app and answer questions about it. Type, or tap the mic and talk.','मैं अलार्म, रिमाइंडर और टेस्ट लगा {सकता|सकती} हूँ, समय-सारणी बना {सकता|सकती} हूँ, ऐप का रंग-रूप बदल {सकता|सकती} हूँ और उसके बारे में सवालों के जवाब दे {सकता|सकती} हूँ। लिखिए, या माइक दबाकर बोलिए।')}</p></div>`;
+  h+=CHAT.slice(-40).map(m=>`<div class="as-m ${m.r==='u'?'u':'a'}" translate="no">${fmtMsg(m.t)}</div>`).join('');
+  if(asstBusy)h+='<div class="as-m a dots" translate="no" aria-label="Thinking"><i></i><i></i><i></i></div>';
   box.innerHTML=h;
   if(stick||asstBusy)box.scrollTop=box.scrollHeight;
   const ch=document.getElementById('as-chips');
   if(ch){
     const list=[];
-    if(LASTSNAP)list.push({t:'Undo my last change',v:'undo',cls:'undo'});
-    if(asstChips&&!asstBusy)SUGGEST.forEach(x=>list.push({t:x,v:x}));
+    if(LASTSNAP)list.push({t:H('Undo my last change','मेरा पिछला बदलाव वापस करें'),v:'undo',cls:'undo'});
+    if(asstChips&&!asstBusy)suggestions().forEach(x=>list.push({t:x,v:x}));
     ch.innerHTML=list.map(c=>`<button type="button" class="as-chip ${c.cls||''}" data-asa="chip" data-v="${esc(c.v)}">${esc(c.t)}</button>`).join('');
   }
   paintMic();
@@ -2193,7 +2636,7 @@ function paintAssistant(){
   const el=asEl();if(!el)return;
   const cfg=asstView==='cfg';
   el.innerHTML=`<div class="as-scrim" data-asa="close"></div><section class="as-panel" role="dialog" aria-modal="true" aria-label="Assistant">
-    <header class="as-head"><div class="as-title"><span class="logo">${ic('spark')}</span><div><b>${cfg?'Assistant settings':'Assistant'}</b><small id="as-sub">${esc(modeLabel())}</small></div></div>
+    <header class="as-head"><div class="as-title"><span class="logo">${ic('spark')}</span><div><b translate="no">${cfg?H('Assistant settings','सहायक की सेटिंग्स'):asstName()}</b><small id="as-sub" translate="no">${esc(modeLabel())}</small></div></div>
       <div class="as-tools">${cfg?`<button type="button" class="icb" data-asa="back" aria-label="Back to chat">${ic('chev','flip')}</button>`:`<button type="button" class="icb" data-asa="speak" aria-pressed="${ACFG.speak}" aria-label="Read answers aloud">${ic(ACFG.speak?'volume':'volume-off')}</button><button type="button" class="icb" data-asa="cfg" aria-label="Assistant settings">${ic('sliders')}</button>`}
       <button type="button" class="icb" data-asa="close" aria-label="Close assistant">${ic('x')}</button></div></header>
     ${cfg?`<div class="as-cfg" id="as-cfg">${cfgHtml()}</div>`:`<div class="as-body" id="as-msgs" aria-live="polite"></div><div class="as-chips" id="as-chips"></div>
@@ -2206,24 +2649,29 @@ function cfgHtml(){
   const base=(ACFG.lang||'en-IN').slice(0,2).toLowerCase();
   const vs=VOICES.filter(v=>(v.lang||'').toLowerCase().startsWith(base));
   const pv=pickVoice();
-  const langs=[['en-IN','English (India)'],['en-US','English (US)'],['en-GB','English (UK)'],['hi-IN','Hindi']];
   const prov=ACFG.provider||'';
-  return `<div class="stack" style="gap:8px"><span class="kick">Voice</span>
-      <div class="seg">${[['female','Female'],['male','Male']].map(([k,l])=>`<button type="button" data-asa="gender" data-v="${k}" aria-pressed="${ACFG.gender===k}">${l}</button>`).join('')}</div>
-      ${SYN_?(pv.shifted&&VOICES.length?`<p class="small muted">This device has no ${ACFG.gender} voice for this language, so I shift the pitch of the one it has. Pick a specific voice below to change that.</p>`:(pv.v?`<p class="small muted">Using: ${esc(pv.v.name)}</p>`:'<p class="small muted">No voices were found yet. Some browsers load them a moment after the page opens.</p>')):'<p class="small muted">This browser cannot speak answers aloud. Chrome, Edge or Safari can.</p>'}</div>
-    <label class="switch"><span>Read answers aloud</span><input type="checkbox" data-cfg="speak"${ACFG.speak?' checked':''}></label>
-    <div class="grid2"><label class="field">Language<select data-cfg="lang">${langs.map(([k,l])=>`<option value="${k}"${ACFG.lang===k?' selected':''}>${l}</option>`).join('')}</select></label>
-      <label class="field">Speed ${(+ACFG.rate||1).toFixed(1)}×<input type="range" data-cfg="rate" min="0.7" max="1.4" step="0.1" value="${+ACFG.rate||1}"></label></div>
-    <label class="field">Voice<select data-cfg="voiceName"><option value="">Automatic (${esc(ACFG.gender)})</option>${vs.map(v=>`<option value="${esc(v.name)}"${ACFG.voiceName===v.name?' selected':''}>${esc(v.name)}${genderOf(v)?' · '+genderOf(v):''}</option>`).join('')}</select></label>
-    <button type="button" class="btn ghost" data-asa="testvoice">${ic('volume')}Test the voice</button>
-    <div class="stack" style="gap:8px;margin-top:6px"><span class="kick">Smart mode (optional)</span>
-      <p class="small muted">Without a key I use my built-in understanding, which handles the common requests and needs no account. For free-form requests, paste your own AI key. It is stored only on this device and sent only to the provider you choose. In Smart mode your messages and a short summary of your schedule go to that provider.</p>
-      <label class="field">Provider<select data-cfg="provider"><option value="">Off (built-in)</option>${Object.keys(AI_PROVIDERS).map(k=>`<option value="${k}"${prov===k?' selected':''}>${esc(AI_PROVIDERS[k].label)}</option>`).join('')}</select></label>
-      ${prov?`<label class="field">API key<input type="password" data-cfg="key" value="${esc(ACFG.key)}" autocomplete="off" spellcheck="false" placeholder="Paste your key"></label>
-      <label class="field">Model (optional)<input type="text" data-cfg="model" value="${esc(ACFG.model)}" placeholder="${esc(AI_PROVIDERS[prov].model)}" spellcheck="false"></label>
-      ${prov==='gemini'?'<p class="small muted">Get a free key at aistudio.google.com/apikey.</p>':'<p class="small muted">Get a key at console.anthropic.com. Usage is billed to you.</p>'}
-      <button type="button" class="btn ghost danger" data-asa="rmkey">Remove my key</button>`:''}</div>
-    <button type="button" class="btn ghost" data-asa="clear">Clear this conversation</button>`;
+  const voiceNote=!SYN_?H('This browser cannot speak answers aloud. Chrome, Edge or Safari can.','यह ब्राउज़र जवाब बोलकर नहीं सुना सकता। Chrome, Edge या Safari सुना सकते हैं।')
+    :pv.shifted&&VOICES.length?H('This device has no '+ACFG.gender+' voice for this language, so I shift the pitch of the one it has. Pick a specific voice below to change that.','इस डिवाइस में इस भाषा की '+(ACFG.gender==='male'?'पुरुष':'महिला')+' आवाज़ नहीं है, इसलिए मैं उपलब्ध आवाज़ की पिच बदल {देता|देती} हूँ। इसे बदलने के लिए नीचे कोई ख़ास आवाज़ चुनें।')
+    :pv.v?H('Using: ','इस्तेमाल हो रही है: ')+esc(pv.v.name)
+    :H('No voices were found yet. Some browsers load them a moment after the page opens.','अभी कोई आवाज़ नहीं मिली। कुछ ब्राउज़र पेज खुलने के थोड़ी देर बाद आवाज़ें लोड करते हैं।');
+  return `<div class="stack" style="gap:8px"><span class="kick">${H('Language','भाषा')}</span>
+      <div class="seg" translate="no">${[['en','English'],['hi','हिन्दी']].map(([k,l])=>`<button type="button" data-asa="lang" data-v="${k}" aria-pressed="${LANG===k}">${l}</button>`).join('')}</div>
+      <p class="small muted">${H('The app, my replies and voice chat all follow this language. You can also type or say "switch to Hindi" or "switch to English".','ऐप, मेरे जवाब और आवाज़ वाली बातचीत, सब इसी भाषा में चलते हैं। आप "हिन्दी में बोलो" या "switch to English" भी कह सकते हैं।')}</p></div>
+    <div class="stack" style="gap:8px"><span class="kick">${H('Voice','आवाज़')}</span>
+      <div class="seg" translate="no">${[['female',H('Female · Anu','महिला · अनु')],['male',H('Male · Adi','पुरुष · आदि')]].map(([k,l])=>`<button type="button" data-asa="gender" data-v="${k}" aria-pressed="${ACFG.gender===k}">${l}</button>`).join('')}</div>
+      <p class="small muted">${voiceNote}</p></div>
+    <label class="switch"><span>${H('Read answers aloud','जवाब बोलकर सुनाएँ')}</span><input type="checkbox" data-cfg="speak"${ACFG.speak?' checked':''}></label>
+    <label class="field">${H('Speed','गति')} ${(+ACFG.rate||1).toFixed(1)}×<input type="range" data-cfg="rate" min="0.7" max="1.4" step="0.1" value="${+ACFG.rate||1}"></label>
+    <label class="field">${H('Voice','आवाज़')}<select data-cfg="voiceName"><option value="">${H('Automatic','अपने-आप')} (${ACFG.gender==='male'?H('male','पुरुष'):H('female','महिला')})</option>${vs.map(v=>`<option value="${esc(v.name)}"${ACFG.voiceName===v.name?' selected':''}>${esc(v.name)}${genderOf(v)?' · '+(genderOf(v)==='male'?H('male','पुरुष'):H('female','महिला')):''}</option>`).join('')}</select></label>
+    <button type="button" class="btn ghost" data-asa="testvoice">${ic('volume')}${H('Test the voice','आवाज़ सुनकर देखें')}</button>
+    <div class="stack" style="gap:8px;margin-top:6px"><span class="kick">${H('Smart mode (optional)','स्मार्ट मोड (वैकल्पिक)')}</span>
+      <p class="small muted">${H('Without a key I use my built-in understanding, which handles the common requests and needs no account. For free-form requests, paste your own AI key. It is stored only on this device and sent only to the provider you choose. In Smart mode your messages and a short summary of your schedule go to that provider.','बिना API key के मैं अपनी बिल्ट-इन समझ से काम {करता|करती} हूँ, जो आम अनुरोध सँभाल लेती है और जिसके लिए कोई खाता नहीं चाहिए। खुले-ढंग के अनुरोधों के लिए अपनी AI key चिपकाएँ। वह सिर्फ़ इसी डिवाइस पर रहती है और सिर्फ़ आपके चुने प्रदाता को भेजी जाती है। स्मार्ट मोड में आपके संदेश और आपकी समय-सारणी का छोटा सार उसी प्रदाता को जाता है।')}</p>
+      <label class="field">${H('Provider','प्रदाता')}<select data-cfg="provider"><option value="">${H('Off (built-in)','बंद (बिल्ट-इन)')}</option>${Object.keys(AI_PROVIDERS).map(k=>`<option value="${k}"${prov===k?' selected':''}>${esc(LANG==='hi'&&k==='gemini'?'Google Gemini (मुफ़्त की)':AI_PROVIDERS[k].label)}</option>`).join('')}</select></label>
+      ${prov?`<label class="field">${H('API key','API key')}<input type="password" data-cfg="key" value="${esc(ACFG.key)}" autocomplete="off" spellcheck="false" placeholder="${H('Paste your key','अपनी key चिपकाएँ')}"></label>
+      <label class="field">${H('Model (optional)','मॉडल (वैकल्पिक)')}<input type="text" data-cfg="model" value="${esc(ACFG.model)}" placeholder="${esc(AI_PROVIDERS[prov].model)}" spellcheck="false"></label>
+      <p class="small muted">${prov==='gemini'?H('Get a free key at aistudio.google.com/apikey.','aistudio.google.com/apikey पर मुफ़्त की पाएँ।'):H('Get a key at console.anthropic.com. Usage is billed to you.','console.anthropic.com पर की पाएँ। इस्तेमाल का ख़र्च आपके खाते से लगेगा।')}</p>
+      <button type="button" class="btn ghost danger" data-asa="rmkey">${H('Remove my key','मेरी की हटाएँ')}</button>`:''}</div>
+    <button type="button" class="btn ghost" data-asa="clear">${H('Clear this conversation','यह बातचीत साफ़ करें')}</button>`;
 }
 function cfgChange(t){
   const k=t.dataset.cfg;if(!k)return;
@@ -2246,9 +2694,10 @@ document.addEventListener('click',e=>{
   else if(a==='speak'){ACFG.speak=!ACFG.speak;saveAcfg();if(!ACFG.speak)stopSpeaking();t.setAttribute('aria-pressed',ACFG.speak);t.innerHTML=ic(ACFG.speak?'volume':'volume-off')}
   else if(a==='mic')toggleMic();
   else if(a==='chip')asstSend(t.dataset.v,false);
-  else if(a==='gender'){ACFG.gender=t.dataset.v;ACFG.voiceName='';saveAcfg();const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml();const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();speak(ACFG.gender==='male'?'Hello, I will speak with a male voice.':'Hello, I will speak with a female voice.')}
-  else if(a==='testvoice')speak('Hello! I am your study assistant. This is how I sound.');
-  else if(a==='rmkey'){ACFG.key='';ACFG.provider='';ACFG.model='';saveAcfg();const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml();const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();toast('Key removed')}
+  else if(a==='gender'){ACFG.gender=t.dataset.v;ACFG.voiceName='';saveAcfg();const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml();const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();speak(H('Hello, I am '+asstName()+'. This is my voice.','नमस्ते, मैं '+asstName()+' हूँ। यह मेरी आवाज़ है।'))}
+  else if(a==='testvoice')speak(H('Hello! I am '+asstName()+', your study assistant. This is how I sound.','नमस्ते! मैं '+asstName()+' हूँ, आपकी पढ़ाई की सहायक। मेरी आवाज़ ऐसी है।'));
+  else if(a==='lang'){setLang(t.dataset.v);const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel()}
+  else if(a==='rmkey'){ACFG.key='';ACFG.provider='';ACFG.model='';saveAcfg();const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml();const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();toast(H('Key removed','की हटा दी गई'))}
   else if(a==='clear'){CHAT=[];saveChat();PENDING=null;asstChips=true;asstView='chat';paintAssistant()}
 });
 document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.cfg&&asEl()&&asEl().contains(e.target))cfgChange(e.target)});
@@ -2373,6 +2822,7 @@ function matForm(m){
 function settingsForm(){
   const p=S.plan;
   openSheet('Settings',`${CL?`<label class="field">Course name<input type="text" name="cn" value="${esc(CL.name||'')}" maxlength="80" required></label>`:''}<div class="stack" style="gap:8px"><span class="kick">Appearance</span><div class="seg" id="themeseg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>`<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme===k}">${l}</button>`).join('')}</div></div>
+    <div class="stack" style="gap:8px"><span class="kick">Language</span>${langSeg()}</div>
     ${lookPickers()}
     <div class="grid2"><label class="field">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="field">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
     <div class="grid2"><label class="field">Alarm minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}" inputmode="numeric"></label><label class="field">Revision buffer (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}" inputmode="numeric"></label></div>
@@ -2523,6 +2973,7 @@ document.addEventListener('click',async e=>{
       try{await navigator.clipboard.writeText(reportText());toast('Report copied')}catch(err){toast('Copy was blocked by the browser')}
       break}
     case 'settings':settingsForm();break;
+    case 'lang':setLang(d.v);break;
     case 'lookacc':{const r=setLook({accent:d.v||null});if(r.err)toast(r.err);paintLookPickers();break}
     case 'lookbg':{const r=setLook({bg:d.v||null});if(r.err)toast(r.err);else if(r.note)toast(r.note.trim());paintLookPickers();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break}
     case 'theme':theme=d.v;lsSet('pl.theme',theme);applyTheme();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break;
@@ -2607,9 +3058,9 @@ function installHelp(){
   const ua=navigator.userAgent;
   const inApp=/FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|GSA\//i.test(ua);
   let steps;
-  if(isIOS())steps=`<li>Open this page in <b>Safari</b> (not inside another app).</li><li>Tap the <b>Share</b> button.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>`;
-  else if(/android/i.test(ua))steps=`<li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>three dots</b> menu at the top right.</li><li>Tap <b>Install app</b> (some phones say <b>Add to Home screen</b>), then <b>Install</b>.</li>`;
-  else steps=`<li>Use <b>Chrome</b> or <b>Edge</b>.</li><li>Click the <b>install icon</b> at the right end of the address bar (a small monitor with a down arrow).</li><li>If you don't see it, open the browser menu and look for <b>Install Abhyashify</b> (Chrome: Cast, save and share, then Install page as app).</li><li>Click <b>Install</b>.</li>`;
+  if(isIOS())steps=H(`<li>Open this page in <b>Safari</b> (not inside another app).</li><li>Tap the <b>Share</b> button.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>`,`<li>इस पेज को <b>Safari</b> में खोलें (किसी दूसरे ऐप के अंदर नहीं)।</li><li><b>Share</b> बटन दबाएँ।</li><li><b>Add to Home Screen</b> चुनें, फिर <b>Add</b> दबाएँ।</li>`);
+  else if(/android/i.test(ua))steps=H(`<li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>three dots</b> menu at the top right.</li><li>Tap <b>Install app</b> (some phones say <b>Add to Home screen</b>), then <b>Install</b>.</li>`,`<li>इस पेज को <b>Chrome</b> में खोलें।</li><li>ऊपर दाएँ कोने में <b>तीन बिंदुओं</b> वाला मेन्यू दबाएँ।</li><li><b>Install app</b> दबाएँ (कुछ फ़ोन में <b>Add to Home screen</b> लिखा होता है), फिर <b>Install</b> दबाएँ।</li>`);
+  else steps=H(`<li>Use <b>Chrome</b> or <b>Edge</b>.</li><li>Click the <b>install icon</b> at the right end of the address bar (a small monitor with a down arrow).</li><li>If you don't see it, open the browser menu and look for <b>Install Abhyashify</b> (Chrome: Cast, save and share, then Install page as app).</li><li>Click <b>Install</b>.</li>`,`<li><b>Chrome</b> या <b>Edge</b> इस्तेमाल करें।</li><li>एड्रेस बार के दाएँ सिरे पर <b>इंस्टॉल आइकन</b> दबाएँ (नीचे तीर वाला छोटा मॉनिटर)।</li><li>अगर वह न दिखे, तो ब्राउज़र का मेन्यू खोलकर <b>Install Abhyashify</b> खोजें (Chrome में: Cast, save and share, फिर Install page as app)।</li><li><b>Install</b> दबाएँ।</li>`);
   openSheet('Install as an app',`${inApp?`<p class="small" style="color:var(--warn)">This looks like a browser built into another app. Open the link in Chrome (or Safari on iPhone) first, since those are the ones that can install it.</p>`:''}
     <ol class="muted" style="padding-left:20px;display:grid;gap:8px">${steps}</ol>
     <p class="small muted">The browser decides when an install option shows up, so a prompt on its own is not guaranteed. If this page is already open as an app, there is nothing to install.</p>`,()=>{});
@@ -2650,7 +3101,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 /* ---------- boot ---------- */
 (async function boot(){
-  applyTheme();
+  applyTheme();trStart();applyLangToPage();
   FB=await Promise.race([window.FBReady,new Promise(r=>setTimeout(()=>r(null),10000))]);
   setInterval(tickTimer,1000);setInterval(alarmTick,5000);
   setInterval(()=>{paintHeader();if(!GATE&&tab==='today'&&sheetEl.hidden&&document.getElementById('alarm').hidden)render(false)},60000);

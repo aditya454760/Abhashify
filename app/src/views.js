@@ -101,6 +101,7 @@ function paintGate(){
     <button class="btn lg" type="button" data-act="signin">Sign in with Google</button>
     <button class="btn lg ghost" type="button" data-act="local">Continue on this device only</button>
     ${installBtn()}
+    ${langSeg()}
     <p class="small muted">Your data is private to your account. Only you can read it.</p></section>`;
 }
 function render(anim){
@@ -132,8 +133,8 @@ function vToday(){
   const blocks=blocksOn(S.plan,sd),order=planner(S,now);
   const planned=blocks.reduce((x,b)=>x+b.m,0),logged=LG().filter(l=>l.d===ds).reduce((x,l)=>x+l.m,0);
   const hr=now.getHours(),greet=hr<5?'Late night':hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
-  const dateTxt=sd.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
-  let h=`<div class="stack" style="gap:2px"><h1>${isToday?greet:DAYS_LONG[selIdx]}</h1><p class="muted">${isToday?dateTxt:sd.toLocaleDateString(undefined,{day:'numeric',month:'long'})+(ds<today?' · past':' · upcoming')}</p></div>`;
+  const dateTxt=sd.toLocaleDateString(LOC(),{weekday:'long',day:'numeric',month:'long'});
+  let h=`<div class="stack" style="gap:2px"><h1>${isToday?greet:DAYS_LONG[selIdx]}</h1><p class="muted">${isToday?dateTxt:sd.toLocaleDateString(LOC(),{day:'numeric',month:'long'})+(ds<today?' · past':' · upcoming')}</p></div>`;
 
   h+=`<div class="strip" role="group" aria-label="Days of this week">`+DAYS.map((n,i)=>{
     const d=addDays(ws,i),k=ymd(d),bl=blocksOn(S.plan,d),P=bl.reduce((x,b)=>x+b.m,0),L=LG().filter(l=>l.d===k).reduce((x,l)=>x+l.m,0);
@@ -227,7 +228,7 @@ function vMaterials(){
 
 function vReport(){
   const now=new Date(),ws=addDays(weekStart(now),weekOffset*7),r=weekReport(VS(),ws,now),we=addDays(ws,6);
-  const f=d=>d.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  const f=d=>d.toLocaleDateString(LOC(),{day:'numeric',month:'short'});
   let h=`<div class="wk"><button class="icb" type="button" data-act="wk" data-v="-1" aria-label="Previous week" style="transform:rotate(180deg)">${ic('chev')}</button>
     <div class="mid"><h1 style="font-size:1.35rem">Weekly report</h1><p class="small muted">${f(ws)} to ${f(we)}${weekOffset===0?' · so far':''}</p></div>
     <button class="icb" type="button" data-act="wk" data-v="1" aria-label="Next week"${weekOffset>=0?' disabled style="opacity:.35"':''}>${ic('chev')}</button></div>`;

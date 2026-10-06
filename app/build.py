@@ -16,7 +16,7 @@ page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '\n<script>window.FBReady=new Promise(function(r){window.__fbResolve=r});</script>\n'
         '<script type="module">\n' + src('firebase-module.js') + '</script>\n'
         '<script>\n' + overlap + '\n</script>\n'
-        '<script>\n' + src('logic.js') + src('state.js') + src('look.js') + src('views.js') + src('planx.js') + src('assistant.js') + src('forms.js') + '</script>\n</body>\n</html>\n')
+        '<script>\n' + src('logic.js') + src('state.js') + src('i18n.js') + src('i18n-hi.js') + src('look.js') + src('views.js') + src('planx.js') + src('asst-hi.js') + src('assistant.js') + src('forms.js') + '</script>\n</body>\n</html>\n')
 out = os.path.join(root, 'docs')
 os.makedirs(out, exist_ok=True)
 open(os.path.join(out, 'index.html'), 'w', encoding='utf-8').write(page)

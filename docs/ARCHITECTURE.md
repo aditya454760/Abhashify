@@ -25,6 +25,8 @@ A few choices behind that layout:
 - Reading progress belongs to each person alone.
 - Times are saved as exact moments (milliseconds since 1970) along with the device's time zone, so a phone and a laptop in different settings still line up.
 
+The language (English or Hindi) is a local setting too. The app's text is written in English in the code and turned into Hindi at display time by `app/src/i18n.js` (a dictionary in `i18n-hi.js` plus pattern rules for sentences with numbers, and a watcher that translates what is drawn on screen). The assistant's Hindi and Hinglish understanding is in `asst-hi.js`: it rewrites a Hindi request into the English form the existing parser already handles, so alarms, tests and schedules behave the same in both languages.
+
 Tests, mock tests and reminders live inside the course plan, so they sync with it and only the course owner edits them. The assistant's chat history, voice settings, theme and any AI key stay on the device (local storage) and never go to Firestore.
 
 ## Counting overlapping time once
@@ -52,7 +54,7 @@ When a course has more than one person, each person is merged on their own first
 ## Where things stand
 
 Working and tested:
-- The assistant (45 tests), apart from the real microphone, real voices and real AI calls.
+- The assistant (45 tests) and its Hindi support (33 tests), apart from the real microphone, real voices and real AI calls.
 - The overlap code (12 tests passing).
 - The website's sign-in and sync, tested against a stand-in for Firestore (22 tests passing).
 - The site is live on GitHub Pages and can be installed like an app. It loads offline too.

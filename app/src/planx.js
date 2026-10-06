@@ -4,10 +4,10 @@ const PR=()=>S.plan.reminders||(S.plan.reminders=[]);
 const TKINDS={mock:'Mock test',test:'Test'};
 const REPS={'':'Does not repeat',daily:'Every day',weekdays:'Every weekday',weekly:'Every week'};
 const testStart=t=>{const d=new Date(t.date+'T'+(t.st||'09:00')+':00').getTime();return isNaN(d)?0:d};
-const timeTxt=d=>d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+const timeTxt=d=>LANG==='hi'?periodHi(d.getHours())+' '+(d.getHours()%12||12)+':'+pad(d.getMinutes()):d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 function whenTxt(ms){
   const d=new Date(ms),t0=parseYmd(ymd(new Date())),d0=parseYmd(ymd(d)),diff=Math.round((d0-t0)/864e5);
-  const day=diff===0?'Today':diff===1?'Tomorrow':diff===-1?'Yesterday':d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'});
+  const day=diff===0?H('Today','आज'):diff===1?H('Tomorrow','कल'):diff===-1?H('Yesterday','बीता कल'):d.toLocaleDateString(LOC(),{weekday:'short',day:'numeric',month:'short'});
   return day+', '+timeTxt(d);
 }
 function nextAt(at,rep){
