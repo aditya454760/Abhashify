@@ -1,5 +1,5 @@
 {
-  "name": "prep-ledger-sync",
+  "name": "abhyashify-sync",
   "private": true,
   "scripts": {
     "test:overlap": "node test/overlap.test.js",

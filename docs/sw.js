@@ -1,6 +1,6 @@
-/* Prep Ledger service worker: keeps the app shell available offline.
+/* Abhyashify service worker: keeps the app shell available offline.
    Only same-origin files are cached. Firebase, Google sign-in and fonts always go straight to the network. */
-const CACHE = 'prep-ledger-v2';
+const CACHE = 'abhyashify-v3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

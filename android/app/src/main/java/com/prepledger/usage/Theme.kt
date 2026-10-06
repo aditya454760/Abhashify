@@ -7,7 +7,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// Same indigo and cool greys as the Prep Ledger web app.
+// Same indigo and cool greys as the Abhyashify web app.
 private val Light = lightColorScheme(
     primary = Color(0xFF3B3FA8),
     onPrimary = Color.White,
@@ -33,7 +33,7 @@ private val Dark = darkColorScheme(
 )
 
 @Composable
-fun PrepLedgerTheme(content: @Composable () -> Unit) {
+fun AbhyashifyTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = if (isSystemInDarkTheme()) Dark else Light,
         content = content,

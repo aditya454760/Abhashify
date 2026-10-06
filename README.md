@@ -1,8 +1,8 @@
-# Prep Ledger
+# Abhyashify
 
-I'm preparing for GATE DA 2027 (exam on 6 February 2027, aiming for IISc or a top IIT, which means a score around 850 or more). Prep Ledger is the study planner I built to keep myself honest. It plans my study blocks, rings an alarm when one is due, asks me to log what I actually did, and at the end of the week shows how the week went compared to the plan.
+I'm preparing for GATE DA 2027 (exam on 6 February 2027, aiming for IISc or a top IIT, which means a score around 850 or more). Abhyashify is the study planner I built to keep myself honest. It plans my study blocks, rings an alarm when one is due, asks me to log what I actually did, and at the end of the week shows how the week went compared to the plan.
 
-You can try it here: **https://aditya454760.github.io/Abhashify/**
+You can try it here: **https://aditya454760.github.io/Abhyashify/**
 
 ## What it does
 
@@ -14,7 +14,7 @@ You can try it here: **https://aditya454760.github.io/Abhashify/**
 
 ## Installing it like a normal app
 
-Open the link above in Chrome or Edge. On a computer there's an install icon in the address bar. On Android, open the browser menu and tap **Install app** (or use the Install button inside Prep Ledger's Account sheet). On iPhone, open it in Safari, tap Share, then **Add to Home Screen**. After that it opens in its own window, has its own icon, and still loads when you're offline. Your data catches up once you're back online.
+Open the link above in Chrome or Edge. On a computer there's an install icon in the address bar. On Android, open the browser menu and tap **Install app** (or use the Install button inside Abhyashify's Account sheet). On iPhone, open it in Safari, tap Share, then **Add to Home Screen**. After that it opens in its own window, has its own icon, and still loads when you're offline. Your data catches up once you're back online.
 
 ## What's in the repo
 
@@ -44,7 +44,7 @@ To run it:
 
 1. In Android Studio choose Open and pick the `android` folder. Wait for the Gradle sync.
 2. Plug in your phone with USB debugging on, or start an emulator, and press Run.
-3. Tap **Open usage access settings**, pick *Prep Ledger Usage* and switch it on. Then come back to the app.
+3. Tap **Open usage access settings**, pick *Abhyashify Usage* and switch it on. Then come back to the app.
 4. Tap **Choose study apps** and tick the apps you study with. Leave out anything you also use for fun, because a chosen app counts fully as study time.
 5. The app shows time per day and per app. **Share** or **Copy** gives you the JSON.
 
@@ -52,7 +52,7 @@ The JSON looks like this:
 
 ```json
 {
-  "source": "prep-ledger-usage",
+  "source": "abhyashify-usage",
   "generated": "2026-10-05T14:30:00Z",
   "days": [
     {
@@ -84,4 +84,4 @@ The JSON looks like this:
 ## A few notes to self
 
 - `AndroidStudioProjects\Tracker` on my laptop is a different project (a Firebase and Maps location tracker cloned from another GitHub account). I haven't touched it.
-- This project lives on the D: drive under `Gate 2027\Prep Ledger`.
+- This project lives on the D: drive under `Gate 2027\Abhyashify`.

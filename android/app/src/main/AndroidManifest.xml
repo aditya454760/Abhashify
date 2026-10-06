@@ -19,7 +19,7 @@
         android:allowBackup="false"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PrepLedger">
+        android:theme="@style/Theme.Abhyashify">
         <activity
             android:name=".MainActivity"
             android:exported="true">

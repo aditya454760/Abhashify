@@ -97,7 +97,7 @@ function paintGate(){
   const v=document.getElementById('view');v.className='view enter';
   if(GATE==='loading'){v.innerHTML='<div class="sk"><i style="height:150px"></i><i style="height:78px"></i><i style="height:92px"></i></div>';return}
   v.innerHTML=`<section class="card" style="gap:16px;margin-top:8vh"><span class="tile-ic" style="--c:var(--accent)">${ic('today')}</span>
-    <div class="stack"><h1>Prep Ledger</h1><p class="muted">Plan your study blocks, get alarms, log your hours and see how you did each week. Sign in and your progress follows you across phone, tablet and laptop.</p></div>
+    <div class="stack"><h1>Abhyashify</h1><p class="muted">Plan your study blocks, get alarms, log your hours and see how you did each week. Sign in and your progress follows you across phone, tablet and laptop.</p></div>
     <button class="btn lg" type="button" data-act="signin">Sign in with Google</button>
     <button class="btn lg ghost" type="button" data-act="local">Continue on this device only</button>
     ${installBtn()}
@@ -120,7 +120,7 @@ function render(anim){
 /* ---------- views ---------- */
 function onboarding(){
   return `<div class="card" style="gap:14px"><span class="tile-ic" style="--c:var(--accent)">${ic('spark')}</span><div class="stack"><h2>Set up your schedule</h2>
-    <p class="muted">Prep Ledger rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.</p></div>
+    <p class="muted">Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.</p></div>
     <button class="btn lg" type="button" data-act="tpl">Start with the GATE DA 2027 template</button>
     <button class="btn lg ghost" type="button" data-act="blank">Start empty and build my own</button>
     <p class="small muted">The template sets the exam date to 6 February 2027 and adds a weekly timetable with nine subjects. Change anything afterwards.</p></div>`;

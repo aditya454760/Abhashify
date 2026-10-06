@@ -1,5 +1,5 @@
 rules_version = '2';
-// Prep Ledger. Every request must come from a signed-in, email-verified Google account.
+// Abhyashify. Every request must come from a signed-in, email-verified Google account.
 // A person can only touch their own data. A course can be shared with other people by invitation.
 service cloud.firestore {
   match /databases/{database}/documents {

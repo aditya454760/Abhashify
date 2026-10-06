@@ -1,4 +1,4 @@
-# How syncing works in Prep Ledger
+# How syncing works in Abhyashify
 
 The aim is simple: if I study on my phone in the morning and on my laptop in the evening, both should land in one set of numbers. Each person signs in with their own Google account. Someone else can study the same course, but they get their own login and their own data; nothing is shared by sharing a password.
 

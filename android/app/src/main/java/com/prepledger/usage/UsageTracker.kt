@@ -96,10 +96,10 @@ object UsageTracker {
         }
     }
 
-    /** JSON the Prep Ledger web app can read: study minutes per day, with the apps behind each total. */
+    /** JSON the Abhyashify web app can read: study minutes per day, with the apps behind each total. */
     fun exportJson(days: List<DayUsage>, selected: Set<String>, labels: Map<String, String>): String {
         val root = JSONObject()
-        root.put("source", "prep-ledger-usage")
+        root.put("source", "abhyashify-usage")
         root.put("generated", Instant.now().toString())
         val list = JSONArray()
         for (day in days) {

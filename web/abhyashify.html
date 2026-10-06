@@ -1,4 +1,4 @@
-<title>Prep Ledger</title>
+<title>Abhyashify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap">
@@ -273,7 +273,7 @@ body.lock{overflow:hidden}
 </svg>
 
 <header class="top"><div class="shell">
-  <div class="brand"><span class="logo"><svg class="ic" aria-hidden="true"><use href="#i-today"/></svg></span><span>Prep Ledger</span></div>
+  <div class="brand"><span class="logo"><svg class="ic" aria-hidden="true"><use href="#i-today"/></svg></span><span>Abhyashify</span></div>
   <div class="top-r"><span class="count" id="count" hidden></span>
     <button class="icb" id="bell" type="button" data-act="arm" aria-pressed="false" aria-label="Alarms"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></button></div>
 </div></header>
@@ -514,7 +514,7 @@ function render(anim){
 /* ---------- views ---------- */
 function onboarding(){
   return `<div class="card" style="gap:14px"><span class="tile-ic" style="--c:var(--accent)">${ic('spark')}</span><div class="stack"><h2>Set up your schedule</h2>
-    <p class="muted">Prep Ledger rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.</p></div>
+    <p class="muted">Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.</p></div>
     <button class="btn lg" type="button" data-act="tpl">Start with the GATE DA 2027 template</button>
     <button class="btn lg ghost" type="button" data-act="blank">Start empty and build my own</button>
     <p class="small muted">The template sets the exam date to 6 February 2027 and adds a weekly timetable with nine subjects. Change anything afterwards.</p></div>`;
@@ -955,7 +955,7 @@ document.addEventListener('click',async e=>{
     case 'settings':settingsForm();break;
     case 'theme':theme=d.v;lsSet('pl.theme',theme);applyTheme();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break;
     case 'exportcsv':await saveFile('prep-schedule.csv',calendarCsv());break;
-    case 'exportjson':await saveFile('prep-ledger-backup.json',JSON.stringify(S,null,1));break;
+    case 'exportjson':await saveFile('abhyashify-backup.json',JSON.stringify(S,null,1));break;
     case 'arm':
       if(!armed){armed=true;beep();keepAwake();toast('Alarms on. Keep this page open.')}
       else{armed=false;try{wakeLock&&wakeLock.release()}catch(err){}wakeLock=null;toast('Alarms off')}

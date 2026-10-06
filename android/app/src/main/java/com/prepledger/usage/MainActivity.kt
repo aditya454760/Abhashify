@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            PrepLedgerTheme {
+            AbhyashifyTheme {
                 UsageScreen(resumeTick.intValue)
             }
         }
@@ -150,7 +150,7 @@ fun UsageScreen(resumeTick: Int) {
                     Panel {
                         Text("Allow usage access", fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Android needs you to switch this on by hand. Open the settings, pick Prep Ledger Usage " +
+                            "Android needs you to switch this on by hand. Open the settings, pick Abhyashify Usage " +
                                 "and turn on usage access. The app can see how long apps were open, not what is inside them.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -237,9 +237,9 @@ fun UsageScreen(resumeTick: Int) {
                 if (selected.isNotEmpty() && days.isNotEmpty()) {
                     item {
                         Panel {
-                            Text("Send to Prep Ledger", fontWeight = FontWeight.SemiBold)
+                            Text("Send to Abhyashify", fontWeight = FontWeight.SemiBold)
                             Text(
-                                "Shares the last 7 days as text. Paste it into the Prep Ledger web app.",
+                                "Shares the last 7 days as text. Paste it into the Abhyashify web app.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -256,8 +256,8 @@ fun UsageScreen(resumeTick: Int) {
                                 OutlinedButton(onClick = {
                                     val json = UsageTracker.exportJson(days, selected, labels)
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    clipboard.setPrimaryClip(ClipData.newPlainText("Prep Ledger usage", json))
-                                    notice = "Copied. Paste it into Prep Ledger."
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("Abhyashify usage", json))
+                                    notice = "Copied. Paste it into Abhyashify."
                                 }) {
                                     Text("Copy")
                                 }
