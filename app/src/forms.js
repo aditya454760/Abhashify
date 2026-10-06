@@ -84,8 +84,10 @@ function logForm(bid,dsArg){
       t0,t1:t0+m*60000,dev:deviceId(),src:fromRun?'timer':'manual',tz:tzOff()});
     if(mid&&mu){const m=S.materials.find(x=>x.id===mid);if(m){m.done=m.total>0?Math.min(m.total,m.done+mu):m.done+mu;mark('materials')}}
     if(S.logs.length>1800)S.logs=S.logs.slice(-1800);
+    const tid=fromRun&&fromRun.tid;
     if(fromRun){run=null;lsSet('pl.run',null)}
     mark('logs');closeSheet();render(false);toast('Session logged');
+    if(tid){const tt=PT().find(x=>x.id===tid);if(tt&&tt.score==null)setTimeout(()=>scoreForm(tt),350)}
   });
 }
 function matForm(m){
@@ -114,6 +116,7 @@ function matForm(m){
 function settingsForm(){
   const p=S.plan;
   openSheet('Settings',`${CL?`<label class="field">Course name<input type="text" name="cn" value="${esc(CL.name||'')}" maxlength="80" required></label>`:''}<div class="stack" style="gap:8px"><span class="kick">Appearance</span><div class="seg" id="themeseg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>`<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme===k}">${l}</button>`).join('')}</div></div>
+    ${lookPickers()}
     <div class="grid2"><label class="field">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="field">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
     <div class="grid2"><label class="field">Alarm minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}" inputmode="numeric"></label><label class="field">Revision buffer (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}" inputmode="numeric"></label></div>
     <button class="btn lg" type="submit">Save settings</button>
@@ -148,10 +151,10 @@ function calendarCsv(){
 }
 
 /* ---------- template ---------- */
-function applyTemplate(){
+function gateTemplate(){
   const subs=[['prob','Probability & Statistics',5,3],['la','Linear Algebra',4,3],['calc','Calculus & Optimization',3,3],['py','Python & DSA',3,3],['db','Databases & Warehousing',2,3],['ml','Machine Learning',5,3],['ai','Artificial Intelligence',4,3],['ga','General Aptitude',3,3],['mix','Revision & full mocks',3,3]];
-  S.plan=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
-  const B=(days,st,m,s,k,sh)=>S.plan.blocks.push({id:uid(),days,st,m,s,k,sh:sh||0,al:true,t:''});
+  const P=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
+  const B=(days,st,m,s,k,sh)=>P.blocks.push({id:uid(),days,st,m,s,k,sh:sh||0,al:true,t:''});
   B([0],'06:30',90,'prob','theory');B([0],'19:30',60,'prob','practice',1);
   B([1],'06:30',90,'la','theory');B([1],'19:30',60,'la','practice',1);
   B([2],'06:30',90,'calc','theory');B([2],'19:30',60,'calc','practice',1);
@@ -159,8 +162,9 @@ function applyTemplate(){
   B([4],'06:30',90,'ai','theory');B([4],'19:30',60,'py','practice',1);
   B([5],'07:00',120,'db','theory');B([5],'15:00',60,'ga','practice',1);
   B([6],'07:00',120,'prob','revision');B([6],'16:00',180,'mix','mock');
-  mark('plan');render();
+  return P;
 }
+function applyTemplate(){S.plan=gateTemplate();mark('plan');render()}
 
 /* ---------- timer, alarms ---------- */
 function startRun(bid){
@@ -192,7 +196,7 @@ function ring(b,late){
 }
 function stopRing(){clearInterval(ringTimer);document.getElementById('alarm').hidden=true}
 function alarmTick(){
-  tickTimer();
+  tickTimer();extraAlarms();
   const now=new Date(),ds=ymd(now),nm=now.getHours()*60+now.getMinutes();
   for(const b of blocksOn(S.plan,now)){
     if(!b.al)continue;
@@ -211,6 +215,21 @@ document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act,d=t.dataset;
   switch(a){
+    case 'addrem':reminderForm();break;
+    case 'editrem':reminderForm(PR().find(r=>r.id===d.r));break;
+    case 'delrem':
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      S.plan.reminders=PR().filter(r=>r.id!==d.r);mark('plan');closeSheet();render(false);toast('Deleted');break;
+    case 'remdone':{const r=PR().find(x=>x.id===d.r);if(r)finishReminder(r);stopRing();render(false);break}
+    case 'rsnooze':{const r=PR().find(x=>x.id===d.r);if(r)snoozes['r|'+r.id+'|'+r.at]=Date.now()+10*60000;stopRing();toast('Snoozed for 10 minutes');break}
+    case 'tsnooze':{const x=PT().find(y=>y.id===d.t);if(x)snoozes['t|'+x.id+'|'+x.date+x.st]=Date.now()+10*60000;stopRing();toast('Snoozed for 10 minutes');break}
+    case 'addtest':testForm();break;
+    case 'edittest':testForm(PT().find(x=>x.id===d.t));break;
+    case 'deltest':
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      S.plan.tests=PT().filter(x=>x.id!==d.t);mark('plan');closeSheet();render(false);toast('Deleted');break;
+    case 'starttest':{const x=PT().find(y=>y.id===d.t);stopRing();if(x)startTest(x);break}
+    case 'asst':openAssistant();break;
     case 'tab':if(tab!==d.v){tab=d.v;render();window.scrollTo({top:0,behavior:'instant'})}break;
     case 'sel':selIdx=+d.v;render(false);break;
     case 'pday':planDay=+d.v;render(false);break;
@@ -247,6 +266,8 @@ document.addEventListener('click',async e=>{
       try{await navigator.clipboard.writeText(reportText());toast('Report copied')}catch(err){toast('Copy was blocked by the browser')}
       break}
     case 'settings':settingsForm();break;
+    case 'lookacc':{const r=setLook({accent:d.v||null});if(r.err)toast(r.err);paintLookPickers();break}
+    case 'lookbg':{const r=setLook({bg:d.v||null});if(r.err)toast(r.err);else if(r.note)toast(r.note.trim());paintLookPickers();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break}
     case 'theme':theme=d.v;lsSet('pl.theme',theme);applyTheme();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break;
     case 'exportcsv':saveFile('prep-schedule.csv',calendarCsv(),'text/csv');break;
     case 'exportjson':saveFile('abhyashify-backup.json',JSON.stringify(backupData(),null,1),'application/json');break;

@@ -10,11 +10,23 @@ You can try it here: **https://aditya454760.github.io/Abhyashify/**
 - Rings an alarm shortly before each block (while the page is open).
 - Lets me log a session by hand or run a timer, and gives me a weekly report.
 - Tracks study material (books, lecture playlists, problem sets) and how much of each I've finished.
+- Has a built-in assistant (the chat button at the bottom right). I can type or talk to it. It answers questions about how the app works, sets alarms and reminders, schedules tests and mock tests and records my scores, builds a new weekly schedule, adds subjects and study material, starts the timer, and changes the theme, accent colour and background. Everything it changes can be undone with one tap. It can talk back in a female or male voice.
 - Syncs through Google sign-in, so the phone, tablet and laptop all show the same data. If I study on my phone and my laptop at the same time for the same course, that overlap is counted once, not twice.
 
 ## Installing it like a normal app
 
 Open the link above in Chrome or Edge. On a computer there's an install icon in the address bar. On Android, open the browser menu and tap **Install app** (or use the Install button inside Abhyashify's Account sheet). On iPhone, open it in Safari, tap Share, then **Add to Home Screen**. After that it opens in its own window, has its own icon, and still loads when you're offline. Your data catches up once you're back online.
+
+## The assistant
+
+It works out of the box with no account and no cost. Without a key it uses a built-in understanding of everyday requests ("remind me to revise ML at 8 pm", "schedule a mock test on Sunday at 10", "make accent teal and background aurora", "how do I log a session?"). For free-form requests there is an optional Smart mode: in the assistant's settings I paste my own Gemini (free) or Anthropic key, and the assistant then uses that model to understand me. The model can only ask the app to do things from a fixed list, and the app checks each one. It can't delete courses or data, and replacing the whole schedule needs a yes first.
+
+Things worth knowing:
+
+- Alarms and reminders ring only while the page is open and the bell is on. A web page can't wake a closed phone. The Android wrapper (on the to-do list) is how that gets fixed.
+- A mock test is scheduled, timed with the study timer, and its score is saved and shown in the Report tab. There's no built-in question bank. In Smart mode I can ask it to quiz me in the chat.
+- Voice needs a browser with speech support (Chrome, Edge and Safari have it). Listening needs the internet and microphone permission, and Chrome sends the audio to Google to turn it into text. The male and female voices are the ones installed on the device. If the device has only one kind, the assistant shifts the pitch.
+- My key is stored only on this device and is sent only to the provider I chose. In Smart mode my messages and a short summary of my schedule go to that provider.
 
 ## What's in the repo
 
@@ -32,6 +44,7 @@ Open the link above in Chrome or Edge. On a computer there's an install icon in 
 I'd rather say this up front than have you find out later.
 
 - The merging of overlapping study time has its own tests, and they pass.
+- The assistant passes 45 tests (understanding of requests, actions, undo, the chat window, colours, reminders ringing, and Smart mode against a stand-in network). The real microphone, real voices and real calls to Gemini or Anthropic haven't been tried yet, so those need a hand test.
 - The website's sync code passes 22 tests against a stand-in for Firestore, using two simulated devices. That is not the same as the real thing, so the real Google sign-in and real database still need to be tried by hand.
 - The Firestore security rules have tests (`npm run test:rules` inside `sync/`), but I haven't been able to run them yet. They need Node and Java and the Firebase emulator.
 - The Android project builds in Android Studio. I haven't run it on a phone yet.

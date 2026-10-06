@@ -5,7 +5,7 @@ let armed=false,wakeLock=null,audioCtx=null,snoozes={},fired=lsGet('pl.fired',{}
 let tab='today',weekOffset=0,matFilter='left',matOrder=true;
 let selIdx=dow(new Date()),planDay=dow(new Date());
 let theme=lsGet('pl.theme','auto');
-function applyTheme(){const r=document.documentElement;if(theme==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',theme)}
+function applyTheme(){const r=document.documentElement;if(theme==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',theme);applyLook()}
 
 /* ---------- UI helpers ---------- */
 const ic=(n,c)=>`<svg class="ic${c?' '+c:''}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
@@ -163,6 +163,7 @@ function vToday(){
   }
   if(isToday)h+=`<button class="btn lg soft" type="button" data-act="log" data-b="" data-d="${ds}">${ic('plus')}Log an extra session</button>`;
 
+  if(isToday)h+=vUpcoming();
   const seen=new Set(),nextUp=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,4);
   if(isToday&&nextUp.length)h+=`<section class="card"><div class="stack"><h3>Study next</h3><p class="small muted">Ordered by importance, your confidence, what is left and what needs to come first.</p></div>`+
     nextUp.map((o,i)=>`<div class="item" style="${cvar(o.m.subj)};grid-template-columns:auto 1fr"><span class="num">${i+1}</span><div class="stack" style="gap:3px;min-width:0"><span class="t">${esc(o.m.title)}</span><span class="small muted">${subjChip(o.m.subj)}${o.chunk?` <span style="margin-left:4px">about ${esc(unitN(o.chunk,o.m.unit))} per session</span>`:''}</span></div></div>`).join('')+`</section>`;
@@ -190,6 +191,7 @@ function vPlan(){
   const pips=n=>`<span class="pips">${[1,2,3,4,5].map(i=>`<i${i<=n?' class="on"':''}></i>`).join('')}</span>`;
   h+=`<section class="card"><div class="sec-h"><div class="stack" style="gap:2px"><h3>Subjects</h3><p class="small muted">Importance and confidence decide what the planner puts first.</p></div><button class="btn sm soft" type="button" data-act="addsubj">${ic('plus')}Add</button></div>`+
     S.plan.subjects.map(s=>`<button type="button" class="item" data-act="editsubj" data-s="${esc(s.id)}" style="${cvar(s.id)};grid-template-columns:1fr auto"><span class="stack" style="gap:6px"><span class="t">${subjChip(s.id)}</span><span class="small muted row" style="gap:14px"><span class="row" style="gap:6px">Importance ${pips(s.w)}</span><span class="row" style="gap:6px">Confidence ${pips(s.c)}</span></span></span>${ic('chev')}</button>`).join('')+`</section>`;
+  h+=vTestsPlan();
   h+=`<button class="btn lg ghost" type="button" data-act="settings">${ic('sliders')}Exam date, appearance, exports</button>`;
   h+=`<section class="card flat aboutapp">${ic('spark')}<p class="small muted">A web page cannot see what you do in other apps, so this app counts what you log or time here. For alarms that ring when this page is closed, export the schedule to your calendar from Settings. Automatic tracking of other apps is done by the Android companion app.</p></section>`;
   return h;
@@ -244,6 +246,7 @@ function vReport(){
   h+=`<section class="card"><h3>Study time of day</h3>${hourChart(r)}<p class="small muted">Dashed is when the plan puts study, solid is when you studied.${r.avgShift!==null?` Sessions started ${Math.abs(Math.round(r.avgShift))} minutes ${r.avgShift>=0?'later':'earlier'} than planned on average.`:''}</p></section>`;
   if(r.sessions.length)h+=`<section class="card"><h3>Planned and actual start</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Day</th><th>Subject</th><th>Plan</th><th>Actual</th><th>Shift</th></tr></thead><tbody>`+
     r.sessions.map(s=>`<tr><td>${DAYS[dow(parseYmd(s.d))]}</td><td>${esc(subjName(s.s))}</td><td>${s.ps}</td><td>${s.st}</td><td>${s.diff>0?'+':''}${s.diff}m</td></tr>`).join('')+`</tbody></table></div></section>`;
+  h+=vMockCard();
   const tips=coach(r);
   if(tips.length)h+=`<section class="card"><h3>What to change</h3>`+tips.map(t=>`<p class="note">${ic('spark')}<span>${esc(t)}</span></p>`).join('')+`</section>`;
   h+=`<button class="btn lg ghost" type="button" data-act="copyrep">Copy report as text</button>`;

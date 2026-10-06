@@ -246,6 +246,11 @@ svg.chart text{fill:var(--ink3);font-family:var(--f-body);font-size:10px}
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M9 20.5h6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4.5 12 20 4.5 15 19.5l-3-6.5-7.5-1Z"/><path d="m12 13 3-3"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4.5 9.5v5h3.5l4.5 3.5v-12L8 9.5H4.5Z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-volume-off" viewBox="0 0 24 24"><path d="M4.5 9.5v5h3.5l4.5 3.5v-12L8 9.5H4.5Z"/><path d="m16.5 9.5 4 5M20.5 9.5l-4 5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17h-7l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5Z"/></symbol>
 </svg>
 
 <header class="top"><div class="shell">
@@ -257,6 +262,8 @@ svg.chart text{fill:var(--ink3);font-family:var(--f-body);font-size:10px}
 <div class="shell"><main id="view" class="view"><div class="sk"><i style="height:150px"></i><i style="height:78px"></i><i style="height:92px"></i><i style="height:92px"></i></div></main></div>
 <div id="mini" hidden></div>
 <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<button type="button" id="asstfab" data-act="asst" aria-label="Open assistant"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg></button>
+<div id="asst" hidden></div>
 <div id="sheet" hidden></div>
 <div id="alarm" hidden></div>
 <div id="toast" hidden role="status" aria-live="polite"></div>

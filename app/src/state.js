@@ -1,6 +1,6 @@
 
 /* ---------- state ---------- */
-const defaultPlan=()=>({exam:'',examName:'',buffer:21,lead:5,subjects:[],blocks:[]});
+const defaultPlan=()=>({exam:'',examName:'',buffer:21,lead:5,subjects:[],blocks:[],tests:[],reminders:[]});
 let S={plan:defaultPlan(),materials:[],logs:[]};
 let FB=null,CL=null,GATE='loading';   // FB: firebase functions, CL: signed-in cloud session, GATE: 'loading' | 'signin' | null
 const ASSETS=null;

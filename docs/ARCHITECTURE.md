@@ -12,7 +12,7 @@ Everything is stored in Firestore, grouped by course:
 
 ```
 users/{uid}                                     email, createdAt, lastSeen
-courses/{courseId}                              name, ownerUid, members[], invited[], plan{subjects[], blocks[]}
+courses/{courseId}                              name, ownerUid, members[], invited[], plan{subjects[], blocks[], tests[], reminders[]}
 courses/{courseId}/people/{uid}/sessions/{id}   uid, s, e (epoch ms), subj, block, planStart, sheets, device, source
 courses/{courseId}/people/{uid}/usage/{id}      uid, device, day, intervals [[s,e],...]   (study-app time, no app names)
 courses/{courseId}/people/{uid}/materials/{id}  title, subj, kind, unit, total, done      (private to that person)
@@ -24,6 +24,8 @@ A few choices behind that layout:
 - Only the course owner edits the plan. If the owner changes it on two devices at once, the last save wins.
 - Reading progress belongs to each person alone.
 - Times are saved as exact moments (milliseconds since 1970) along with the device's time zone, so a phone and a laptop in different settings still line up.
+
+Tests, mock tests and reminders live inside the course plan, so they sync with it and only the course owner edits them. The assistant's chat history, voice settings, theme and any AI key stay on the device (local storage) and never go to Firestore.
 
 ## Counting overlapping time once
 
@@ -50,6 +52,7 @@ When a course has more than one person, each person is merged on their own first
 ## Where things stand
 
 Working and tested:
+- The assistant (45 tests), apart from the real microphone, real voices and real AI calls.
 - The overlap code (12 tests passing).
 - The website's sign-in and sync, tested against a stand-in for Firestore (22 tests passing).
 - The site is live on GitHub Pages and can be installed like an app. It loads offline too.

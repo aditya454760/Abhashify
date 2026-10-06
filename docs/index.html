@@ -258,10 +258,60 @@ svg.chart text{fill:var(--ink3);font-family:var(--f-body);font-size:10px}
 .bellon{color:var(--accent)}
 body.lock{overflow:hidden}
 [hidden]{display:none!important}
-.brand span:last-child{white-space:nowrap}.count{overflow:hidden;text-overflow:ellipsis;max-width:48vw}
+.brand span:last-child{white-space:nowrap}.count{overflow:hidden;text-overflow:ellipsis;max-width:30vw;min-width:0;flex:0 1 auto}.top-r{min-width:0}.brand{flex:none}.brand span:last-child{flex:none}
 .tiles{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))}.tile{padding:12px 10px}.tile .v{font-size:1.1rem}
 .avatar{background:var(--accent-soft)!important;color:var(--accent)!important;font-weight:700;border-radius:50%!important}
 body.gate nav.tabs,body.gate #bell{display:none}
+
+/* ---------- custom background (set by the assistant or settings) ---------- */
+body{background-image:var(--bgimg,none);background-attachment:fixed;background-repeat:no-repeat;background-size:cover}
+.ic.flip{transform:rotate(180deg)}
+
+/* ---------- assistant ---------- */
+#asstfab{position:fixed;z-index:9;right:max(16px,calc((100vw - 560px)/2 + 16px));bottom:calc(88px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 10px 26px -8px rgba(10,16,24,.5);transition:transform .12s}
+#asstfab:active{transform:scale(.93)}
+#asstfab .ic{width:24px;height:24px}
+#mini:not([hidden]) ~ #asstfab{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+body.gate #asstfab{display:none}
+#asst{position:fixed;inset:0;z-index:25;display:flex;align-items:flex-end;justify-content:center}
+.as-scrim{position:absolute;inset:0;background:var(--scrim);animation:fade .2s both}
+.as-panel{position:relative;width:min(100%,560px);height:min(88vh,760px);height:min(88dvh,760px);background:var(--bg);background-image:var(--bgimg,none);background-attachment:fixed;border-radius:24px 24px 0 0;display:flex;flex-direction:column;box-shadow:0 -14px 40px -14px rgba(0,0,0,.4);animation:asrise .24s ease-out both;overflow:hidden}
+@keyframes asrise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.as-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 10px 10px 16px;border-bottom:1px solid var(--line)}
+.as-title{display:flex;align-items:center;gap:10px;min-width:0}
+.as-title b{display:block;font-family:var(--f-display);font-size:1.05rem;line-height:1.2}
+.as-title small{display:block;color:var(--ink3);font-size:.76rem}
+.as-tools{display:flex;gap:2px}
+.as-body{flex:1;min-height:0;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.as-hello{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:18px 10px 8px}
+.as-hello p{max-width:34ch}
+.as-m{max-width:86%;padding:10px 13px;border-radius:18px;font-size:.95rem;line-height:1.4;overflow-wrap:anywhere}
+.as-m.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:6px}
+.as-m.a{align-self:flex-start;background:var(--surface);box-shadow:var(--shadow);border-bottom-left-radius:6px}
+.as-m.dots{display:flex;gap:5px;padding:14px}
+.as-m.dots i{width:7px;height:7px;border-radius:50%;background:var(--ink3);animation:asd 1s infinite ease-in-out}
+.as-m.dots i:nth-child(2){animation-delay:.15s}.as-m.dots i:nth-child(3){animation-delay:.3s}
+@keyframes asd{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.as-chips{display:flex;gap:8px;overflow-x:auto;padding:6px 14px;scrollbar-width:none;flex:none}
+.as-chips::-webkit-scrollbar{display:none}
+.as-chips:empty{display:none}
+.as-chip{flex:none;border:0;border-radius:999px;padding:8px 13px;background:var(--accent-soft);color:var(--accent);font-size:.84rem;font-weight:600;white-space:nowrap}
+.as-chip.undo{background:var(--warn-soft);color:var(--warn)}
+.as-state{min-height:0;font-size:.78rem;color:var(--ink3);text-align:center}
+.as-state:not(:empty){padding:2px 0 0}
+.as-in{display:flex;align-items:center;gap:6px;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px)) 14px}
+.as-in input{flex:1;min-width:0;height:46px;border-radius:23px;border:0;padding:0 16px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);outline:none;font-size:16px}
+.as-in input:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.as-in .icb{width:46px;height:46px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.as-in .as-send{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.as-in .as-mic.on{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);animation:pl 1.4s ease-out infinite}
+.as-in .as-mic.talk{background:var(--good-soft);color:var(--good);box-shadow:inset 0 0 0 2px var(--good)}
+.as-cfg{flex:1;min-height:0;overflow-y:auto;padding:14px 16px 26px;display:flex;flex-direction:column;gap:14px}
+.sw-row{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:34px;height:34px;border-radius:50%;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);position:relative}
+.sw[aria-pressed="true"]::after{content:'';position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 0 2.5px var(--ink)}
+.sw.bgsw{border-radius:10px;width:44px}
+.sw.bgsw[aria-pressed="true"]::after{border-radius:13px}
 </style>
 </head>
 <body>
@@ -289,6 +339,11 @@ body.gate nav.tabs,body.gate #bell{display:none}
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5M9 20.5h6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4.5 12 20 4.5 15 19.5l-3-6.5-7.5-1Z"/><path d="m12 13 3-3"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4.5 9.5v5h3.5l4.5 3.5v-12L8 9.5H4.5Z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-volume-off" viewBox="0 0 24 24"><path d="M4.5 9.5v5h3.5l4.5 3.5v-12L8 9.5H4.5Z"/><path d="m16.5 9.5 4 5M20.5 9.5l-4 5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17h-7l-4.5 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5Z"/></symbol>
 </svg>
 
 <header class="top"><div class="shell">
@@ -300,6 +355,8 @@ body.gate nav.tabs,body.gate #bell{display:none}
 <div class="shell"><main id="view" class="view"><div class="sk"><i style="height:150px"></i><i style="height:78px"></i><i style="height:92px"></i><i style="height:92px"></i></div></main></div>
 <div id="mini" hidden></div>
 <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<button type="button" id="asstfab" data-act="asst" aria-label="Open assistant"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg></button>
+<div id="asst" hidden></div>
 <div id="sheet" hidden></div>
 <div id="alarm" hidden></div>
 <div id="toast" hidden role="status" aria-live="polite"></div>
@@ -510,7 +567,7 @@ function nextFor(order,block){
 }
 //#LOGIC-END
 /* ---------- state ---------- */
-const defaultPlan=()=>({exam:'',examName:'',buffer:21,lead:5,subjects:[],blocks:[]});
+const defaultPlan=()=>({exam:'',examName:'',buffer:21,lead:5,subjects:[],blocks:[],tests:[],reminders:[]});
 let S={plan:defaultPlan(),materials:[],logs:[]};
 let FB=null,CL=null,GATE='loading';   // FB: firebase functions, CL: signed-in cloud session, GATE: 'loading' | 'signin' | null
 const ASSETS=null;
@@ -710,6 +767,91 @@ async function deleteCourseData(){
 function enterLocal(){
   GATE=null;loadLocal();firstApply=true;render();
 }
+/* ---------- look: accent colour and background, on top of light/dark ---------- */
+const ACCENTS={indigo:'#4349C9',blue:'#1D6FD8',teal:'#0F8B8D',green:'#1F8A57',lime:'#5B8A12',yellow:'#B8860B',gold:'#B8860B',orange:'#D9631A',red:'#C23B35',pink:'#C93C7C',magenta:'#B5389E',purple:'#7A3FC4',violet:'#6A45D1',brown:'#8A5A3C',grey:'#58677A',gray:'#58677A',slate:'#4A5B6A',cyan:'#0E87A8',navy:'#26407A',maroon:'#8E2B3A'};
+// Each background has a light and a dark version. tone 'dark' means it only makes sense in dark mode.
+const BGS={
+  default:{label:'Default',l:{bg:'#F2F4F3'},d:{bg:'#0E1217'}},
+  paper:{label:'Paper',l:{bg:'#F7F1E5'},d:{bg:'#17140F'}},
+  mint:{label:'Mint',l:{bg:'#E9F4EE'},d:{bg:'#0C1511'}},
+  sky:{label:'Sky',l:{bg:'#E8F1FB'},d:{bg:'#0B131C'}},
+  blush:{label:'Blush',l:{bg:'#FBEDEE'},d:{bg:'#1A1113'}},
+  lavender:{label:'Lavender',l:{bg:'#EFEBFA'},d:{bg:'#13101E'}},
+  slate:{label:'Slate',l:{bg:'#E4E8EC'},d:{bg:'#0A0D11'}},
+  sunrise:{label:'Sunrise',l:{bg:'#FBEFE4',img:'linear-gradient(170deg,#FFE9D6 0%,#FBEFE4 38%,#F3EEF8 100%)'},d:{bg:'#18110F',img:'linear-gradient(170deg,#2A1A12 0%,#18110F 45%,#14111C 100%)'}},
+  aurora:{label:'Aurora',l:{bg:'#E8F3F1',img:'linear-gradient(165deg,#D8F1EA 0%,#E8F3F1 40%,#E6E8FA 100%)'},d:{bg:'#0B1416',img:'linear-gradient(165deg,#0D2420 0%,#0B1416 45%,#15122B 100%)'}},
+  midnight:{label:'Midnight',tone:'dark',d:{bg:'#0A1020',img:'linear-gradient(180deg,#0F1A36 0%,#0A1020 60%)'}},
+  black:{label:'Black',tone:'dark',d:{bg:'#000000'}}
+};
+let LOOK=Object.assign({accent:null,bg:null},lsGet('pl.look',{}));
+const isDarkNow=()=>theme==='dark'||(theme==='auto'&&!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));
+const hexOk=h=>typeof h==='string'&&/^#[0-9a-f]{6}$/i.test(h);
+function h2rgb(h){return [1,3,5].map(i=>parseInt(h.slice(i,i+2),16))}
+function rgb2hsl([r,g,b]){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}
+  return [h,s*100,l*100]}
+const lumOf=hex=>{const [r,g,b]=h2rgb(hex).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b};
+function parseColour(s){
+  s=String(s||'').trim().toLowerCase();
+  if(ACCENTS[s])return ACCENTS[s];
+  let m=s.match(/^#?([0-9a-f]{6})$/);if(m)return '#'+m[1];
+  m=s.match(/^#?([0-9a-f]{3})$/);if(m)return '#'+m[1].split('').map(c=>c+c).join('');
+  return null;
+}
+function applyLook(){
+  const st=document.documentElement.style,dark=isDarkNow();
+  const vars=['--accent','--accent-soft','--accent-ink','--bg','--bgimg'];
+  vars.forEach(v=>st.removeProperty(v));
+  if(LOOK.accent&&hexOk(LOOK.accent)){
+    const [h,s0,l0]=rgb2hsl(h2rgb(LOOK.accent)),s=Math.min(s0,88);
+    // keep the colour readable: darker on light screens, lighter on dark ones
+    const l=dark?Math.max(l0,66):Math.min(l0,42);
+    st.setProperty('--accent',`hsl(${h.toFixed(0)} ${s.toFixed(0)}% ${l.toFixed(0)}%)`);
+    st.setProperty('--accent-soft',dark?`hsl(${h.toFixed(0)} 38% 20%)`:`hsl(${h.toFixed(0)} 70% 94%)`);
+    st.setProperty('--accent-ink',dark?'#0E1217':'#FFFFFF');
+  }
+  const bg=resolveBg(LOOK.bg,dark);
+  if(bg){st.setProperty('--bg',bg.bg);if(bg.img)st.setProperty('--bgimg',bg.img)}
+  const meta=document.querySelector('meta[name=theme-color]');
+  if(meta)meta.setAttribute('content',bg?bg.bg:(LOOK.accent&&hexOk(LOOK.accent)?LOOK.accent:'#4349C9'));
+}
+function resolveBg(key,dark){
+  if(!key)return null;
+  if(BGS[key]){const b=BGS[key];return dark?(b.d||null):(b.l||b.d||null)}
+  if(hexOk(key))return {bg:key};
+  return null;
+}
+// Returns a note when the theme had to change so the text stays readable.
+function setLook(p){
+  let note='';
+  if('accent' in p){const c=p.accent?parseColour(p.accent):null;if(p.accent&&!c)return {err:'I do not know the colour "'+p.accent+'". Try a name like green or orange, or a hex code like #1D6FD8.'};LOOK.accent=c}
+  if('bg' in p){
+    let k=p.bg;
+    if(k&&!BGS[k]){const c=parseColour(k);if(!c)return {err:'I do not know the background "'+k+'". Pick one of: '+Object.keys(BGS).join(', ')+', or give a hex code.'};k=c}
+    LOOK.bg=k||null;
+    let wantDark=null;
+    if(k&&BGS[k]&&BGS[k].tone==='dark')wantDark=true;
+    else if(k&&hexOk(k)){wantDark=lumOf(k)<.3}
+    if(wantDark!==null&&wantDark!==isDarkNow()){
+      theme=wantDark?'dark':'light';lsSet('pl.theme',theme);
+      note=wantDark?' I switched to dark mode so the text stays readable on it.':' I switched to light mode so the text stays readable on it.';
+    }
+  }
+  lsSet('pl.look',LOOK);applyTheme();
+  return {note};
+}
+function resetLook(){LOOK={accent:null,bg:null};lsSet('pl.look',LOOK);applyLook()}
+if(window.matchMedia)try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyLook())}catch(e){}
+
+/* swatches in Settings */
+const PICK_ACC=['indigo','blue','teal','green','orange','red','pink','purple'];
+function lookPickers(){
+  const acc=PICK_ACC.map(k=>`<button type="button" class="sw" style="background:${ACCENTS[k]}" data-act="lookacc" data-v="${k}" aria-label="${k} accent" aria-pressed="${LOOK.accent===ACCENTS[k]}"></button>`).join('')+`<button type="button" class="btn sm ghost" data-act="lookacc" data-v="">Default</button>`;
+  const dk=isDarkNow();
+  const bgs=Object.keys(BGS).filter(k=>k!=='default').map(k=>{const r=resolveBg(k,dk)||resolveBg(k,!dk);return `<button type="button" class="sw bgsw" style="background:${r.img||r.bg}" data-act="lookbg" data-v="${k}" aria-label="${BGS[k].label} background" aria-pressed="${LOOK.bg===k}"></button>`}).join('')+`<button type="button" class="btn sm ghost" data-act="lookbg" data-v="">Default</button>`;
+  return `<div class="stack" id="lookpick" style="gap:8px"><span class="kick">Accent colour</span><div class="sw-row">${acc}</div><span class="kick" style="margin-top:6px">Background</span><div class="sw-row">${bgs}</div></div>`;
+}
+function paintLookPickers(){const e=document.getElementById('lookpick');if(e)e.outerHTML=lookPickers()}
 
 /* ---------- local-only state ---------- */
 let run=lsGet('pl.run',null);
@@ -717,7 +859,7 @@ let armed=false,wakeLock=null,audioCtx=null,snoozes={},fired=lsGet('pl.fired',{}
 let tab='today',weekOffset=0,matFilter='left',matOrder=true;
 let selIdx=dow(new Date()),planDay=dow(new Date());
 let theme=lsGet('pl.theme','auto');
-function applyTheme(){const r=document.documentElement;if(theme==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',theme)}
+function applyTheme(){const r=document.documentElement;if(theme==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',theme);applyLook()}
 
 /* ---------- UI helpers ---------- */
 const ic=(n,c)=>`<svg class="ic${c?' '+c:''}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
@@ -875,6 +1017,7 @@ function vToday(){
   }
   if(isToday)h+=`<button class="btn lg soft" type="button" data-act="log" data-b="" data-d="${ds}">${ic('plus')}Log an extra session</button>`;
 
+  if(isToday)h+=vUpcoming();
   const seen=new Set(),nextUp=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,4);
   if(isToday&&nextUp.length)h+=`<section class="card"><div class="stack"><h3>Study next</h3><p class="small muted">Ordered by importance, your confidence, what is left and what needs to come first.</p></div>`+
     nextUp.map((o,i)=>`<div class="item" style="${cvar(o.m.subj)};grid-template-columns:auto 1fr"><span class="num">${i+1}</span><div class="stack" style="gap:3px;min-width:0"><span class="t">${esc(o.m.title)}</span><span class="small muted">${subjChip(o.m.subj)}${o.chunk?` <span style="margin-left:4px">about ${esc(unitN(o.chunk,o.m.unit))} per session</span>`:''}</span></div></div>`).join('')+`</section>`;
@@ -902,6 +1045,7 @@ function vPlan(){
   const pips=n=>`<span class="pips">${[1,2,3,4,5].map(i=>`<i${i<=n?' class="on"':''}></i>`).join('')}</span>`;
   h+=`<section class="card"><div class="sec-h"><div class="stack" style="gap:2px"><h3>Subjects</h3><p class="small muted">Importance and confidence decide what the planner puts first.</p></div><button class="btn sm soft" type="button" data-act="addsubj">${ic('plus')}Add</button></div>`+
     S.plan.subjects.map(s=>`<button type="button" class="item" data-act="editsubj" data-s="${esc(s.id)}" style="${cvar(s.id)};grid-template-columns:1fr auto"><span class="stack" style="gap:6px"><span class="t">${subjChip(s.id)}</span><span class="small muted row" style="gap:14px"><span class="row" style="gap:6px">Importance ${pips(s.w)}</span><span class="row" style="gap:6px">Confidence ${pips(s.c)}</span></span></span>${ic('chev')}</button>`).join('')+`</section>`;
+  h+=vTestsPlan();
   h+=`<button class="btn lg ghost" type="button" data-act="settings">${ic('sliders')}Exam date, appearance, exports</button>`;
   h+=`<section class="card flat aboutapp">${ic('spark')}<p class="small muted">A web page cannot see what you do in other apps, so this app counts what you log or time here. For alarms that ring when this page is closed, export the schedule to your calendar from Settings. Automatic tracking of other apps is done by the Android companion app.</p></section>`;
   return h;
@@ -956,6 +1100,7 @@ function vReport(){
   h+=`<section class="card"><h3>Study time of day</h3>${hourChart(r)}<p class="small muted">Dashed is when the plan puts study, solid is when you studied.${r.avgShift!==null?` Sessions started ${Math.abs(Math.round(r.avgShift))} minutes ${r.avgShift>=0?'later':'earlier'} than planned on average.`:''}</p></section>`;
   if(r.sessions.length)h+=`<section class="card"><h3>Planned and actual start</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Day</th><th>Subject</th><th>Plan</th><th>Actual</th><th>Shift</th></tr></thead><tbody>`+
     r.sessions.map(s=>`<tr><td>${DAYS[dow(parseYmd(s.d))]}</td><td>${esc(subjName(s.s))}</td><td>${s.ps}</td><td>${s.st}</td><td>${s.diff>0?'+':''}${s.diff}m</td></tr>`).join('')+`</tbody></table></div></section>`;
+  h+=vMockCard();
   const tips=coach(r);
   if(tips.length)h+=`<section class="card"><h3>What to change</h3>`+tips.map(t=>`<p class="note">${ic('spark')}<span>${esc(t)}</span></p>`).join('')+`</section>`;
   h+=`<button class="btn lg ghost" type="button" data-act="copyrep">Copy report as text</button>`;
@@ -1008,6 +1153,1108 @@ function reportText(){
   for(const [id,v] of Object.entries(r.bySub))L.push(`${subjName(id)}: ${fmtDur(v.a)} of ${fmtDur(v.p)}, sheets ${v.shA} of ${v.sh}`);
   return L.join('\n');
 }
+/* ---------- tests, mock tests and reminders (stored inside the course plan) ---------- */
+const PT=()=>S.plan.tests||(S.plan.tests=[]);
+const PR=()=>S.plan.reminders||(S.plan.reminders=[]);
+const TKINDS={mock:'Mock test',test:'Test'};
+const REPS={'':'Does not repeat',daily:'Every day',weekdays:'Every weekday',weekly:'Every week'};
+const testStart=t=>{const d=new Date(t.date+'T'+(t.st||'09:00')+':00').getTime();return isNaN(d)?0:d};
+const timeTxt=d=>d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+function whenTxt(ms){
+  const d=new Date(ms),t0=parseYmd(ymd(new Date())),d0=parseYmd(ymd(d)),diff=Math.round((d0-t0)/864e5);
+  const day=diff===0?'Today':diff===1?'Tomorrow':diff===-1?'Yesterday':d.toLocaleDateString([],{weekday:'short',day:'numeric',month:'short'});
+  return day+', '+timeTxt(d);
+}
+function nextAt(at,rep){
+  const d=new Date(at);let guard=0;
+  do{d.setDate(d.getDate()+(rep==='weekly'?7:1));guard++}while(guard<400&&(d.getTime()<=Date.now()||(rep==='weekdays'&&(d.getDay()===0||d.getDay()===6))));
+  return d.getTime();
+}
+const pctTxt=t=>t.score!=null&&t.marks>0?Math.round(t.score/t.marks*100)+'%':'';
+const toLocalInput=ms=>{const d=new Date(ms);return {date:ymd(d),time:pad(d.getHours())+':'+pad(d.getMinutes())}};
+
+function reminderForm(r){
+  const now=Date.now()+3600000;
+  const f=r?toLocalInput(r.at):toLocalInput(now-now%900000+900000);
+  r=r||{id:'',text:'',kind:'reminder',rep:''};
+  openSheet(r.id?'Edit reminder':'New reminder or alarm',`<label class="field">What for<input type="text" name="tx" value="${esc(r.text)}" maxlength="120" placeholder="Revise ML notes" required></label>
+    <div class="grid2"><label class="field">Date<input type="date" name="d" value="${f.date}" required></label><label class="field">Time<input type="time" name="t" value="${f.time}" required></label></div>
+    <div class="grid2"><label class="field">Type<select name="k"><option value="reminder"${r.kind==='reminder'?' selected':''}>Reminder</option><option value="alarm"${r.kind==='alarm'?' selected':''}>Alarm</option></select></label>
+    <label class="field">Repeat<select name="rep">${Object.entries(REPS).map(([k,v])=>`<option value="${k}"${(r.rep||'')===k?' selected':''}>${v}</option>`).join('')}</select></label></div>
+    <p class="small muted">It rings on this screen while the page is open and alarms are turned on.</p>
+    <button class="btn lg" type="submit">${r.id?'Save':'Add'}</button>${r.id?`<button class="btn lg danger" type="button" data-act="delrem" data-r="${r.id}">Delete</button>`:''}`,fd=>{
+    const at=new Date(fd.get('d')+'T'+fd.get('t')+':00').getTime();need(!isNaN(at),'Enter a valid date and time.');
+    const nr={id:r.id||uid(),text:need((fd.get('tx')||'').trim(),'Say what it is for.').slice(0,120),at,kind:fd.get('k')==='alarm'?'alarm':'reminder',rep:fd.get('rep')||null,done:false};
+    const i=PR().findIndex(x=>x.id===nr.id);if(i<0)PR().push(nr);else PR()[i]=nr;
+    mark('plan');closeSheet();render(false);toast('Saved for '+whenTxt(at));
+  });
+}
+function testForm(t){
+  const nowT=new Date(Date.now()+86400000);
+  t=t||{id:'',title:'',kind:'mock',subj:'',date:ymd(nowT),st:'10:00',m:180,marks:100,al:true,score:null};
+  openSheet(t.id?'Edit test':'New test or mock test',`<label class="field">Name<input type="text" name="ti" value="${esc(t.title)}" maxlength="80" placeholder="Full mock 1" required></label>
+    <div class="grid2"><label class="field">Type<select name="k">${Object.entries(TKINDS).map(([k,v])=>`<option value="${k}"${t.kind===k?' selected':''}>${v}</option>`).join('')}</select></label>
+    <label class="field">Subject<select name="s"><option value="">All subjects</option>${subjOpts(t.subj)}</select></label></div>
+    <div class="grid2"><label class="field">Date<input type="date" name="d" value="${esc(t.date)}" required></label><label class="field">Start<input type="time" name="st" value="${esc(t.st)}" required></label></div>
+    <div class="grid2"><label class="field">Minutes<input type="number" name="m" min="10" max="360" value="${t.m}" inputmode="numeric"></label><label class="field">Total marks<input type="number" name="mk" min="1" max="1000" value="${t.marks}" inputmode="numeric"></label></div>
+    <div class="presets">${[60,90,120,180].map(n=>`<button type="button" class="pre" data-fill="m" data-val="${n}">${fmtDur(n)}</button>`).join('')}</div>
+    ${t.id?`<label class="field">Marks scored (leave empty if not taken)<input type="number" name="sc" min="0" step="0.25" value="${t.score==null?'':t.score}" inputmode="decimal"></label>`:''}
+    ${switchRow('Ring an alarm before it starts','al',t.al)}
+    <button class="btn lg" type="submit">${t.id?'Save':'Add'}</button>${t.id?`<button class="btn lg danger" type="button" data-act="deltest" data-t="${t.id}">Delete</button>`:''}`,fd=>{
+    const nt={id:t.id||uid(),title:need((fd.get('ti')||'').trim(),'Give it a name.').slice(0,80),kind:fd.get('k')==='test'?'test':'mock',subj:fd.get('s')||'',date:fd.get('d'),st:fd.get('st'),
+      m:Math.min(360,Math.max(10,+fd.get('m')||180)),marks:Math.min(1000,Math.max(1,+fd.get('mk')||100)),al:fd.get('al')==='on',score:t.score??null};
+    need(testStart(nt)>0,'Enter a valid date and time.');
+    if(t.id){const v=fd.get('sc');nt.score=v===''||v===null?null:Math.min(nt.marks,Math.max(0,+v||0))}
+    const i=PT().findIndex(x=>x.id===nt.id);if(i<0)PT().push(nt);else PT()[i]=nt;
+    mark('plan');closeSheet();render(false);toast('Saved');
+  });
+}
+function scoreForm(t){
+  openSheet('How did it go?',`<p class="muted">${esc(t.title)}</p><div class="grid2"><label class="field">Marks scored<input type="number" name="sc" min="0" step="0.25" inputmode="decimal" required autofocus></label><label class="field">Out of<input type="number" name="mk" min="1" value="${t.marks}" inputmode="numeric"></label></div>
+    <button class="btn lg" type="submit">Save score</button>`,fd=>{
+    const mk=Math.max(1,+fd.get('mk')||t.marks),sc=Math.max(0,+fd.get('sc'));need(fd.get('sc')!==''&&!isNaN(sc),'Enter your marks.');
+    t.marks=mk;t.score=Math.min(mk,sc);mark('plan');closeSheet();render(false);toast('Scored '+pctTxt(t));
+  });
+}
+function startTest(t){
+  run={b:null,s:t.subj||(S.plan.subjects[0]||{}).id,t0:Date.now(),st:pad(new Date().getHours())+':'+pad(new Date().getMinutes()),ps:null,pm:t.m,tid:t.id};
+  lsSet('pl.run',run);selIdx=dow(new Date());tab='today';render();toast('Test timer started');
+}
+
+/* ---------- views ---------- */
+function reminderRow(r){
+  const late=!r.done&&r.at<Date.now()-10*60000,ic2=r.kind==='alarm'?'bell':'clock';
+  return `<button type="button" class="item" data-act="editrem" data-r="${r.id}" style="grid-template-columns:auto 1fr auto"><span class="tile-ic" style="--c:var(--accent);width:34px;height:34px">${ic(ic2)}</span>
+    <span class="stack" style="gap:2px;min-width:0"><span class="t">${esc(r.text)}</span><span class="small muted">${esc(whenTxt(r.at))}${r.rep?' · '+REPS[r.rep].toLowerCase():''}</span></span>
+    ${r.done?'<span class="st good">Done</span>':late?'<span class="st bad">Missed</span>':ic('chev')}</button>`;
+}
+function testRow(t){
+  const at=testStart(t),late=t.score==null&&at+t.m*60000<Date.now();
+  return `<button type="button" class="item" data-act="edittest" data-t="${t.id}" style="grid-template-columns:auto 1fr auto"><span class="tile-ic" style="--c:var(--accent);width:34px;height:34px">${ic('target')}</span>
+    <span class="stack" style="gap:2px;min-width:0"><span class="t">${esc(t.title)}</span><span class="small muted">${esc(whenTxt(at))} · ${fmtDur(t.m)}${t.subj?' · '+esc(subjName(t.subj)):''}</span></span>
+    ${t.score!=null?`<span class="st ${tone(t.score/t.marks*100)}">${pctTxt(t)}</span>`:late?'<span class="st warn">Add score</span>':ic('chev')}</button>`;
+}
+function vUpcoming(){
+  const now=Date.now(),lim=now+7*864e5;
+  const rs=PR().filter(r=>!r.done&&r.at<=lim&&r.at>=now-864e5).map(r=>({at:r.at,h:reminderRow(r)}));
+  const ts=PT().filter(t=>t.score==null&&testStart(t)<=lim+7*864e5&&testStart(t)+t.m*60000>=now-864e5).map(t=>({at:testStart(t),h:testRow(t)}));
+  const all=rs.concat(ts).sort((a,b)=>a.at-b.at).slice(0,4);
+  if(!all.length)return '';
+  return `<section class="card" style="gap:2px"><div class="sec-h" style="margin-bottom:4px"><h3>Coming up</h3><button class="btn sm soft" type="button" data-act="tab" data-v="plan">All</button></div>${all.map(x=>x.h).join('')}</section>`;
+}
+function vTestsPlan(){
+  const ts=PT().slice().sort((a,b)=>testStart(a)-testStart(b)),up=ts.filter(t=>t.score==null),past=ts.filter(t=>t.score!=null).reverse();
+  const rs=PR().slice().sort((a,b)=>a.at-b.at);
+  let h=`<section class="card" style="gap:2px"><div class="sec-h" style="margin-bottom:4px"><div class="stack" style="gap:2px"><h3>Tests and mock tests</h3><p class="small muted">Schedule them, time yourself, then record the score.</p></div><button class="btn sm soft" type="button" data-act="addtest">${ic('plus')}Add</button></div>`;
+  h+=up.length?up.map(testRow).join(''):`<p class="small muted" style="padding:6px 0">No test scheduled.</p>`;
+  if(up.some(t=>testStart(t)<=Date.now()+864e5&&t.score==null))h+=`<div class="row" style="margin-top:6px">`+`<button class="btn sm" type="button" data-act="starttest" data-t="${up.find(t=>testStart(t)<=Date.now()+864e5).id}" style="flex:1">${ic('play')}Start the test timer</button></div>`;
+  if(past.length)h+=`<div class="kick" style="margin-top:10px">Taken</div>`+past.slice(0,5).map(testRow).join('');
+  h+=`</section><section class="card" style="gap:2px"><div class="sec-h" style="margin-bottom:4px"><div class="stack" style="gap:2px"><h3>Reminders and alarms</h3><p class="small muted">One-off or repeating.</p></div><button class="btn sm soft" type="button" data-act="addrem">${ic('plus')}Add</button></div>`;
+  h+=rs.length?rs.map(reminderRow).join(''):`<p class="small muted" style="padding:6px 0">None yet. You can also ask the assistant.</p>`;
+  return h+`</section>`;
+}
+function vMockCard(){
+  const sc=PT().filter(t=>t.score!=null&&t.marks>0).sort((a,b)=>testStart(a)-testStart(b));
+  if(!sc.length)return '';
+  const ps=sc.map(t=>t.score/t.marks*100),avg=ps.reduce((a,b)=>a+b,0)/ps.length,last=ps[ps.length-1],prev=ps.length>1?ps[ps.length-2]:null;
+  const bars=sc.slice(-8).map((t,i,a)=>{const p=t.score/t.marks*100;return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0"><div style="height:80px;width:100%;display:flex;align-items:flex-end"><i style="display:block;width:100%;height:${Math.max(4,p)}%;border-radius:8px 8px 3px 3px;background:var(--accent);opacity:${i===a.length-1?1:.55}"></i></div><span class="small muted">${Math.round(p)}%</span></div>`}).join('');
+  return `<section class="card"><div class="sec-h"><h3>Test scores</h3><span class="small muted">${sc.length} taken · average ${Math.round(avg)}%</span></div><div style="display:flex;gap:8px">${bars}</div>
+    <p class="small muted">${prev===null?'Latest':'Latest is '+(last>=prev?'up ':'down ')+Math.abs(Math.round(last-prev))+' points on the one before. Latest'}: ${esc(sc[sc.length-1].title)}, ${Math.round(last)}%.</p></section>`;
+}
+
+/* ---------- alarms for reminders and tests ---------- */
+function ringItem(o){
+  const el=document.getElementById('alarm');
+  el.innerHTML=`<div class="alarm-card" role="alertdialog" aria-label="${esc(o.kicker)}"><span class="alarm-ring">${ic('bell')}</span><span class="kick">${esc(o.kicker)}</span><h2>${esc(o.title)}</h2><div class="big">${esc(o.time)}</div>${o.sub?`<p class="muted">${esc(o.sub)}</p>`:''}${o.main||''}
+    <div class="grid2" style="width:100%">${o.side}</div></div>`;
+  el.hidden=false;beep();clearInterval(ringTimer);let n=0;ringTimer=setInterval(()=>{if(++n>40)return stopRing();beep()},2200);
+  if(window.AsstSpeak&&o.say)AsstSpeak(o.say);
+}
+function ringReminder(r){
+  ringItem({kicker:r.kind==='alarm'?'Alarm':'Reminder',title:r.text,time:timeTxt(new Date(r.at)),sub:r.rep?REPS[r.rep]:'',say:r.kind==='alarm'?'Alarm. '+r.text:'Reminder. '+r.text,
+    main:`<button class="btn lg" type="button" data-act="remdone" data-r="${r.id}">${ic('check')}Done</button>`,
+    side:`<button class="btn ghost" type="button" data-act="rsnooze" data-r="${r.id}">Snooze 10 min</button><button class="btn ghost" type="button" data-act="dismiss">Dismiss</button>`});
+}
+function ringTest(t){
+  ringItem({kicker:TKINDS[t.kind]+' starting',title:t.title,time:t.st,sub:fmtDur(t.m)+(t.subj?' · '+subjName(t.subj):''),say:TKINDS[t.kind]+' time. '+t.title,
+    main:`<button class="btn lg" type="button" data-act="starttest" data-t="${t.id}">${ic('play')}Start the timer</button>`,
+    side:`<button class="btn ghost" type="button" data-act="tsnooze" data-t="${t.id}">Snooze 10 min</button><button class="btn ghost" type="button" data-act="dismiss">Dismiss</button>`});
+}
+function extraAlarms(){
+  if(!armed||!document.getElementById('alarm').hidden)return;
+  const now=Date.now();
+  for(const r of PR()){
+    if(r.done)continue;
+    const key='r|'+r.id+'|'+r.at,sz=snoozes[key];
+    if(sz){if(now>=sz){delete snoozes[key];ringReminder(r);return}continue}
+    if(fired[key])continue;
+    if(now>=r.at&&now<=r.at+10*60000){fired[key]=1;lsSet('pl.fired',fired);ringReminder(r);return}
+  }
+  for(const t of PT()){
+    if(!t.al||t.score!=null)continue;
+    const key='t|'+t.id+'|'+t.date+t.st,sz=snoozes[key],at=testStart(t)-(S.plan.lead||0)*60000;
+    if(sz){if(now>=sz){delete snoozes[key];ringTest(t);return}continue}
+    if(fired[key])continue;
+    if(now>=at&&now<=at+10*60000){fired[key]=1;lsSet('pl.fired',fired);ringTest(t);return}
+  }
+}
+function finishReminder(r){
+  if(r.rep){r.at=nextAt(r.at,r.rep)}else r.done=true;
+  mark('plan');
+}
+function setArmed(on){
+  if(on&&!armed){armed=true;beep();keepAwake()}
+  else if(!on&&armed){armed=false;try{wakeLock&&wakeLock.release()}catch(e){}wakeLock=null}
+  paintHeader();
+}
+/* ---------- assistant: settings, chat history ---------- */
+let ACFG=Object.assign({gender:'female',rate:1,lang:'en-IN',voiceName:'',speak:false,provider:'',key:'',model:''},lsGet('pl.asst',{}));
+let CHAT=lsGet('pl.chat',[]);
+let PENDING=null,LASTSNAP=null;
+const saveAcfg=()=>lsSet('pl.asst',ACFG);
+const saveChat=()=>lsSet('pl.chat',CHAT.slice(-40));
+
+/* ---------- reading dates, times and durations out of a sentence ---------- */
+const MONTHS=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+const WD3=['mon','tue','wed','thu','fri','sat','sun'];
+const NUMW={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,ninety:90};
+const UNITS='hours?|hrs?|minutes?|mins?|marks?|days?|am|pm|o\'?clock|questions?|pages?|sheets?|weeks?';
+function normText(s){
+  let t=' '+String(s||'').toLowerCase().replace(/[“”"]/g,'').replace(/\s+/g,' ')+' ';
+  t=t.replace(/\ba\.?\s?m\.?(?=\W)/g,'am').replace(/\bp\.?\s?m\.?(?=\W)/g,'pm');
+  t=t.replace(/\bhalf an? hour\b/g,'30 minutes').replace(/\ban hour and a half\b/g,'90 minutes').replace(/\b(an|a|one) hour\b/g,'1 hour').replace(/\bquarter of an hour\b/g,'15 minutes');
+  t=t.replace(new RegExp('\\b('+Object.keys(NUMW).join('|')+')(?=\\s+('+UNITS+')\\b)','g'),w=>NUMW[w]);
+  t=t.replace(/\btmrw\b|\btmr\b|\btomorow\b/g,'tomorrow').replace(/\bmins\b/g,'minutes');
+  return t;
+}
+function nextWeekday(now,wd,strict){
+  const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let add=(wd-dow(d)+7)%7;if(add===0&&strict)add=7;
+  d.setDate(d.getDate()+add);return d;
+}
+function parseWhen(raw,nowArg){
+  const now=nowArg||new Date();
+  let t=normText(raw);
+  const o={date:null,h:null,m:0,rel:null,rep:null,dur:null,marks:null,when:null,hasTime:false,hasDate:false,vague:null};
+  let m;
+  const cut=re=>{const r=t.match(re);if(r)t=t.replace(re,' ');return r};
+  // repeats
+  if(cut(/\b(every ?day|daily|each day|everyday|every morning|every night|every evening)\b/))o.rep='daily';
+  else if(cut(/\b(every weekday|on weekdays|weekdays|monday to friday|mon(?:day)? ?(?:-|to) ?fri(?:day)?)\b/))o.rep='weekdays';
+  else if(m=cut(/\bevery (mon|tue|wed|thu|fri|sat|sun)[a-z]*\b/)){o.rep='weekly';o.date=nextWeekday(now,WD3.indexOf(m[1]),false)}
+  // "in 20 minutes", "in 2 hours"
+  if(m=cut(/\bin (\d+(?:\.\d+)?|an?) ?(minutes?|hours?|hrs?|days?|weeks?)\b/)){
+    const n=m[1][0]==='a'?1:parseFloat(m[1]),u=m[2][0];
+    o.rel=u==='m'?n:u==='h'?n*60:u==='d'?n*1440:n*10080;
+  }
+  // explicit dates
+  const mon='(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*';
+  if(m=cut(/\b(\d{4})-(\d{2})-(\d{2})\b/)){o.date=new Date(+m[1],+m[2]-1,+m[3])}
+  else if(m=cut(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?(?: of)? '+mon+'(?:,? (\\d{4}))?\\b'))){o.date=new Date(m[3]?+m[3]:now.getFullYear(),MONTHS.indexOf(m[2]),+m[1])}
+  else if(m=cut(new RegExp('\\b'+mon+' (\\d{1,2})(?:st|nd|rd|th)?(?:,? (\\d{4}))?\\b'))){o.date=new Date(m[3]?+m[3]:now.getFullYear(),MONTHS.indexOf(m[1]),+m[2])}
+  else if(m=cut(/\b(\d{1,2})[\/.](\d{1,2})(?:[\/.](\d{2,4}))?\b(?!\s*(?:hours?|marks?))/)){const y=m[3]?(+m[3]<100?2000+ +m[3]:+m[3]):now.getFullYear();o.date=new Date(y,+m[2]-1,+m[1])}
+  if(o.date&&!m3(o.date))o.date=null;
+  if(o.date&&o.date<new Date(now.getFullYear(),now.getMonth(),now.getDate())&&!/\b\d{4}\b/.test(raw))o.date=new Date(o.date.getFullYear()+1,o.date.getMonth(),o.date.getDate());
+  // day words
+  if(!o.date){
+    if(cut(/\bday after tomorrow\b/))o.date=addDays(now,2);
+    else if(cut(/\btomorrow\b/))o.date=addDays(now,1);
+    else if(cut(/\b(today|tonight|this evening|this afternoon|this morning)\b/)){o.date=new Date(now.getFullYear(),now.getMonth(),now.getDate())}
+    else if(m=cut(/\b(?:(next|this|on) )?(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b/)){o.date=nextWeekday(now,WD3.indexOf(m[2]),m[1]==='next')}
+  }
+  // clock time
+  let h=null,mi=0,mer=null;
+  if(m=cut(/\b(\d{1,2})[:.](\d{2}) ?(am|pm)?(?! ?(?:hours?|hrs?|marks?|minutes?))/)){h=+m[1];mi=+m[2];mer=m[3]||null}
+  else if(m=cut(/\b(\d{1,2}) ?(am|pm)\b/)){h=+m[1];mer=m[2]}
+  else if(m=cut(/\b(\d{1,2}) o'?clock\b/)){h=+m[1]}
+  else if(m=cut(new RegExp('\\b(?:at|by|around|@|wake me up at|alarm for|alarm at|for) ?(\\d{1,2})(?!\\d)(?! ?(?:'+UNITS+'|%|/))'))){h=+m[1]}
+  else if(cut(/\bnoon\b/)){h=12;mer='pm'}
+  else if(cut(/\bmidnight\b/)){h=0;mer='am'}
+  else if(cut(/\b(?:in the |this )?morning\b/)){h=7;mer='am';o.vague='morning'}
+  else if(cut(/\b(?:in the |this )?afternoon\b/)){h=3;mer='pm';o.vague='afternoon'}
+  else if(cut(/\b(?:in the |this )?evening\b/)){h=6;mer='pm';o.vague='evening'}
+  else if(cut(/\b(?:at )?night\b/)){h=9;mer='pm';o.vague='night'}
+  if(h!==null&&h<=24&&mi<60){
+    if(mer==='pm'&&h<12)h+=12;
+    if(mer==='am'&&h===12)h=0;
+    if(!mer&&h<=12&&h!==0){
+      // no am/pm said: pick the sensible one
+      if(!o.date||sameDay(o.date,now)){
+        const base=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+        const cand=[h%12,h%12+12].filter(x=>base.getTime()+x*3600000+mi*60000>now.getTime());
+        h=cand.length?cand[0]:h%12;
+      }else h=h>=5&&h<=11?h:h===12?12:h+12;
+    }
+    o.h=h;o.m=mi;o.hasTime=true;
+  }
+  // how long
+  if(m=cut(/\b(\d+(?:\.\d+)?) ?(?:hours?|hrs?|h)\b(?: ?(?:and )?(\d+) ?(?:minutes?|m)\b)?/)){o.dur=Math.round(parseFloat(m[1])*60+(m[2]?+m[2]:0))}
+  else if(m=cut(/\b(\d+) ?minutes?\b/)){o.dur=+m[1]}
+  if(m=cut(/\b(\d+) ?marks?\b/))o.marks=+m[1];
+  else if(m=cut(/\bout of (\d+)\b/))o.marks=+m[1];
+  // put the pieces together
+  if(o.rel!==null){o.when=new Date(now.getTime()+o.rel*60000);o.hasTime=true;o.hasDate=true}
+  else{
+    o.hasDate=!!o.date;
+    if(o.hasTime){
+      let d=o.date?new Date(o.date):new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      d.setHours(o.h,o.m,0,0);
+      if(!o.date&&d.getTime()<=now.getTime())d.setDate(d.getDate()+1);
+      else if(o.date&&sameDay(o.date,now)&&d.getTime()<=now.getTime()&&o.rep)d.setDate(d.getDate()+1);
+      o.when=d;
+    }else if(o.date){o.when=new Date(o.date)}
+  }
+  o.rest=t.replace(/\s+/g,' ').trim();
+  return o;
+}
+const sameDay=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+const m3=d=>d instanceof Date&&!isNaN(d.getTime());
+const fmtLocal=d=>ymd(d)+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+
+/* ---------- finding a subject in a sentence ---------- */
+function findSubject(text){
+  const t=normText(text),words=t.split(/[^a-z0-9&]+/).filter(Boolean);
+  let best=null,bs=0;
+  for(const s of S.plan.subjects){
+    const nm=normText(s.name).trim(),toks=nm.split(/[^a-z0-9]+/).filter(x=>x.length>=3&&!['and','the'].includes(x));
+    let sc=0;
+    if(nm&&t.includes(' '+nm+' '))sc+=10;
+    for(const w of words){
+      if(w===String(s.id).toLowerCase()&&w.length>=2)sc+=6;
+      for(const k of toks){if(w.length>=4&&(k.startsWith(w)||w.startsWith(k)))sc+=4;else if(w===k)sc+=4}
+    }
+    const initials=nm.split(/[^a-z0-9]+/).filter(x=>x&&!['and','the','of'].includes(x)).map(x=>x[0]).join('');
+    if(initials.length>=2&&words.includes(initials))sc+=5;
+    if(sc>bs){bs=sc;best=s}
+  }
+  return bs>=4?best:null;
+}
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+function cleanLabel(rest,drop){
+  let t=' '+rest+' ';
+  t=t.replace(/\b(please|can you|could you|would you|kindly|hey|hi|abhyashify|assistant)\b/g,' ');
+  t=t.replace(/\b(set|create|add|make|schedule|put|book|plan|give)( me)?( a| an| the| my| new)*\b/g,' ');
+  t=t.replace(/\b(remind me|remind|reminder|alarm|wake me up|wake me|mock test|mock|test)\b/g,' ');
+  t=t.replace(/\b(for|to|about|of|on|at|by|that|me|my|a|an|the|every|each|called|named|titled|it|is|and)\b/g,w=>w);
+  t=t.replace(/^[\s,.:;-]+|[\s,.:;-]+$/g,'').replace(/\s+/g,' ');
+  t=t.replace(/^(to|for|about|that|of|on|at|a|an|the|me|my)\s+/,'').replace(/\s+(to|for|about|that|of|on|at|a|an|the|and)$/,'');
+  t=t.replace(/^(to|for|about|that|of|on|at|a|an|the|me|my)\s+/,'');
+  t=t.trim();if(/^(for|to|a|an|the|me|my|at|on|in|it|and|of|about|that)$/.test(t))t='';
+  return t;
+}
+
+/* ---------- doing things: every action goes through here, from the built-in brain or from the AI ---------- */
+const MUTATES=new Set(['set_reminder','cancel_reminder','schedule_test','record_score','cancel_test','set_theme','set_accent','set_background','reset_look','add_block','new_schedule','clear_schedule','add_subject','add_material','set_exam','log_session']);
+const NEEDS_SURE=new Set(['new_schedule','clear_schedule']);
+const snap=()=>({plan:JSON.stringify(S.plan),mats:JSON.stringify(S.materials),logs:JSON.stringify(S.logs),look:JSON.stringify(LOOK),theme});
+function undoLast(){
+  const s=LASTSNAP;if(!s)return 'There is nothing to undo.';
+  const cur=snap();
+  S.plan=Object.assign(defaultPlan(),JSON.parse(s.plan));S.materials=JSON.parse(s.mats);S.logs=JSON.parse(s.logs);
+  LOOK=JSON.parse(s.look);theme=s.theme;lsSet('pl.look',LOOK);lsSet('pl.theme',theme);applyTheme();
+  if(cur.plan!==s.plan)mark('plan');if(cur.mats!==s.mats)mark('materials');if(cur.logs!==s.logs)mark('logs');
+  LASTSNAP=null;render(false);return 'Undone. Everything is back as it was before my last change.';
+}
+function parseLocal(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);return m?new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]).getTime():NaN}
+function parseDay(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const d=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(d)?null:ymd(d)}
+function parseHM(s){const m=String(s||'').match(/^(\d{1,2}):(\d{2})$/);if(!m||+m[1]>23||+m[2]>59)return null;return pad(+m[1])+':'+m[2]}
+function subjectFrom(v){
+  if(!v)return null;v=String(v);
+  return S.plan.subjects.find(s=>s.id===v)||S.plan.subjects.find(s=>s.name.toLowerCase()===v.toLowerCase())||findSubject(v);
+}
+function dayList(v){
+  const out=new Set();
+  for(const x of [].concat(v||[])){
+    if(typeof x==='number'&&x>=0&&x<=6)out.add(x);
+    else{const i=WD3.indexOf(String(x).toLowerCase().slice(0,3));if(i>=0)out.add(i);else if(/^[0-6]$/.test(String(x)))out.add(+x)}
+  }
+  return [...out].sort((a,b)=>a-b);
+}
+const dayNames=a=>a.length===7?'every day':a.join(',')==='0,1,2,3,4'?'Monday to Friday':a.map(i=>DAYS[i]).join(', ');
+function tokensOf(s){return normText(s).split(/[^a-z0-9]+/).filter(w=>w.length>=3&&!['the','and','for','mock','test','reminder','alarm','all'].includes(w))}
+function bestMatch(list,textOf,q){
+  const qs=tokensOf(q);if(!qs.length)return null;
+  let best=null,bs=0;
+  for(const it of list){const ts=tokensOf(textOf(it));let sc=0;for(const w of qs)if(ts.some(x=>x===w||(w.length>=4&&(x.startsWith(w)||w.startsWith(x)))))sc++;if(sc>bs){bs=sc;best=it}}
+  return bs?best:null;
+}
+function buildSchedule(o){
+  const subs=S.plan.subjects;if(!subs.length)throw new Error('There are no subjects yet.');
+  const hours=Math.min(14,Math.max(1,+o.hours||4)),start=parseHM(o.start)||'06:00',days=dayList(o.days);const ds=days.length?days:[0,1,2,3,4,5,6];
+  const D=Math.round(hours*60),blocks=[],weights=Object.fromEntries(subs.map(s=>[s.id,Math.max(.5,s.w*(6-s.c))]));
+  const slots=[];
+  for(const d of ds){
+    if(d===6&&D>=240&&ds.length>=5){
+      slots.push({d,st:start,m:Math.min(120,D-30),k:'revision'},{d,st:'16:00',m:180,k:'mock',fixed:true});continue;
+    }
+    let rem=D,t=toMin(start),idx=0;
+    while(rem>=30&&t<23*60){
+      let m=Math.min(90,rem);if(rem-m>0&&rem-m<30)m=rem;
+      slots.push({d,st:fromMin(t),m,k:idx%2===0?'theory':'practice'});
+      rem-=m;t+=m+15;idx++;
+      if(idx===2&&t<19*60)t=19*60;
+    }
+  }
+  const total=slots.filter(s=>!s.fixed).reduce((x,s)=>x+s.m,0),sw=Object.values(weights).reduce((a,b)=>a+b,0),got={};
+  const mixId=(subs.find(s=>s.id==='mix')||subs[0]).id;
+  let lastDay=-1,prev=null;
+  for(const s of slots){
+    if(s.d!==lastDay){lastDay=s.d;prev=null}
+    if(s.fixed){s.s=mixId;blocks.push(s);continue}
+    let pick=null,bd=-1e9;
+    for(const sub of subs){
+      if(sub.id===prev&&subs.length>1)continue;
+      if(s.k==='revision'&&sub.id!=='mix'&&subs.some(x=>x.id==='mix')){}
+      const deficit=weights[sub.id]/sw*total-(got[sub.id]||0);
+      if(deficit>bd){bd=deficit;pick=sub}
+    }
+    s.s=pick.id;got[pick.id]=(got[pick.id]||0)+s.m;prev=pick.id;blocks.push(s);
+  }
+  return {blocks:blocks.map(b=>({id:uid(),days:[b.d],st:b.st,m:b.m,s:b.s,k:b.k,sh:b.k==='practice'?1:0,al:true,t:''})),got,hours,ds,start};
+}
+
+const AX={
+  set_reminder(a){
+    const at=parseLocal(a.at);if(isNaN(at))throw new Error('I need a date and time for that.');
+    if(at<Date.now()-60000)throw new Error('That time has already passed.');
+    if(PR().length>=200)throw new Error('You have too many reminders. Delete a few first.');
+    const kind=a.kind==='alarm'?'alarm':'reminder',rep=['daily','weekdays','weekly'].includes(a.repeat)?a.repeat:null;
+    const text=String(a.text||'').trim().slice(0,120)||(kind==='alarm'?'Alarm':'Reminder');
+    PR().push({id:uid(),text,at,kind,rep,done:false});mark('plan');
+    const was=armed;setArmed(true);
+    return {msg:`${kind==='alarm'?'Alarm':'Reminder'} set for ${whenTxt(at)}${rep?' ('+REPS[rep].toLowerCase()+')':''}: ${text}.${was?'':' I turned your alarm bell on. Keep this page open so it can ring.'}`};
+  },
+  cancel_reminder(a){
+    const q=String(a.match||'').trim().toLowerCase(),list=PR().filter(r=>!r.done);
+    if(!list.length)return {msg:'You have no active reminders or alarms.'};
+    let del;
+    if(!q||q==='all'||q==='everything')del=list;
+    else{const m=bestMatch(list,r=>r.text,q)||list.find(r=>q.includes(whenTxt(r.at).toLowerCase().split(', ')[1]||'zzz'));del=m?[m]:[]}
+    if(!del.length)throw new Error('I could not find one that matches "'+q+'".');
+    const ids=new Set(del.map(r=>r.id));S.plan.reminders=PR().filter(r=>!ids.has(r.id));mark('plan');
+    return {msg:del.length===1?'Removed: '+del[0].text+' ('+whenTxt(del[0].at)+').':'Removed '+del.length+' reminders and alarms.'};
+  },
+  schedule_test(a){
+    const date=parseDay(a.date),time=parseHM(a.time)||'10:00';if(!date)throw new Error('I need a date for the test.');
+    const kind=a.kind==='test'?'test':'mock',sub=a.subject?subjectFrom(a.subject):null;
+    const m=Math.min(360,Math.max(10,Math.round(+a.minutes||(kind==='mock'?180:60)))),marks=Math.min(1000,Math.max(1,Math.round(+a.marks||100)));
+    const t={id:uid(),title:String(a.title||'').trim().slice(0,80)||(sub?sub.name+' '+TKINDS[kind].toLowerCase():'Full '+TKINDS[kind].toLowerCase()),kind,subj:sub?sub.id:'',date,st:time,m,marks,al:true,score:null};
+    if(testStart(t)<Date.now()-60000)throw new Error('That time has already passed.');
+    if(PT().length>=200)throw new Error('You have too many tests. Delete a few first.');
+    PT().push(t);mark('plan');const was=armed;setArmed(true);
+    return {msg:`${TKINDS[kind]} scheduled: ${t.title}, ${whenTxt(testStart(t))}, ${fmtDur(m)}, ${marks} marks.${was?'':' I turned your alarm bell on so it can ring while this page is open.'}`};
+  },
+  record_score(a){
+    const score=+a.score;if(isNaN(score)||score<0)throw new Error('I need the marks you scored.');
+    const all=PT().slice().sort((x,y)=>testStart(x)-testStart(y));if(!all.length)throw new Error('You have no tests yet. Schedule one first.');
+    let t=a.match&&!/^(last|latest|recent|previous|my)$/i.test(a.match)?bestMatch(all,x=>x.title+' '+TKINDS[x.kind]+' '+(x.subj?subjName(x.subj):''),a.match):null;
+    if(!t)t=all.filter(x=>testStart(x)<=Date.now()+3600000).pop()||all[all.length-1];
+    if(+a.marks>0)t.marks=Math.min(1000,Math.round(+a.marks));
+    t.score=Math.min(t.marks,score);mark('plan');
+    return {msg:`Saved ${t.score} out of ${t.marks} (${pctTxt(t)}) for ${t.title}.`};
+  },
+  cancel_test(a){
+    const all=PT(),q=String(a.match||'');if(!all.length)return {msg:'You have no tests.'};
+    const up=all.filter(t=>t.score==null).sort((x,y)=>testStart(x)-testStart(y));
+    const t=(q&&bestMatch(all,x=>x.title,q))||(/all/.test(q)?null:up[0]);
+    if(/\ball\b/.test(q)){const n=up.length;S.plan.tests=all.filter(x=>x.score!=null);mark('plan');return {msg:'Removed '+n+' upcoming tests.'}}
+    if(!t)throw new Error('I could not find that test.');
+    S.plan.tests=all.filter(x=>x.id!==t.id);mark('plan');return {msg:'Removed '+t.title+'.'};
+  },
+  start_test(a){
+    const up=PT().filter(t=>t.score==null).sort((x,y)=>testStart(x)-testStart(y));
+    const t=(a.match&&bestMatch(up,x=>x.title,a.match))||up.find(x=>testStart(x)<=Date.now()+864e5)||up[0];
+    if(!t)throw new Error('There is no test to start. Ask me to schedule one first.');
+    startTest(t);return {msg:`Started the timer for ${t.title} (${fmtDur(t.m)}). Stop it when you finish and I will ask for your score.`,close:true};
+  },
+  set_theme(a){
+    const m=['auto','light','dark'].includes(a.mode)?a.mode:null;if(!m)throw new Error('Pick auto, light or dark.');
+    theme=m;lsSet('pl.theme',theme);applyTheme();return {msg:m==='auto'?'Theme now follows your device setting.':'Switched to '+m+' mode.'};
+  },
+  set_accent(a){const r=setLook({accent:a.color});if(r.err)throw new Error(r.err);return {msg:'Accent colour changed to '+a.color+'.'+r.note}},
+  set_background(a){
+    const v=String(a.background||a.color||'').toLowerCase().trim();
+    const alias={cream:'paper',beige:'paper',yellow:'paper',pink:'blush',purple:'lavender',violet:'lavender',green:'mint',blue:'sky',gray:'slate',grey:'slate',gradient:'sunrise',orange:'sunrise',night:'midnight',dark:'midnight',teal:'aurora',white:'#FFFFFF',red:'blush'};
+    const key=BGS[v]?v:alias[v]||v;
+    const r=setLook({bg:key});if(r.err)throw new Error(r.err);return {msg:'Background changed to '+v+'.'+r.note};
+  },
+  reset_look(){resetLook();return {msg:'Colours and background are back to the default.'}},
+  add_block(a){
+    const sub=subjectFrom(a.subject);if(!sub)throw new Error('Which subject is it for? You have: '+S.plan.subjects.map(s=>s.name).join(', ')+'.');
+    const days=dayList(a.days);if(!days.length)throw new Error('Which days should it repeat on?');
+    const st=parseHM(a.time);if(!st)throw new Error('What time should it start?');
+    const k=KINDS[a.kind]&&a.kind!=='other'?a.kind:(KINDS[a.kind]?a.kind:'theory'),m=Math.min(600,Math.max(5,Math.round(+a.minutes||90)));
+    if(S.plan.blocks.length>=300)throw new Error('You have too many blocks.');
+    S.plan.blocks.push({id:uid(),days,st,m,s:sub.id,k,sh:Math.max(0,Math.min(20,Math.round(+a.sheets||0))),al:a.alarm!==false,t:''});mark('plan');
+    return {msg:`Added a ${KINDS[k].toLowerCase()} block for ${sub.name}: ${dayNames(days)} at ${st} for ${fmtDur(m)}.`};
+  },
+  new_schedule(a){
+    const hasSubs=S.plan.subjects.length>0;
+    if(a.mode==='template'||!hasSubs){
+      const T=gateTemplate(),keep={tests:S.plan.tests||[],reminders:S.plan.reminders||[]};
+      S.plan=Object.assign(T,keep);mark('plan');
+      return {msg:'Loaded the GATE DA 2027 template: nine subjects and a weekly timetable. Your tests and reminders are untouched. Change anything in the Plan tab.'};
+    }
+    const r=buildSchedule(a);S.plan.blocks=r.blocks;mark('plan');
+    const top=Object.entries(r.got).sort((x,y)=>y[1]-x[1]).slice(0,4).map(([id,m])=>subjName(id)+' '+fmtDur(m)+'/week').join(', ');
+    return {msg:`New schedule built: about ${r.hours} hours a day, ${dayNames(r.ds)}, starting at ${r.start}. More time goes to the subjects that carry more marks and where you are less confident (${top}). Sunday afternoon is a 3-hour mock when you study that day.`};
+  },
+  clear_schedule(){const n=S.plan.blocks.length;S.plan.blocks=[];mark('plan');return {msg:'Removed all '+n+' blocks from your schedule.'}},
+  add_subject(a){
+    const name=String(a.name||'').trim().slice(0,40);if(!name)throw new Error('What is the subject called?');
+    if(S.plan.subjects.some(s=>s.name.toLowerCase()===name.toLowerCase()))throw new Error(name+' is already in your subjects.');
+    if(S.plan.subjects.length>=60)throw new Error('You have too many subjects.');
+    const w=Math.min(5,Math.max(1,Math.round(+a.importance||3))),c=Math.min(5,Math.max(1,Math.round(+a.confidence||3)));
+    S.plan.subjects.push({id:uid(),name,w,c});mark('plan');return {msg:`Added the subject ${name} (importance ${w}, confidence ${c}).`};
+  },
+  add_material(a){
+    const title=String(a.title||'').trim().slice(0,120);if(!title)throw new Error('What is the material called?');
+    const sub=subjectFrom(a.subject)||S.plan.subjects[0];if(!sub)throw new Error('Add a subject first.');
+    const kind=MKINDS[a.kind]?a.kind:'theory',unit=['pages','chapters','questions','sheets','lectures'].includes(a.unit)?a.unit:(kind==='sheet'?'questions':'pages');
+    S.materials.push({id:uid(),title,subj:sub.id,kind,unit,total:Math.max(0,Math.round(+a.total||0)),done:0,file:null,asset:null,added:ymd(new Date())});mark('materials');
+    return {msg:`Added ${title} under ${sub.name}${+a.total>0?' ('+a.total+' '+unit+')':''}.`};
+  },
+  set_exam(a){
+    const d=parseDay(a.date);if(!d)throw new Error('I need the exam date.');
+    S.plan.exam=d;if(a.name)S.plan.examName=String(a.name).trim().slice(0,30);mark('plan');
+    const left=Math.round((parseYmd(d)-parseYmd(ymd(new Date())))/864e5);return {msg:`Exam set to ${parseYmd(d).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}${left>=0?', '+left+' days from now':''}.`};
+  },
+  log_session(a){
+    const sub=subjectFrom(a.subject)||S.plan.subjects[0];if(!sub)throw new Error('Add a subject first.');
+    const m=Math.round(+a.minutes);if(!(m>=1&&m<=720))throw new Error('How many minutes did you study? (1 to 720)');
+    const now=new Date(),d=parseDay(a.date)||ymd(now);let st=parseHM(a.time);
+    if(!st)st=d===ymd(now)?fromMin(Math.max(0,now.getHours()*60+now.getMinutes()-m)):'09:00';
+    const t0=new Date(d+'T'+st+':00').getTime();if(isNaN(t0))throw new Error('That date does not look right.');
+    S.logs.push({id:uid(),d,b:null,s:sub.id,st,ps:null,pm:null,m,q:0,mid:null,mu:0,t0,t1:t0+m*60000,dev:deviceId(),src:'manual',tz:tzOff()});
+    if(S.logs.length>1800)S.logs=S.logs.slice(-1800);mark('logs');
+    return {msg:`Logged ${fmtDur(m)} of ${sub.name} on ${d===ymd(now)?'today':parseYmd(d).toLocaleDateString([],{weekday:'long',day:'numeric',month:'short'})} from ${st}.`};
+  },
+  start_timer(a){
+    if(run)throw new Error('A timer is already running.');
+    const sub=subjectFrom(a.subject);startRun(null);if(sub){run.s=sub.id;lsSet('pl.run',run);render(false)}
+    return {msg:'Timer started'+(sub?' for '+sub.name:'')+'. Say "stop the timer" when you finish.',close:true};
+  },
+  stop_timer(){if(!run)throw new Error('No timer is running.');logForm(run.b);return {msg:'Review the details and tap Save log.',close:true}},
+  navigate(a){
+    const to=String(a.to||'');
+    if(['today','plan','materials','report'].includes(to)){tab=to;render();window.scrollTo({top:0})}
+    else if(to==='settings')settingsForm();else if(to==='account')accountSheet();else throw new Error('I can open Today, Plan, Materials, Report, Settings or Account.');
+    return {msg:'Opened '+to+'.',close:true};
+  },
+  alarms_on(a){setArmed(a.on!==false);return {msg:armed?'Alarms are on. Keep this page open for them to ring.':'Alarms are off.'}},
+  async create_course(a){
+    if(!CL)throw new Error('Separate courses need sign-in so each one keeps its own data. Sign in from the Account button, then ask me again.');
+    const name=String(a.name||'').trim().slice(0,80);if(!name)throw new Error('What should the course be called?');
+    const id=await createCourse(name);CL.courses.push({id,name});await openCourse(id);
+    return {msg:`Created the course "${name}" and switched to it. Ask me to load the GATE DA template or build a schedule for it.`};
+  },
+  async open_course(a){
+    if(!CL)throw new Error('Sign in to switch between courses.');
+    const c=bestMatch(CL.courses,x=>x.name,a.name||'');if(!c)throw new Error('I could not find that course. You have: '+CL.courses.map(x=>x.name).join(', ')+'.');
+    await openCourse(c.id);return {msg:'Switched to '+c.name+'.'};
+  }
+};
+const SPEC_TYPES=new Set([...Object.keys(AX)]);
+async function runActions(list,opts){
+  opts=opts||{};const msgs=[],errs=[];let close=false;
+  list=(Array.isArray(list)?list:[]).filter(a=>a&&SPEC_TYPES.has(a.type)).slice(0,6);
+  if(!opts.confirmed&&list.some(a=>NEEDS_SURE.has(a.type))&&(S.plan.blocks.length||list.some(a=>a.type==='new_schedule'&&a.mode==='template'&&S.plan.subjects.length))){
+    PENDING={actions:list};
+    const n=S.plan.blocks.length;
+    return {msgs:[`This will replace your ${n} schedule block${n===1?'':'s'}. Your subjects, materials, tests and reminders stay. Go ahead? (yes or no)`],pending:true,close:false};
+  }
+  const before=snap();let changed=false;
+  for(const a of list){
+    try{
+      const r=await AX[a.type](a.args||a);
+      if(r&&r.msg)msgs.push(r.msg);if(r&&r.close)close=true;
+      if(MUTATES.has(a.type))changed=true;
+    }catch(e){errs.push(e&&e.message?e.message:'That did not work.')}
+  }
+  if(changed&&JSON.stringify(snap())!==JSON.stringify(before)){LASTSNAP=before;render(false)}
+  return {msgs:msgs.concat(errs),close,changed};
+}
+
+/* ---------- how the app works: answers to questions ---------- */
+const KB=[
+ {k:'log logging record add session time studied hours manually extra missed',a:'To record study time, tap **Log time** on a block, or **Log an extra session** on the Today tab. Enter the minutes, when you started, the subject, any practice sheets, and optionally the material and how many pages you finished. You can also tell me, for example "I studied probability for 90 minutes today".'},
+ {k:'timer stopwatch start stop running session clock',a:'Tap **Start** on a block (or "Start now" on Today) to run a timer. When you finish, tap **Stop and log** and check the details. A running timer shows as a bar above the tabs on other screens.'},
+ {k:'alarm alarms ring bell sound notification closed background',a:'Alarms ring on screen at the start of each block (a few minutes early, as set in Settings). Turn them on with the bell icon at the top. They only ring while this page is open, because a web page cannot wake your phone by itself. For alarms that work with the page closed, export your schedule from Settings and import it into Google Calendar.'},
+ {k:'not ringing wont ring silent no sound alarm problem fix',a:'If an alarm did not ring: check that the bell icon is on, the page was still open, and your volume is up. Browsers only allow sound after you have tapped something on the page, so tap the bell once after opening the app. Keeping the screen on helps; the app asks for that when alarms are on.'},
+ {k:'block blocks schedule timetable plan add edit change delete slot',a:'Your weekly schedule is made of blocks. Open the **Plan** tab, pick a day and tap **Add block**. Choose the days, start time, minutes, subject and type, and whether it rings an alarm. Tap any block to edit or delete it. You can also ask me to add one or to build a whole new schedule.'},
+ {k:'subject subjects importance confidence weight',a:'Each subject has an **importance** (how many marks it carries) and a **confidence** (how strong you feel, 5 is strong). The planner puts important and weak subjects first. Edit them in the Plan tab under Subjects.'},
+ {k:'material materials book pdf notes sheet progress pages chapters questions finished complete order suggested',a:'In the **Materials** tab add books, notes, practice sheets or mock papers, with how many pages or questions they have. Update your progress with the +buttons or when you log a session. "Suggested order" sorts them by what to study next.'},
+ {k:'study next order suggested planner priority which first how decides',a:'"Study next" is ordered by how much the subject matters, how unsure you are about it, how much of the material is left, and what must come first (theory before practice sheets). Mock papers move up as the exam gets closer than 45 days.'},
+ {k:'report score weekly week performance calculated percentage how',a:'The weekly report score is half **hours studied vs planned**, a quarter **practice sheets attempted**, and a quarter **starting within 30 minutes of the planned time**. It also shows hours per day, by subject, time of day, and tips on what to change.'},
+ {k:'overlap overlapping duplicate twice counted once same course devices merge',a:'If two sessions in the same course overlap in time (for example the same hour logged on your phone and your laptop), the overlap is counted once. Sessions in different courses are never merged. The report mentions how much time was counted once.'},
+ {k:'sync devices phone laptop tablet account google sign login cloud',a:'Sign in with Google (Account button, top right) and your plan, materials and logs sync live across your phone, tablet and laptop. Without signing in, data stays on this device only.'},
+ {k:'course courses separate new switch multiple',a:'Each course has its own plan, materials and logs. When you are signed in, open the Account sheet to switch courses or create a new one, or ask me to create one.'},
+ {k:'install app home screen download phone desktop icon',a:'To install: in Chrome or Edge use the install icon in the address bar or the browser menu, then Install app. On iPhone use Safari, Share, Add to Home Screen. There is also an Install card on the Today tab.'},
+ {k:'offline internet connection works without network',a:'After the first visit the app opens offline. When you are signed in, changes made offline are saved on your device and sync when you reconnect.'},
+ {k:'backup export import download csv json calendar restore',a:'Settings has **Export schedule (CSV)** for Google Calendar and **Download a backup (JSON)**. The Account sheet can export all your data and import a backup, which is also how you bring over data from an older version.'},
+ {k:'privacy safe secure security data private who can see encrypted',a:'Your data is stored in your own account and only you can read it. Study minutes of people sharing a course are visible to each other, but reading progress is private. Data is encrypted in transit and at rest, though not end-to-end encrypted. You can export or delete everything from the Account sheet.'},
+ {k:'delete remove account course data erase wipe',a:'Open the Account sheet and use **Delete this course and my data** to remove a course and everything in it. Signing out clears the local copy on this device.'},
+ {k:'exam date countdown days left settings name',a:'Set the exam name and date in **Settings** (Plan tab, then "Exam date, appearance, exports"). The countdown shows at the top of the app. You can also tell me the date.'},
+ {k:'test tests mock tests papers score marks scheduled',a:'Add tests and mock tests under **Plan, Tests and mock tests**, or ask me, for example "schedule a mock test on Sunday at 10 am for 3 hours". Start the test timer when it begins, and when you stop it I ask for your score. Scores show in the Report tab with a trend.'},
+ {k:'reminder reminders remind repeat daily',a:'Add reminders under **Plan, Reminders and alarms**, or ask me, for example "remind me to revise ML tomorrow at 6 pm" or "every day at 9 pm remind me to log my hours". Like alarms, they ring while this page is open.'},
+ {k:'theme color colour dark light mode accent background look appearance wallpaper change',a:'Ask me, for example "dark mode", "make the accent green" or "background mint". You can also pick them in Settings. Say "reset the look" to go back to the default.'},
+ {k:'voice speak talk listen microphone mic male female speaking hear',a:'Tap the microphone in this chat to talk to me, and I answer out loud. Open the gear icon to choose a female or male voice, the speed and the language. Voice recognition uses your browser (Chrome or Edge work best).'},
+ {k:'assistant ai smart mode key api gemini claude model',a:'I understand common requests on my own, with no key and no cost. For free-form questions and requests you can switch on **Smart mode** in the gear menu by pasting your own AI key (a free Google Gemini key works). The key stays on this device.'},
+ {k:'android usage tracker other apps phone apps study time track',a:'A web page cannot see which other apps you use. A separate Android companion app measures time in the study apps you choose and gives you JSON. Reading that JSON into the weekly report is not built yet.'},
+ {k:'what is abhyashify about app purpose',a:'Abhyashify is a study planner for GATE DA 2027. It builds your weekly schedule, rings alarms, logs your study time, tracks your materials and tests, and gives a weekly report that compares what you did with the plan.'},
+ {k:'sign out logout switch account',a:'Open the Account sheet (top right) and tap **Sign out**. That also clears the local copy on this device.'},
+];
+function askKB(q){
+  const stop=new Set(['how','do','i','the','a','an','to','is','it','what','can','you','me','my','of','in','on','and','does','are','where','when','why','which','this','that','with','for','about','tell','explain','please','app']);
+  const qs=normText(q).split(/[^a-z0-9]+/).filter(w=>w&&!stop.has(w));
+  let best=null,bs=0;
+  for(const e of KB){
+    const ks=e.k.split(' ');let sc=0;
+    for(const w of qs)if(ks.some(x=>x===w||(w.length>=4&&x.length>=4&&(x.startsWith(w.slice(0,4))&&Math.abs(x.length-w.length)<=3))))sc++;
+    if(sc>bs){bs=sc;best=e}
+  }
+  return bs>=1?best.a:null;
+}
+
+/* ---------- questions about your own data ---------- */
+function studiedIn(from,to){return LG().filter(l=>l.d>=from&&l.d<=to).reduce((x,l)=>x+l.m,0)}
+function dataAnswer(t){
+  const now=new Date(),today=ymd(now),ws=weekStart(now);
+  if(/\bhow (many|much)\b.*\b(hours?|time|minutes?|long)\b/.test(t)&&/\b(studi|log|did i|have i|spent)/.test(t)){
+    let m,label;
+    if(/\byesterday\b/.test(t)){const y=ymd(addDays(now,-1));m=studiedIn(y,y);label='yesterday'}
+    else if(/\blast week\b/.test(t)){const a=addDays(ws,-7);m=studiedIn(ymd(a),ymd(addDays(a,6)));label='last week'}
+    else if(/\bthis month\b/.test(t)){const a=ymd(new Date(now.getFullYear(),now.getMonth(),1));m=studiedIn(a,today);label='this month'}
+    else if(/\btoday\b/.test(t)){m=studiedIn(today,today);label='today'}
+    else{m=studiedIn(ymd(ws),ymd(addDays(ws,6)));label='this week'}
+    return m?`You have logged ${fmtDur(m)} ${label}.`:`Nothing logged ${label} yet.`;
+  }
+  if(/\b(days? left|how many days|countdown|when is (the |my )?(exam|gate))\b/.test(t)){
+    if(!S.plan.exam)return 'No exam date is set. Tell me the date, for example "my exam is on 6 February 2027".';
+    const d=Math.round((parseYmd(S.plan.exam)-parseYmd(today))/864e5);
+    return d>=0?`${S.plan.examName||'The exam'} is on ${parseYmd(S.plan.exam).toLocaleDateString([],{day:'numeric',month:'long',year:'numeric'})}, which is ${d} days away.`:'The exam date has passed.';
+  }
+  if(/\b(what|which)\b.*\b(next|now|should i (study|do)|to study|on today|today)\b|\bwhat'?s (next|on today)\b/.test(t)&&!/\b(test|mock|reminder|alarm)s?\b/.test(t)){
+    const blocks=blocksOn(S.plan,now),nm=now.getHours()*60+now.getMinutes(),nb=blocks.find(b=>toMin(b.st)+b.m>nm);
+    const order=planner(S,now),seen=new Set(),nx=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,2);
+    let s=nb?`Next block: ${blockTitle(nb)} at ${nb.st} for ${fmtDur(nb.m)}.`:blocks.length?'You have no more blocks today.':'Nothing is scheduled today.';
+    if(nx.length)s+=' Study next: '+nx.map(o=>o.m.title+(o.chunk?' (about '+unitN(o.chunk,o.m.unit)+')':'')).join(', then ')+'.';
+    return s;
+  }
+  if(/\b(my (score|report)|how am i doing|how('?s| is) my (week|progress))\b/.test(t)){
+    const r=weekReport(VS(),ws,now);
+    return r.score===null?'There is not enough data yet for a score this week. Log a session and ask again.':`Your score this week is ${r.score}. You studied ${fmtDur(r.ta)} of ${fmtDur(r.td)} due so far, with ${r.shA} of ${r.shD} sheets attempted.`;
+  }
+  if(/\b(when|what|which|show|list|any|upcoming|next)\b.*\b(tests?|mock)/.test(t)||/\b(my )?(tests?|mocks?)\b.*\b(coming|upcoming|scheduled)\b/.test(t)){
+    const up=PT().filter(x=>x.score==null).sort((a,b)=>testStart(a)-testStart(b));
+    if(!up.length){const done=PT().filter(x=>x.score!=null);return done.length?'No upcoming tests. Your last score was '+pctTxt(done[done.length-1])+'.':'You have no tests scheduled. Ask me to schedule one.'}
+    return 'Upcoming: '+up.slice(0,5).map(x=>`${x.title}, ${whenTxt(testStart(x))} (${fmtDur(x.m)})`).join('; ')+'.';
+  }
+  if(/\b(reminders?|alarms?)\b/.test(t)&&/\b(what|which|show|list|any|do i have|my|upcoming)\b/.test(t)&&!/\b(set|create|add|remind me|cancel|delete|remove|turn)\b/.test(t)){
+    const rs=PR().filter(r=>!r.done).sort((a,b)=>a.at-b.at);
+    return rs.length?'Active: '+rs.slice(0,6).map(r=>`${r.text} (${whenTxt(r.at)}${r.rep?', '+REPS[r.rep].toLowerCase():''})`).join('; ')+'.':'You have no reminders or alarms set.';
+  }
+  return null;
+}
+
+/* ---------- the built-in brain: turns a sentence into actions ---------- */
+let AWAIT=null;
+const DAYRE='(monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)';
+function extractDays(t){
+  const set=new Set(),all=[0,1,2,3,4,5,6];
+  const idx=w=>WD3.indexOf(w.slice(0,3));
+  if(/\b(every ?day|daily|all days|all week|whole week|seven days)\b/.test(t))all.forEach(d=>set.add(d));
+  if(/\bweekdays?\b/.test(t))[0,1,2,3,4].forEach(d=>set.add(d));
+  if(/\bweekends?\b/.test(t))[5,6].forEach(d=>set.add(d));
+  let m,rg=new RegExp('\\b'+DAYRE+' ?(?:-|to|through|till|until) ?'+DAYRE+'\\b','g');
+  while(m=rg.exec(t)){let a=idx(m[1]),b=idx(m[2]);for(let i=a;;i=(i+1)%7){set.add(i);if(i===b)break}}
+  const ex=new Set();
+  const exRe=new RegExp('\\b(?:except|excluding|but not|without|no|off on|leave out|skip)\\s+((?:'+DAYRE+'(?:\\s*(?:,|and|&)\\s*)?)+)','g');
+  while(m=exRe.exec(t)){const sub=m[1].match(new RegExp(DAYRE,'g'))||[];sub.forEach(w=>ex.add(idx(w)));t=t.replace(m[0],' ')}
+  let sg=new RegExp('\\b'+DAYRE+'\\b','g');
+  while(m=sg.exec(t))set.add(idx(m[1]));
+  ex.forEach(d=>set.delete(d));
+  if(!set.size&&ex.size)all.forEach(d=>{if(!ex.has(d))set.add(d)});
+  return [...set].sort((a,b)=>a-b);
+}
+const ex_=(type,o)=>Object.assign({type},o);
+async function doActs(list,lead,opts){
+  const r=await runActions(list,opts);
+  return {reply:[lead].concat(r.msgs).filter(Boolean).join(' '),close:r.close,pending:r.pending};
+}
+function pickColourWord(t){
+  const hex=t.match(/#[0-9a-f]{6}\b|#[0-9a-f]{3}\b/);if(hex)return hex[0];
+  const names=Object.keys(ACCENTS).concat(Object.keys(BGS),['cream','beige','white','night','gradient']);
+  const ws=t.split(/[^a-z#0-9]+/);
+  for(const w of ws)if(names.includes(w)&&w!=='default'&&w!=='dark'&&w!=='light')return w;
+  return null;
+}
+function nameAfter(t,words){
+  const m=t.match(new RegExp('\\b(?:'+words+')\\s+(?:is |as |to |being )?(.+?)(?:\\s+(?:with|and|importance|confidence|having|that|which)\\b.*)?$'));
+  return m?m[1].replace(/^(a|an|the|new)\s+/,'').replace(/[.?!]+$/,'').trim():'';
+}
+async function brain(text){
+  const t=normText(text).trim(),T=' '+t+' ',now=new Date();
+  if(!t)return {reply:'I did not catch that.'};
+  // answering my own question (yes/no) or filling a missing detail
+  if(PENDING){
+    if(/^(yes|yeah|yep|yup|sure|ok|okay|do it|confirm|go ahead|please do|haan|ha)\b/.test(t)){const p=PENDING;PENDING=null;return doActs(p.actions,'',{confirmed:true})}
+    PENDING=null;
+    if(/^(no|nope|nah|cancel|don'?t|dont|stop|never ?mind|nahi)\b/.test(t))return {reply:'Okay, I left everything as it was.'};
+  }
+  if(AWAIT){
+    const a=AWAIT;AWAIT=null;
+    if(a.kind==='when'){
+      const pw=parseWhen(text);
+      if(pw.when&&(pw.hasTime||pw.hasDate)){
+        const d=a.draft,w=pw.when;
+        if(d.type==='set_reminder'){if(!pw.hasTime){w.setHours(9,0,0,0)}return doActs([ex_('set_reminder',Object.assign({},d,{at:fmtLocal(w),repeat:d.repeat||pw.rep}))],'')}
+        if(d.type==='schedule_test'){return doActs([ex_('schedule_test',Object.assign({},d,{date:ymd(w),time:pw.hasTime?pad(w.getHours())+':'+pad(w.getMinutes()):'10:00',minutes:d.minutes||pw.dur}))],'')}
+      }
+    }else if(a.kind==='coursename'){
+      const nm=text.replace(/^(call it|name it|it'?s|its|called|named)\s+/i,'').replace(/[.?!]+$/,'').trim();
+      if(nm&&nm.length<=80&&!/^(no|cancel|never ?mind)/i.test(nm))return doActs([ex_('create_course',{name:nm})],'');
+    }
+  }
+  if(/^(undo|revert|take (that|it) back|go back)\b/.test(t))return {reply:undoLast()};
+  if(/^(thanks|thank you|thx|ty|thanks a lot)\b/.test(t))return {reply:'Anytime. Good luck with the prep.'};
+  if(/^(hi|hello|hey|hii+|namaste|yo|good (morning|afternoon|evening))\b[\s!.]*$/.test(t))return {reply:'Hi! I can set alarms and reminders, schedule tests and mock tests, build a new study schedule, change the colours, or answer questions about the app. What would you like?',chips:true};
+  if(/\b(what can you do|help me|^help\b|your (features|abilities|skills)|how can you help|what do you do)\b/.test(t))return {reply:'I can: set alarms and reminders (one-off or repeating); schedule tests and mock tests and record your scores; build a new weekly schedule or add a block; add subjects and materials; log a session or start the timer; change dark/light mode, accent colour and background; answer how the app works; and tell you your hours, score, countdown and what to study next. I can also talk: tap the microphone.',chips:true};
+
+  /* look and theme */
+  const lookTalk=/\b(theme|dark mode|light mode|night mode|colou?rs?|accent|background|wallpaper|appearance|look)\b/.test(t)||/\b(make|turn|switch|change|set|use|go)\b.*\b(dark|light)\b/.test(t);
+  if(lookTalk&&!/^(how|what|where|can i|can you tell)\b/.test(t)){
+    if(/\b(reset|default|original|restore|normal)\b/.test(t))return doActs([ex_('reset_look',{})],'');
+    const col=pickColourWord(t);
+    if(/\b(background|wallpaper)\b/.test(t)&&/\b(accent|colou?rs?|buttons?|primary)\b/.test(t)){
+      const aw=(t.match(/\b(?:accent|colou?rs?|buttons?|primary)\b(?: colou?r)?(?: to| as| is| be)?\s+(.*)$/)||[])[1],bw=(t.match(/\b(?:background|wallpaper)\b(?: to| as| is| be)?\s+(.*)$/)||[])[1];
+      const ac=aw&&pickColourWord(aw),bc=bw&&pickColourWord(bw);
+      if(ac&&bc&&ac!==bc){return doActs([ex_('set_accent',{color:ac}),ex_('set_background',{background:bc})],'')}
+    }
+    if(/\b(theme|background|wallpaper)\b/.test(t)&&!/\b(accent|button)\b/.test(t)&&col&&BGS[col]&&col!=='default'&&!ACCENTS[col])return doActs([ex_('set_background',{background:col})],'');
+    if(/\b(background|wallpaper)\b/.test(t)){
+      if(col)return doActs([ex_('set_background',{background:col})],'');
+      return {reply:'Which background? Try: '+Object.keys(BGS).join(', ')+', or a hex code such as #102030.',chips:false};
+    }
+    if(/\b(accent|colou?r|button|primary)\b/.test(t)&&col)return doActs([ex_('set_accent',{color:col})],'');
+    if(col&&/\b(make|turn|change|set|switch)\b/.test(t)&&!/\b(dark|light) mode\b/.test(t))return doActs([ex_('set_accent',{color:col})],'');
+    if(/\b(auto|system|device)\b/.test(t))return doActs([ex_('set_theme',{mode:'auto'})],'');
+    if(/\bdark\b|\bnight\b/.test(t))return doActs([ex_('set_theme',{mode:'dark'})],'');
+    if(/\blight\b|\bbright\b|\bday\b/.test(t))return doActs([ex_('set_theme',{mode:'light'})],'');
+    return {reply:'I can switch dark, light or auto mode, change the accent colour (for example "make it green") and the background (for example "background mint"). Which one?'};
+  }
+
+  /* tests and mock tests */
+  if(/\b(mock|mocks|tests?|test paper|practice paper)\b/.test(t)&&!/^(how|why|what is|what are|does|can i|where)\b/.test(t)){
+    const hasNum=/\d/.test(t);
+    if(/\b(scored|score was|my score|got|result|secured|obtained)\b/.test(t)&&hasNum){
+      let sc=null,mk=null,m;
+      if(m=t.match(/(\d+(?:\.\d+)?) ?(?:out of|\/) ?(\d+)/)){sc=+m[1];mk=+m[2]}
+      else if(m=t.match(/(?:scored|got|secured|obtained|score (?:was|is)|result (?:was|is))\D{0,12}(\d+(?:\.\d+)?)/))sc=+m[1];
+      if(sc!==null)return doActs([ex_('record_score',{score:sc,marks:mk,match:cleanLabel(t.replace(/\d+(?:\.\d+)?/g,' '))})],'');
+    }
+    if(/\b(start|begin|take|launch)\b/.test(t)&&!/\b(schedule|set|add|book|plan)\b/.test(t))return doActs([ex_('start_test',{match:cleanLabel(t)})],'');
+    if(/\b(cancel|delete|remove|drop|clear)\b/.test(t))return doActs([ex_('cancel_test',{match:/\ball\b/.test(t)?'all':cleanLabel(t)})],'');
+    const dq=dataAnswer(t);if(dq&&!/\b(schedule|set|add|create|book|plan|arrange)\b/.test(t)&&!(/\d/.test(t)&&/\b(am|pm|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|at)\b/.test(t)))return {reply:dq};
+    const pw0=parseWhen(text);
+    if(/\b(schedule|set|add|create|book|plan|put|arrange|need|want|have|take|new|fix)\b/.test(t)||(pw0.when&&(pw0.hasTime||pw0.hasDate)&&!/\b(when|list|show|next|upcoming|what)\b/.test(t))){
+      const pw=pw0,kind=/\bmock/.test(t)?'mock':'test',sub=findSubject(pw.rest);
+      let label=cleanLabel(pw.rest);
+      if(sub){const st=new Set(tokensOf(sub.name).concat([String(sub.id).toLowerCase()]));if(tokensOf(label).every(w=>[...st].some(x=>x.startsWith(w.slice(0,4))||w.startsWith(x.slice(0,4)))))label=''}
+      label=label.replace(/\b(paper|exam)\b/g,'').trim();
+      const draft={type:'schedule_test',title:label?cap(label):'',subject:sub?sub.id:'',kind,minutes:pw.dur,marks:pw.marks};
+      if(!pw.when){AWAIT={kind:'when',draft};return {reply:`When should the ${kind==='mock'?'mock test':'test'} be? For example "Sunday at 10 am" or "12 October, 4 pm".`}}
+      return doActs([ex_('schedule_test',Object.assign(draft,{date:ymd(pw.when),time:pw.hasTime?pad(pw.when.getHours())+':'+pad(pw.when.getMinutes()):'10:00'}))],'');
+    }
+  }
+
+  /* reminders and alarms */
+  if(/\b(remind|reminders?|alarms?|wake me)\b/.test(t)){
+    if(/\b(cancel|delete|remove|clear|stop|turn off|disable)\b/.test(t)&&!/\b(bell|alarms? (?:on|off))\b/.test(t)){
+      const lab=cleanLabel(parseWhen(text).rest);
+      return doActs([ex_('cancel_reminder',{match:/\b(all|every|everything)\b/.test(t)?'all':lab})],'');
+    }
+    if(/\b(turn|switch) (the )?(bell|alarms?) (on|off)\b|\b(enable|disable) (the )?(alarms?|bell)\b/.test(t))return doActs([ex_('alarms_on',{on:/\b(on|enable)\b/.test(t)})],'');
+    const dq=dataAnswer(t);if(dq)return {reply:dq};
+    if(/\b(set|create|add|make|remind|wake|new|put|give|schedule)\b/.test(t)){
+      const pw=parseWhen(text),isAlarm=/\b(alarm|wake me)\b/.test(t)&&!/\bremind/.test(t);
+      let label=cleanLabel(pw.rest);
+      if(!label&&/\bwake me\b/.test(t))label='Wake up';
+      const draft={type:'set_reminder',text:label,kind:isAlarm?'alarm':'reminder',repeat:pw.rep};
+      if(!pw.when||(!pw.hasTime&&!pw.hasDate)){AWAIT={kind:'when',draft};return {reply:`What time should I ${isAlarm?'set the alarm':'remind you'}? For example "6 pm" or "tomorrow at 7:30 am".`}}
+      let w=pw.when;if(!pw.hasTime){w=new Date(w);w.setHours(9,0,0,0)}
+      return doActs([ex_('set_reminder',Object.assign(draft,{at:fmtLocal(w),text:label||(isAlarm?'Alarm':'Reminder')}))],'');
+    }
+  }
+
+  /* blocks and schedules */
+  if(/\b(add|create|put|schedule|set up|make|insert)\b/.test(t)&&/\b(block|slot|session|class)\b/.test(t)&&!/\b(log|logged)\b/.test(t)&&!/\bstart\b/.test(t)){
+    const pw=parseWhen(text),sub=findSubject(text),days=extractDays(t);
+    const kind=/\bmock\b/.test(t)?'mock':/\brevision|revise\b/.test(t)?'revision':/\bpractice|practise|problems|questions\b/.test(t)?'practice':'theory';
+    if(!sub)return {reply:'Which subject is the block for? You have: '+S.plan.subjects.map(s=>s.name).join(', ')+'.'};
+    if(!pw.hasTime)return {reply:'What time should the block start? For example "at 6 am".'};
+    return doActs([ex_('add_block',{subject:sub.id,days:days.length?days:[dow(pw.when||now)],time:pad(pw.h)+':'+pad(pw.m),minutes:pw.dur||90,kind,sheets:kind==='practice'?1:0})],'');
+  }
+  if(/\b(schedule|timetable|routine|study plan|plan)\b/.test(t)&&/\b(new|make|create|build|generate|prepare|design|set up|setup|replace|reset|redo|fresh|load|use|start with|apply)\b/.test(t)&&!/^(how|what is|why)\b/.test(t)){
+    if(/\b(clear|empty|blank|delete|remove)\b/.test(t)&&!/\b(new|build|make|create)\b/.test(t))return doActs([ex_('clear_schedule',{})],'');
+    const pw=parseWhen(text),template=/\b(gate|template|default|standard)\b/.test(t);
+    const hm=t.match(/(\d+(?:\.\d+)?) ?(?:hours?|hrs?)(?: ?(?:a|per|every|each) ?day| daily)?/);
+    const days=extractDays(t);
+    return doActs([ex_('new_schedule',{mode:template?'template':'generate',hours:hm?+hm[1]:(pw.dur?pw.dur/60:4),start:pw.hasTime?pad(pw.h)+':'+pad(pw.m):'06:00',days:days.length?days:null})],'');
+  }
+
+  /* subjects, materials, exam */
+  if(/\b(add|create|new)\b.*\bsubject\b/.test(t)){
+    const name=nameAfter(text.toLowerCase().replace(/\s+/g,' '),'subject|called|named');
+    const imp=(t.match(/importance (?:of |is |to )?(\d)/)||[])[1],conf=(t.match(/confidence (?:of |is |to )?(\d)/)||[])[1];
+    if(!name)return {reply:'What is the subject called?'};
+    return doActs([ex_('add_subject',{name:cap(name),importance:imp,confidence:conf})],'');
+  }
+  if(/\b(add|create|new|upload)\b.*\b(book|pdf|material|notes|sheet|paper|lecture|lectures|playlist|resource|course material|textbook)\b/.test(t)&&!/\b(mock test|reminder|alarm)\b/.test(t)){
+    const sub=findSubject(text),tot=t.match(/(\d+) ?(pages?|chapters?|questions?|sheets?|lectures?|videos?)/);
+    const kind=/\b(sheet|questions|problems|practice)\b/.test(t)?'sheet':/\b(notes|slides)\b/.test(t)?'notes':/\b(mock|paper)\b/.test(t)?'mock':'theory';
+    let title=nameAfter(text.replace(/\s+/g,' '),'book|pdf|material|notes|sheet|paper|textbook|called|named|titled');
+    title=title.replace(/\s+(for|in|on|with)\b.*$/i,'').replace(/\b\d+ ?(pages?|chapters?|questions?|sheets?|lectures?|videos?)\b/gi,'').trim();
+    if(!title)return {reply:'What is the material called?'};
+    const unit=tot?(tot[2].replace(/s$/,'')==='video'?'lectures':tot[2].replace(/s$/,'')+'s'):undefined;
+    return doActs([ex_('add_material',{title,subject:sub?sub.id:null,kind,total:tot?+tot[1]:0,unit})],'');
+  }
+  if(/\b(exam|gate)\b/.test(t)&&/\b(date|on|is|set|change)\b/.test(t)&&/\d/.test(t)&&!/\b(how|when is)\b/.test(t)){
+    const pw=parseWhen(text);
+    if(pw.when&&pw.hasDate)return doActs([ex_('set_exam',{date:ymd(pw.when)})],'');
+  }
+
+  /* courses */
+  if(/\bcourse\b/.test(t)){
+    if(/\b(new|create|add|start|make)\b/.test(t)&&!/\b(material|how)\b/.test(t)){
+      const nm=nameAfter(text.replace(/\s+/g,' '),'called|named|titled|course for|course on|course');
+      if(!nm||/^(new|a|another|one)$/i.test(nm)){AWAIT={kind:'coursename'};return {reply:'What should the course be called?'}}
+      return doActs([ex_('create_course',{name:cap(nm)})],'');
+    }
+    if(/\b(switch|open|go to|change to|move to)\b/.test(t)){const nm=nameAfter(text,'course|to');return doActs([ex_('open_course',{name:nm})],'')}
+    if(/\b(list|which|what|my|show)\b/.test(t))return {reply:CL?'Your courses: '+CL.courses.map(c=>c.name).join(', ')+'.':'You are using one plan on this device. Sign in to keep several courses.'};
+  }
+
+  /* timer, logging, navigation */
+  if(/\b(stop|end|finish|pause)\b.*\b(timer|session|studying|study)\b/.test(t))return doActs([ex_('stop_timer',{})],'');
+  if(/\b(start|begin)\b.*\b(timer|stopwatch|studying|study session|session|study)\b/.test(t)&&!/\b(block|mock|test)\b/.test(t))return doActs([ex_('start_timer',{subject:findSubject(text)?findSubject(text).id:null})],'');
+  if(/\b(studied|studying|revised|practi[sc]ed|worked on|spent|read|did)\b/.test(t)&&/\d ?(hours?|minutes?)|\bhour\b/.test(t)&&!/\bhow (many|much)\b/.test(t)||/\blog\b/.test(t)&&/\d ?(hours?|minutes?)/.test(t)){
+    const pw=parseWhen(text),sub=findSubject(text);
+    return doActs([ex_('log_session',{subject:sub?sub.id:null,minutes:pw.dur,date:pw.date?ymd(pw.date):null,time:pw.hasTime?pad(pw.h)+':'+pad(pw.m):null})],'');
+  }
+  if(/\b(turn|switch) (the )?(bell|alarms?) (on|off)\b|\b(enable|disable) (the )?(alarms?|bell)\b/.test(t))return doActs([ex_('alarms_on',{on:/\b(on|enable)\b/.test(t)})],'');
+  const nav=t.match(/\b(open|go to|show me|take me to|switch to|show)\b.*\b(today|plan|materials|report|settings|account)\b/);
+  if(nav&&!/\b(how|what)\b/.test(t))return doActs([ex_('navigate',{to:nav[2]})],'');
+
+  /* questions about your own data, then about the app */
+  const dq=dataAnswer(t);if(dq)return {reply:dq};
+  const kb=askKB(text);if(kb)return {reply:kb};
+  return {reply:'I am not sure I understood that. Try something like "set an alarm for 6 am tomorrow", "schedule a mock test on Sunday at 10", "remind me to revise ML at 8 pm", "make a schedule for 5 hours a day", "dark mode", or "how do I log a session?"'+(ACFG.provider&&ACFG.key?'':' For free-form requests, switch on Smart mode in the gear menu.'),chips:true};
+}
+
+/* ---------- optional smart mode: your own AI key, called straight from this device ---------- */
+const AI_PROVIDERS={gemini:{label:'Google Gemini (free key)',model:'gemini-2.5-flash'},anthropic:{label:'Anthropic Claude',model:'claude-haiku-4-5-20251001'}};
+const aiReady=()=>!!(ACFG.provider&&AI_PROVIDERS[ACFG.provider]&&ACFG.key);
+const ACTION_DOC=`Action types (all fields optional unless marked; dates are YYYY-MM-DD, times are 24-hour HH:MM, in the user's local time):
+set_reminder {at:"YYYY-MM-DD HH:MM" (required), text, kind:"reminder"|"alarm", repeat:"daily"|"weekdays"|"weekly"}
+cancel_reminder {match: words from its text, or "all"}
+schedule_test {title, subject (name), date (required), time, minutes, marks, kind:"mock"|"test"}
+record_score {score (required), marks, match: words from the test title}
+cancel_test {match}
+start_test {match}
+set_theme {mode:"auto"|"light"|"dark"}
+set_accent {color: a name like green or a hex code}
+set_background {background: one of ${Object.keys(BGS).join(', ')} or a hex code}
+reset_look {}
+add_block {subject (name), days:["mon",...], time (required), minutes, kind:"theory"|"practice"|"revision"|"mock"|"other", sheets}
+new_schedule {mode:"generate"|"template", hours (study hours per day), start (HH:MM), days:["mon",...]}  (replaces the weekly blocks; the app asks the user to confirm)
+clear_schedule {}  (the app asks the user to confirm)
+add_subject {name (required), importance:1-5, confidence:1-5}
+add_material {title (required), subject, kind:"theory"|"sheet"|"notes"|"mock", total, unit:"pages"|"chapters"|"questions"|"sheets"|"lectures"}
+set_exam {date (required), name}
+log_session {subject, minutes (required), date, time}
+start_timer {subject}   stop_timer {}
+create_course {name}   open_course {name}
+navigate {to:"today"|"plan"|"materials"|"report"|"settings"|"account"}
+alarms_on {on:true|false}`;
+function stateSummary(){
+  const now=new Date(),ws=weekStart(now),r=weekReport(VS(),ws,now);
+  return JSON.stringify({
+    exam:S.plan.exam?{name:S.plan.examName,date:S.plan.exam}:null,
+    subjects:S.plan.subjects.map(s=>({name:s.name,importance:s.w,confidence:s.c})),
+    blocks_per_week:S.plan.blocks.length,
+    todays_blocks:blocksOn(S.plan,now).map(b=>blockTitle(b)+' '+b.st+' '+fmtDur(b.m)),
+    upcoming_tests:PT().filter(t=>t.score==null).slice(0,6).map(t=>({title:t.title,when:t.date+' '+t.st,minutes:t.m})),
+    past_test_scores:PT().filter(t=>t.score!=null).slice(-5).map(t=>({title:t.title,percent:Math.round(t.score/t.marks*100)})),
+    reminders:PR().filter(r=>!r.done).slice(0,8).map(r=>({text:r.text,at:ymd(new Date(r.at))+' '+timeTxt(new Date(r.at))})),
+    this_week:{score:r.score,hours_logged:Math.round(r.ta/6)/10,hours_due:Math.round(r.td/6)/10},
+    theme:theme,accent:LOOK.accent,background:LOOK.bg,course:CL?CL.name:null,signed_in:!!CL
+  });
+}
+function aiSystem(){
+  const now=new Date();
+  return `You are the assistant inside Abhyashify, a study-planner web app used by a student preparing for GATE DA 2027 (Data Science and AI). Be warm, brief and practical.
+Reply with ONE JSON object and nothing else: {"reply": string, "actions": [ ... ]}.
+- "reply" is plain text, at most 3 short sentences, no markdown (it may be read aloud). When you quiz the student, ask one question at a time and check their answer.
+- "actions" is a list (often empty) of things for the app to do. Use only the action types below. You cannot delete courses, materials or account data; tell the user to do that in the app.
+- If a detail you need is missing, ask for it in "reply" and send no actions. Never invent facts about the app; if unsure, say so.
+- Now: ${now.toLocaleString([],{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})} (${ymd(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}, local time).
+App areas: Today (schedule, timer, coming up), Plan (blocks, subjects, tests and mock tests, reminders), Materials, Report. Alarms ring only while the page is open and the bell is on.
+${ACTION_DOC}
+Current data (JSON): ${stateSummary()}`;
+}
+function aiMessages(userText){
+  const turns=[];
+  for(const m of CHAT.slice(-10)){const role=m.r==='u'?'user':'assistant';if(turns.length&&turns[turns.length-1].role===role)turns[turns.length-1].text+='\n'+m.t;else turns.push({role,text:m.t})}
+  if(turns.length&&turns[turns.length-1].role==='user'&&turns[turns.length-1].text.trim()===userText.trim())turns.pop();
+  while(turns.length&&turns[0].role!=='user')turns.shift();
+  turns.push({role:'user',text:userText});
+  const merged=[];for(const t of turns){if(merged.length&&merged[merged.length-1].role===t.role)merged[merged.length-1].text+='\n'+t.text;else merged.push(Object.assign({},t))}
+  return merged;
+}
+async function aiCall(system,msgs){
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),30000),model=(ACFG.model||AI_PROVIDERS[ACFG.provider].model).trim();
+  try{
+    let res,data,text;
+    if(ACFG.provider==='gemini'){
+      res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{method:'POST',signal:ctl.signal,
+        headers:{'content-type':'application/json','x-goog-api-key':ACFG.key},
+        body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:msgs.map(m=>({role:m.role==='user'?'user':'model',parts:[{text:m.text}]})),generationConfig:{responseMimeType:'application/json',temperature:.3,maxOutputTokens:900}})});
+      data=await res.json().catch(()=>({}));
+      if(!res.ok)throw new Error(aiErr(res.status,data&&data.error&&data.error.message));
+      text=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts.map(p=>p.text||'').join('');
+    }else{
+      res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:ctl.signal,
+        headers:{'content-type':'application/json','x-api-key':ACFG.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model,max_tokens:900,system,messages:msgs.map(m=>({role:m.role,content:m.text}))})});
+      data=await res.json().catch(()=>({}));
+      if(!res.ok)throw new Error(aiErr(res.status,data&&data.error&&data.error.message));
+      text=data.content&&data.content.map(c=>c.text||'').join('');
+    }
+    if(!text)throw new Error('The AI sent back nothing.');
+    return text;
+  }catch(e){
+    if(e&&e.name==='AbortError')throw new Error('The AI took too long to answer.');
+    if(e&&e.name==='TypeError')throw new Error('Could not reach the AI. Check your connection.');
+    throw e;
+  }finally{clearTimeout(to)}
+}
+const aiErr=(s,m)=>s===401||s===403||s===400&&/api key|API_KEY/i.test(m||'')?'The AI key was rejected. Check it in the gear menu.':s===429?'The AI is rate-limited right now. Try again in a minute.':'The AI returned an error ('+s+')'+(m?': '+String(m).slice(0,120):'')+'.';
+function parseAI(text){
+  let s=String(text).trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+  const a=s.indexOf('{'),b=s.lastIndexOf('}');
+  try{const j=JSON.parse(a>=0&&b>a?s.slice(a,b+1):s);return {reply:typeof j.reply==='string'?j.reply:'',actions:Array.isArray(j.actions)?j.actions:[]}}
+  catch(e){return {reply:s.slice(0,600),actions:[]}}
+}
+async function respond(text){
+  if(PENDING){const t0=normText(text).trim();if(/^(yes|yeah|yep|yup|sure|ok|okay|do it|confirm|go ahead|please do|haan|ha|no|nope|nah|cancel|don'?t|dont|stop|never ?mind|nahi)\b/.test(t0))return brain(text);PENDING=null}
+  if(aiReady()){
+    try{
+      const raw=await aiCall(aiSystem(),aiMessages(text)),j=parseAI(raw);
+      if(!j.actions.length)return {reply:j.reply||'Okay.'};
+      const r=await runActions(j.actions);
+      const lead=j.reply&&j.reply.length>110&&r.msgs.length?j.reply:'';
+      return {reply:[lead].concat(r.msgs).filter(Boolean).join(' ')||j.reply||'Done.',close:r.close,pending:r.pending};
+    }catch(e){
+      const r=await brain(text);r.reply=(e&&e.message?e.message:'Smart mode failed.')+' I used my built-in answer instead.\n'+r.reply;return r;
+    }
+  }
+  return brain(text);
+}
+
+/* ---------- voice: listening and speaking ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition,SYN_=window.speechSynthesis;
+let VOICES=[],rec=null,listening=false,voiceChat=false,speakingNow=false,noSpeech=0,speakGen=0;
+function loadVoices(){try{VOICES=SYN_?SYN_.getVoices():[]}catch(e){VOICES=[]}}
+if(SYN_){loadVoices();try{SYN_.addEventListener('voiceschanged',loadVoices)}catch(e){SYN_.onvoiceschanged=loadVoices}}
+const FEM=/female|woman|zira|hazel|susan|heera|aria|jenny|samantha|karen|moira|tessa|veena|fiona|victoria|natasha|libby|sonia|emma|neerja|swara|priya|lekha|kalpana|amy|joanna|ivy|salli|kimberly|nicole|raveena|aditi|kajal|siri|allison|ava|serena|catherine|zoe|google uk english female/i;
+const MAL=/\bmale\b|\bdavid\b|\bmark\b|george|ravi\b|hemant|james|daniel|\balex\b|fred|oliver|\bguy\b|ryan|prabhat|rishi|thomas|brian|matthew|joey|justin|kevin|arthur|google uk english male|\bpaul\b|\bhenry\b|\bgordon\b/i;
+function genderOf(v){const n=v.name||'';if(MAL.test(n)&&!/female/i.test(n))return 'male';if(FEM.test(n))return 'female';return null}
+function voicePool(){
+  const l=(ACFG.lang||'en-IN').toLowerCase(),base=l.slice(0,2);
+  const same=VOICES.filter(v=>(v.lang||'').toLowerCase().replace('_','-')===l),near=VOICES.filter(v=>(v.lang||'').toLowerCase().startsWith(base));
+  return same.length?same.concat(near.filter(v=>!same.includes(v))):near.length?near:VOICES;
+}
+function pickVoice(){
+  if(ACFG.voiceName){const v=VOICES.find(x=>x.name===ACFG.voiceName);if(v)return {v,pitch:1,shifted:false}}
+  const pool=voicePool(),hit=pool.find(v=>genderOf(v)===ACFG.gender);
+  if(hit)return {v:hit,pitch:1,shifted:false};
+  return {v:pool[0]||null,pitch:ACFG.gender==='male'?.75:1.18,shifted:true};
+}
+function speechText(s){
+  return String(s||'').replace(/\*\*/g,'').replace(/https?:\/\/\S+/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'').replace(/\s*\n\s*/g,'. ').replace(/\s+/g,' ').trim();
+}
+function stopSpeaking(){speakGen++;speakingNow=false;try{SYN_&&SYN_.cancel()}catch(e){}}
+function speak(text,done){
+  if(!SYN_||!window.SpeechSynthesisUtterance){done&&done();return}
+  const clean=speechText(text).slice(0,600);if(!clean){done&&done();return}
+  stopSpeaking();const gen=speakGen,pv=pickVoice();
+  const parts=clean.match(/[^.!?]+[.!?]*/g)||[clean];
+  speakingNow=true;paintMic();
+  parts.forEach((p,i)=>{
+    const u=new SpeechSynthesisUtterance(p.trim());
+    if(pv.v){u.voice=pv.v;u.lang=pv.v.lang}else u.lang=ACFG.lang;
+    u.rate=Math.min(1.6,Math.max(.6,+ACFG.rate||1));u.pitch=pv.pitch;
+    if(i===parts.length-1){const fin=()=>{if(gen!==speakGen)return;speakingNow=false;paintMic();done&&done()};u.onend=fin;u.onerror=fin}
+    try{SYN_.speak(u)}catch(e){}
+  });
+}
+window.AsstSpeak=t=>{if(ACFG.speak)speak(t)};
+function stopListening(){try{rec&&(rec.onend=null,rec.abort())}catch(e){}rec=null;listening=false;paintMic()}
+function startListening(){
+  if(!SR){asstAdd('a','Voice input is not supported in this browser. Chrome, Edge or Safari work. You can still type, and I can read my answers aloud.');voiceChat=false;paintMic();return}
+  stopSpeaking();stopListening();
+  const r=new SR();rec=r;r.lang=ACFG.lang||'en-IN';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
+  let finalT='',err=null;const box=document.getElementById('as-text');
+  r.onstart=()=>{listening=true;paintMic()};
+  r.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal)finalT+=x[0].transcript;else interim+=x[0].transcript}if(box)box.value=(finalT+' '+interim).trim()};
+  r.onerror=e=>{err=e.error};
+  r.onend=()=>{
+    if(rec!==r)return;rec=null;listening=false;paintMic();
+    if(err==='not-allowed'||err==='service-not-allowed'){voiceChat=false;paintMic();asstAdd('a','The microphone is blocked. Allow microphone access for this site in your browser settings, then tap the mic again.');return}
+    if(err==='network'){voiceChat=false;paintMic();asstAdd('a','Voice recognition needs an internet connection. You can type instead.');return}
+    const txt=finalT.trim();
+    if(txt){noSpeech=0;asstSend(txt,true)}
+    else if(voiceChat){noSpeech++;if(noSpeech>=2){voiceChat=false;noSpeech=0;paintMic();asstAdd('a','I stopped listening because I did not hear anything. Tap the microphone to talk again.')}else setTimeout(()=>{if(voiceChat&&!listening&&!speakingNow)startListening()},250)}
+  };
+  try{r.start()}catch(e){voiceChat=false;paintMic()}
+}
+function toggleMic(){
+  if(voiceChat||listening){voiceChat=false;noSpeech=0;stopListening();stopSpeaking();paintMic();return}
+  voiceChat=true;noSpeech=0;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}startListening();
+}
+
+/* ---------- assistant panel ---------- */
+const SUGGEST=['Set an alarm for 6 am tomorrow','Schedule a mock test on Sunday at 10','Make a schedule for 5 hours a day','What should I study next?','Make it dark with a green accent','How do I log a session?'];
+let asstOpen=false,asstView='chat',asstBusy=false,asstChips=true;
+const asEl=()=>document.getElementById('asst');
+const fmtMsg=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+function asstAdd(role,text){
+  CHAT.push({r:role,t:String(text||''),ts:Date.now()});if(CHAT.length>80)CHAT=CHAT.slice(-80);saveChat();
+  paintChat();
+}
+function modeLabel(){return (aiReady()?'Smart mode':'Built-in')+' · '+(ACFG.gender==='male'?'male':'female')+' voice'}
+function paintMic(){
+  const b=document.getElementById('as-mic');if(!b)return;
+  const on=listening||voiceChat;
+  b.classList.toggle('on',on);b.classList.toggle('talk',speakingNow);
+  b.setAttribute('aria-pressed',on?'true':'false');
+  b.setAttribute('aria-label',on?'Stop voice chat':'Start voice chat');
+  const st=document.getElementById('as-state');
+  if(st)st.textContent=listening?'Listening…':speakingNow?'Speaking…':asstBusy?'Thinking…':voiceChat?'Voice chat on':'';
+}
+function paintChat(){
+  const box=document.getElementById('as-msgs');if(!box||asstView!=='chat')return;
+  const stick=box.scrollHeight-box.scrollTop-box.clientHeight<80;
+  let h='';
+  if(!CHAT.length)h+=`<div class="as-hello"><span class="logo">${ic('spark')}</span><b>Hi, I'm your study assistant</b><p class="muted small">I can set alarms, reminders and tests, build schedules, change the look of the app and answer questions about it. Type, or tap the mic and talk.</p></div>`;
+  h+=CHAT.slice(-40).map(m=>`<div class="as-m ${m.r==='u'?'u':'a'}">${fmtMsg(m.t)}</div>`).join('');
+  if(asstBusy)h+='<div class="as-m a dots" aria-label="Thinking"><i></i><i></i><i></i></div>';
+  box.innerHTML=h;
+  if(stick||asstBusy)box.scrollTop=box.scrollHeight;
+  const ch=document.getElementById('as-chips');
+  if(ch){
+    const list=[];
+    if(LASTSNAP)list.push({t:'Undo my last change',v:'undo',cls:'undo'});
+    if(asstChips&&!asstBusy)SUGGEST.forEach(x=>list.push({t:x,v:x}));
+    ch.innerHTML=list.map(c=>`<button type="button" class="as-chip ${c.cls||''}" data-asa="chip" data-v="${esc(c.v)}">${esc(c.t)}</button>`).join('');
+  }
+  paintMic();
+}
+async function asstSend(text,fromVoice){
+  text=String(text||'').trim();if(!text||asstBusy)return;
+  const box=document.getElementById('as-text');if(box)box.value='';
+  asstChips=false;asstAdd('u',text);asstBusy=true;paintChat();
+  let r;
+  try{r=await respond(text)}catch(e){r={reply:'Something went wrong: '+(e&&e.message?e.message:'unknown error')}}
+  asstBusy=false;
+  asstChips=!!r.chips;
+  const reply=r.reply||(r.msgs&&r.msgs.length?r.msgs.join(' '):'Done.');
+  asstAdd('a',reply);
+  const talk=voiceChat||fromVoice||ACFG.speak;
+  const after=()=>{if(voiceChat&&asstOpen&&!listening)setTimeout(()=>{if(voiceChat&&!listening&&!speakingNow)startListening()},300)};
+  if(talk&&SYN_)speak(reply,after);else after();
+  if(r.close&&!voiceChat)setTimeout(closeAssistant,900);
+}
+function openAssistant(view){
+  const el=asEl();if(!el)return;
+  asstView=view||'chat';asstOpen=true;el.hidden=false;document.body.classList.add('lock');
+  paintAssistant();
+  const fab=document.getElementById('asstfab');if(fab)fab.hidden=true;
+  setTimeout(()=>{const b=document.getElementById('as-text');if(b&&asstView==='chat'&&!('ontouchstart' in window))b.focus()},60);
+}
+function closeAssistant(){
+  const el=asEl();if(!el||!asstOpen)return;
+  asstOpen=false;voiceChat=false;noSpeech=0;stopListening();stopSpeaking();
+  el.hidden=true;el.innerHTML='';document.body.classList.remove('lock');
+  const fab=document.getElementById('asstfab');if(fab)fab.hidden=!!GATE;
+}
+function paintAssistant(){
+  const el=asEl();if(!el)return;
+  const cfg=asstView==='cfg';
+  el.innerHTML=`<div class="as-scrim" data-asa="close"></div><section class="as-panel" role="dialog" aria-modal="true" aria-label="Assistant">
+    <header class="as-head"><div class="as-title"><span class="logo">${ic('spark')}</span><div><b>${cfg?'Assistant settings':'Assistant'}</b><small id="as-sub">${esc(modeLabel())}</small></div></div>
+      <div class="as-tools">${cfg?`<button type="button" class="icb" data-asa="back" aria-label="Back to chat">${ic('chev','flip')}</button>`:`<button type="button" class="icb" data-asa="speak" aria-pressed="${ACFG.speak}" aria-label="Read answers aloud">${ic(ACFG.speak?'volume':'volume-off')}</button><button type="button" class="icb" data-asa="cfg" aria-label="Assistant settings">${ic('sliders')}</button>`}
+      <button type="button" class="icb" data-asa="close" aria-label="Close assistant">${ic('x')}</button></div></header>
+    ${cfg?`<div class="as-cfg" id="as-cfg">${cfgHtml()}</div>`:`<div class="as-body" id="as-msgs" aria-live="polite"></div><div class="as-chips" id="as-chips"></div>
+    <div class="as-state" id="as-state" aria-live="polite"></div>
+    <form class="as-in" id="as-form" autocomplete="off"><input id="as-text" type="text" placeholder="Ask or tell me something…" maxlength="400" aria-label="Message"><button type="button" class="icb as-mic" id="as-mic" data-asa="mic" aria-pressed="false" aria-label="Start voice chat">${ic('mic')}</button><button type="submit" class="icb as-send" aria-label="Send">${ic('send')}</button></form>`}
+  </section>`;
+  if(!cfg)paintChat();
+}
+function cfgHtml(){
+  const base=(ACFG.lang||'en-IN').slice(0,2).toLowerCase();
+  const vs=VOICES.filter(v=>(v.lang||'').toLowerCase().startsWith(base));
+  const pv=pickVoice();
+  const langs=[['en-IN','English (India)'],['en-US','English (US)'],['en-GB','English (UK)'],['hi-IN','Hindi']];
+  const prov=ACFG.provider||'';
+  return `<div class="stack" style="gap:8px"><span class="kick">Voice</span>
+      <div class="seg">${[['female','Female'],['male','Male']].map(([k,l])=>`<button type="button" data-asa="gender" data-v="${k}" aria-pressed="${ACFG.gender===k}">${l}</button>`).join('')}</div>
+      ${SYN_?(pv.shifted&&VOICES.length?`<p class="small muted">This device has no ${ACFG.gender} voice for this language, so I shift the pitch of the one it has. Pick a specific voice below to change that.</p>`:(pv.v?`<p class="small muted">Using: ${esc(pv.v.name)}</p>`:'<p class="small muted">No voices were found yet. Some browsers load them a moment after the page opens.</p>')):'<p class="small muted">This browser cannot speak answers aloud. Chrome, Edge or Safari can.</p>'}</div>
+    <label class="switch"><span>Read answers aloud</span><input type="checkbox" data-cfg="speak"${ACFG.speak?' checked':''}></label>
+    <div class="grid2"><label class="field">Language<select data-cfg="lang">${langs.map(([k,l])=>`<option value="${k}"${ACFG.lang===k?' selected':''}>${l}</option>`).join('')}</select></label>
+      <label class="field">Speed ${(+ACFG.rate||1).toFixed(1)}×<input type="range" data-cfg="rate" min="0.7" max="1.4" step="0.1" value="${+ACFG.rate||1}"></label></div>
+    <label class="field">Voice<select data-cfg="voiceName"><option value="">Automatic (${esc(ACFG.gender)})</option>${vs.map(v=>`<option value="${esc(v.name)}"${ACFG.voiceName===v.name?' selected':''}>${esc(v.name)}${genderOf(v)?' · '+genderOf(v):''}</option>`).join('')}</select></label>
+    <button type="button" class="btn ghost" data-asa="testvoice">${ic('volume')}Test the voice</button>
+    <div class="stack" style="gap:8px;margin-top:6px"><span class="kick">Smart mode (optional)</span>
+      <p class="small muted">Without a key I use my built-in understanding, which handles the common requests and needs no account. For free-form requests, paste your own AI key. It is stored only on this device and sent only to the provider you choose. In Smart mode your messages and a short summary of your schedule go to that provider.</p>
+      <label class="field">Provider<select data-cfg="provider"><option value="">Off (built-in)</option>${Object.keys(AI_PROVIDERS).map(k=>`<option value="${k}"${prov===k?' selected':''}>${esc(AI_PROVIDERS[k].label)}</option>`).join('')}</select></label>
+      ${prov?`<label class="field">API key<input type="password" data-cfg="key" value="${esc(ACFG.key)}" autocomplete="off" spellcheck="false" placeholder="Paste your key"></label>
+      <label class="field">Model (optional)<input type="text" data-cfg="model" value="${esc(ACFG.model)}" placeholder="${esc(AI_PROVIDERS[prov].model)}" spellcheck="false"></label>
+      ${prov==='gemini'?'<p class="small muted">Get a free key at aistudio.google.com/apikey.</p>':'<p class="small muted">Get a key at console.anthropic.com. Usage is billed to you.</p>'}
+      <button type="button" class="btn ghost danger" data-asa="rmkey">Remove my key</button>`:''}</div>
+    <button type="button" class="btn ghost" data-asa="clear">Clear this conversation</button>`;
+}
+function cfgChange(t){
+  const k=t.dataset.cfg;if(!k)return;
+  let v=t.type==='checkbox'?t.checked:t.value;
+  if(k==='rate')v=Math.min(1.4,Math.max(.7,+v||1));
+  if(k==='key'||k==='model')v=String(v).trim();
+  if(k==='lang'){ACFG.voiceName=''}
+  if(k==='provider'){ACFG.model=''}
+  ACFG[k]=v;saveAcfg();
+  if(k==='provider'||k==='lang'||k==='speak'){const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml()}
+  const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();
+  if(k==='rate'){const l=t.closest('label');if(l&&l.firstChild)l.firstChild.textContent='Speed '+(+v).toFixed(1)+'× '}
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-asa]');if(!t||!asEl()||!asEl().contains(t))return;
+  const a=t.dataset.asa;
+  if(a==='close')closeAssistant();
+  else if(a==='cfg'){voiceChat=false;stopListening();stopSpeaking();asstView='cfg';paintAssistant()}
+  else if(a==='back'){asstView='chat';paintAssistant()}
+  else if(a==='speak'){ACFG.speak=!ACFG.speak;saveAcfg();if(!ACFG.speak)stopSpeaking();t.setAttribute('aria-pressed',ACFG.speak);t.innerHTML=ic(ACFG.speak?'volume':'volume-off')}
+  else if(a==='mic')toggleMic();
+  else if(a==='chip')asstSend(t.dataset.v,false);
+  else if(a==='gender'){ACFG.gender=t.dataset.v;ACFG.voiceName='';saveAcfg();const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml();const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();speak(ACFG.gender==='male'?'Hello, I will speak with a male voice.':'Hello, I will speak with a female voice.')}
+  else if(a==='testvoice')speak('Hello! I am your study assistant. This is how I sound.');
+  else if(a==='rmkey'){ACFG.key='';ACFG.provider='';ACFG.model='';saveAcfg();const c=document.getElementById('as-cfg');if(c)c.innerHTML=cfgHtml();const sub=document.getElementById('as-sub');if(sub)sub.textContent=modeLabel();toast('Key removed')}
+  else if(a==='clear'){CHAT=[];saveChat();PENDING=null;asstChips=true;asstView='chat';paintAssistant()}
+});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.cfg&&asEl()&&asEl().contains(e.target))cfgChange(e.target)});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.cfg==='rate'&&asEl()&&asEl().contains(e.target)){const l=e.target.closest('label');if(l&&l.firstChild)l.firstChild.textContent='Speed '+(+e.target.value).toFixed(1)+'× '}});
+document.addEventListener('submit',e=>{if(e.target.id==='as-form'){e.preventDefault();const b=document.getElementById('as-text');asstSend(b?b.value:'',false)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&asstOpen)closeAssistant()});
 
 /* ---------- toast ---------- */
 let toastT=null;
@@ -1094,8 +2341,10 @@ function logForm(bid,dsArg){
       t0,t1:t0+m*60000,dev:deviceId(),src:fromRun?'timer':'manual',tz:tzOff()});
     if(mid&&mu){const m=S.materials.find(x=>x.id===mid);if(m){m.done=m.total>0?Math.min(m.total,m.done+mu):m.done+mu;mark('materials')}}
     if(S.logs.length>1800)S.logs=S.logs.slice(-1800);
+    const tid=fromRun&&fromRun.tid;
     if(fromRun){run=null;lsSet('pl.run',null)}
     mark('logs');closeSheet();render(false);toast('Session logged');
+    if(tid){const tt=PT().find(x=>x.id===tid);if(tt&&tt.score==null)setTimeout(()=>scoreForm(tt),350)}
   });
 }
 function matForm(m){
@@ -1124,6 +2373,7 @@ function matForm(m){
 function settingsForm(){
   const p=S.plan;
   openSheet('Settings',`${CL?`<label class="field">Course name<input type="text" name="cn" value="${esc(CL.name||'')}" maxlength="80" required></label>`:''}<div class="stack" style="gap:8px"><span class="kick">Appearance</span><div class="seg" id="themeseg">${[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>`<button type="button" data-act="theme" data-v="${k}" aria-pressed="${theme===k}">${l}</button>`).join('')}</div></div>
+    ${lookPickers()}
     <div class="grid2"><label class="field">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="field">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
     <div class="grid2"><label class="field">Alarm minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}" inputmode="numeric"></label><label class="field">Revision buffer (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}" inputmode="numeric"></label></div>
     <button class="btn lg" type="submit">Save settings</button>
@@ -1158,10 +2408,10 @@ function calendarCsv(){
 }
 
 /* ---------- template ---------- */
-function applyTemplate(){
+function gateTemplate(){
   const subs=[['prob','Probability & Statistics',5,3],['la','Linear Algebra',4,3],['calc','Calculus & Optimization',3,3],['py','Python & DSA',3,3],['db','Databases & Warehousing',2,3],['ml','Machine Learning',5,3],['ai','Artificial Intelligence',4,3],['ga','General Aptitude',3,3],['mix','Revision & full mocks',3,3]];
-  S.plan=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
-  const B=(days,st,m,s,k,sh)=>S.plan.blocks.push({id:uid(),days,st,m,s,k,sh:sh||0,al:true,t:''});
+  const P=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
+  const B=(days,st,m,s,k,sh)=>P.blocks.push({id:uid(),days,st,m,s,k,sh:sh||0,al:true,t:''});
   B([0],'06:30',90,'prob','theory');B([0],'19:30',60,'prob','practice',1);
   B([1],'06:30',90,'la','theory');B([1],'19:30',60,'la','practice',1);
   B([2],'06:30',90,'calc','theory');B([2],'19:30',60,'calc','practice',1);
@@ -1169,8 +2419,9 @@ function applyTemplate(){
   B([4],'06:30',90,'ai','theory');B([4],'19:30',60,'py','practice',1);
   B([5],'07:00',120,'db','theory');B([5],'15:00',60,'ga','practice',1);
   B([6],'07:00',120,'prob','revision');B([6],'16:00',180,'mix','mock');
-  mark('plan');render();
+  return P;
 }
+function applyTemplate(){S.plan=gateTemplate();mark('plan');render()}
 
 /* ---------- timer, alarms ---------- */
 function startRun(bid){
@@ -1202,7 +2453,7 @@ function ring(b,late){
 }
 function stopRing(){clearInterval(ringTimer);document.getElementById('alarm').hidden=true}
 function alarmTick(){
-  tickTimer();
+  tickTimer();extraAlarms();
   const now=new Date(),ds=ymd(now),nm=now.getHours()*60+now.getMinutes();
   for(const b of blocksOn(S.plan,now)){
     if(!b.al)continue;
@@ -1221,6 +2472,21 @@ document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act,d=t.dataset;
   switch(a){
+    case 'addrem':reminderForm();break;
+    case 'editrem':reminderForm(PR().find(r=>r.id===d.r));break;
+    case 'delrem':
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      S.plan.reminders=PR().filter(r=>r.id!==d.r);mark('plan');closeSheet();render(false);toast('Deleted');break;
+    case 'remdone':{const r=PR().find(x=>x.id===d.r);if(r)finishReminder(r);stopRing();render(false);break}
+    case 'rsnooze':{const r=PR().find(x=>x.id===d.r);if(r)snoozes['r|'+r.id+'|'+r.at]=Date.now()+10*60000;stopRing();toast('Snoozed for 10 minutes');break}
+    case 'tsnooze':{const x=PT().find(y=>y.id===d.t);if(x)snoozes['t|'+x.id+'|'+x.date+x.st]=Date.now()+10*60000;stopRing();toast('Snoozed for 10 minutes');break}
+    case 'addtest':testForm();break;
+    case 'edittest':testForm(PT().find(x=>x.id===d.t));break;
+    case 'deltest':
+      if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Tap again to delete';break}
+      S.plan.tests=PT().filter(x=>x.id!==d.t);mark('plan');closeSheet();render(false);toast('Deleted');break;
+    case 'starttest':{const x=PT().find(y=>y.id===d.t);stopRing();if(x)startTest(x);break}
+    case 'asst':openAssistant();break;
     case 'tab':if(tab!==d.v){tab=d.v;render();window.scrollTo({top:0,behavior:'instant'})}break;
     case 'sel':selIdx=+d.v;render(false);break;
     case 'pday':planDay=+d.v;render(false);break;
@@ -1257,6 +2523,8 @@ document.addEventListener('click',async e=>{
       try{await navigator.clipboard.writeText(reportText());toast('Report copied')}catch(err){toast('Copy was blocked by the browser')}
       break}
     case 'settings':settingsForm();break;
+    case 'lookacc':{const r=setLook({accent:d.v||null});if(r.err)toast(r.err);paintLookPickers();break}
+    case 'lookbg':{const r=setLook({bg:d.v||null});if(r.err)toast(r.err);else if(r.note)toast(r.note.trim());paintLookPickers();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break}
     case 'theme':theme=d.v;lsSet('pl.theme',theme);applyTheme();document.querySelectorAll('#themeseg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===theme));break;
     case 'exportcsv':saveFile('prep-schedule.csv',calendarCsv(),'text/csv');break;
     case 'exportjson':saveFile('abhyashify-backup.json',JSON.stringify(backupData(),null,1),'application/json');break;
