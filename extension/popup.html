@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font:14px/1.45 system-ui,sans-serif;margin:0;width:320px;color:#1b2430;background:#fff}
+main{padding:14px;display:grid;gap:12px}
+h1{font-size:16px;margin:0}
+p{margin:0;color:#56606e;font-size:12.5px}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 8px;border:1px solid #e3e7ec;border-radius:8px}
+li span.m{color:#4a43c4;font-weight:600;white-space:nowrap}
+li button{border:0;background:none;color:#8a93a0;cursor:pointer;font-size:16px}
+.row{display:flex;gap:6px}
+input[type=text]{flex:1;padding:7px 8px;border:1px solid #cfd5dc;border-radius:8px;font:inherit}
+button.b{padding:7px 10px;border:0;border-radius:8px;background:#4a43c4;color:#fff;font:inherit;cursor:pointer}
+button.g{background:#eef0f4;color:#1b2430}
+.err{color:#b3261e;font-size:12px;min-height:14px}
+label{display:flex;gap:8px;align-items:center}
+</style></head><body><main>
+<h1>Abhyashify study timer</h1>
+<p>Counts time only on the sites listed here, only while you are using them. It keeps the site name and minutes, never page addresses or titles.</p>
+<label><input type="checkbox" id="pause"> Pause counting</label>
+<ul id="list"></ul>
+<div class="row"><input type="text" id="host" placeholder="nptel.ac.in" aria-label="Site to add"><button class="b" id="add">Add</button></div>
+<div class="err" id="err" role="alert"></div>
+<div class="row"><button class="b" id="dl">Download totals (JSON)</button><button class="b g" id="clr">Clear</button></div>
+<p>Open Abhyashify in this browser and the totals are picked up automatically. The download is only for when you want a file.</p>
+</main><script src="popup.js"></script></body></html>

@@ -165,6 +165,8 @@ function toolsBody(){
     <div class="stack" style="gap:0">${ts.length?ts.map(t=>`<div class="item" style="grid-template-columns:1fr auto"><span class="stack" style="gap:2px;min-width:0"><span class="t">${esc(t.name)}</span><span class="small muted" style="overflow-wrap:anywhere">${esc(t.url)}</span></span><button class="btn sm danger" type="button" data-act="tooldel" data-t="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">${ic('x')}</button></div>`).join(''):'<p class="small muted">None yet.</p>'}</div>
     <div class="grid2"><label class="field">Name<input type="text" id="tn" maxlength="40" placeholder="My YouTube playlist"></label><label class="field">Link<input type="url" id="tu" maxlength="300" placeholder="https://"></label></div>
     <button class="btn soft" type="button" data-act="tooladd">${ic('plus')}Add this tool</button>
+    <div class="stack" style="gap:2px"><h3>Time on your computer</h3><p class="small muted">${EXT.seen?'The Abhyashify browser extension is connected. It counts time only on the sites you chose above, and the totals arrive here by themselves.':'On a laptop, the Abhyashify browser extension counts the time you spend on your study sites and sends the totals here by itself. It is in the extension folder of the project (see the README). It is not installed in this browser yet.'}</p></div>
+    ${EXT.seen?`<button class="btn ghost" type="button" data-act="extsync">Get the latest from the extension</button>`:''}
     <div class="stack" style="gap:2px"><h3>Time from your phone</h3><p class="small muted">The Android companion app measures the time you spend in the study apps you chose and exports a file. Import it here and it is added to your logs, one entry per app per day. Days are filled from midnight because the file has totals, not start times.</p></div>
     <input type="file" id="usef" accept=".json,application/json" hidden>
     <button class="btn ghost" type="button" data-act="usagepick">${ic('upload')}Import the usage file (JSON)</button>`;
@@ -190,6 +192,7 @@ function addTool(name,url,list){
   arr.push({id,name:name.slice(0,40),url:u.href,pkg:known?known.pkg:''});
   return id;
 }
+const hostOf=u=>{try{return new URL(u).hostname.toLowerCase().replace(/^www\./,'')}catch(e){return ''}};
 function importUsage(o){
   if(!o||o.source!=='abhyashify-usage'||!Array.isArray(o.days))throw new Error('bad');
   let days=0,apps=0;const by=new Map(S.logs.map(l=>[l.id,l]));
@@ -200,8 +203,8 @@ function importUsage(o){
       const mins=Math.round(+a.minutes||0);if(!a.package||mins<1)continue;
       const m=Math.min(720,mins);if(off+m>23*60)break;
       const id='ph-'+d.date+'-'+String(a.package).replace(/[^a-z0-9._]/gi,'').slice(0,60);
-      const known=PTOOLS().find(t=>t.pkg&&t.pkg===a.package);
-      const rec=ensureT({id,d:d.date,st:fromMin(off),m,b:null,s:null,ps:null,pm:null,q:0,mid:null,mu:0,t0:base+off*60000,t1:base+(off+m)*60000,dev:'phone',src:'phone',tz:tzOff(),tool:known?known.id:String(a.label||a.package).slice(0,40)});
+      const known=PTOOLS().find(t=>(t.pkg&&t.pkg===a.package)||(/^web:/.test(a.package)&&hostOf(t.url)===String(a.package).slice(4)));
+      const rec=ensureT({id,d:d.date,st:fromMin(off),m,b:null,s:null,ps:null,pm:null,q:0,mid:null,mu:0,t0:base+off*60000,t1:base+(off+m)*60000,dev:o.origin==='browser'?'laptop':'phone',src:'phone',tz:tzOff(),tool:known?known.id:String(a.label||a.package).slice(0,40)});
       off+=m;any=true;apps++;
       const old=by.get(id);
       if(old)Object.assign(old,rec);else{S.logs.push(rec);by.set(id,rec)}
@@ -212,6 +215,35 @@ function importUsage(o){
   if(apps)mark('logs');
   return {days,apps};
 }
+
+/* ----- browser extension bridge (desktop Chrome / Edge) -----
+   The extension's content script talks to this page through window messages. The page only imports what passes importUsage's checks,
+   and only after the person turned tracking on once. */
+const EXT={seen:false,version:'',last:0};
+function extSend(o){try{window.postMessage(Object.assign({src:'abhyashify-app'},o),location.origin)}catch(e){}}
+function extPushTools(){
+  const list=PTOOLS().map(t=>({host:hostOf(t.url),label:t.name})).filter(t=>t.host&&t.host.includes('.'));
+  extSend({type:'tools',tools:list});
+}
+function extAsk(){if(EXT.seen&&trackOn()){extPushTools();extSend({type:'getUsage'})}}
+window.addEventListener('message',e=>{
+  if(e.source!==window||e.origin!==location.origin)return;
+  const m=e.data;if(!m||m.src!=='abhyashify-ext')return;
+  if(m.type==='hello'){EXT.seen=true;EXT.version=String(m.version||'').slice(0,12);if(document.getElementById('toolperms'))refreshToolsSheet();extAsk()}
+  else if(m.type==='usage'&&trackOn()){
+    try{
+      const before=S.logs.length,sig=JSON.stringify(S.logs.filter(l=>/^ph-/.test(l.id)).map(l=>l.id+l.m));
+      const x=importUsage(m.data);EXT.last=Date.now();
+      const after=JSON.stringify(S.logs.filter(l=>/^ph-/.test(l.id)).map(l=>l.id+l.m));
+      if(after!==sig){render(false);if(EXT.manual)toast(H('Got '+x.apps+' entries from the browser extension.',"ब्राउज़र एक्सटेंशन से "+x.apps+" प्रविष्टियाँ मिलीं।"))}
+      else if(EXT.manual)toast(H('Nothing new from the browser extension yet.','ब्राउज़र एक्सटेंशन से अभी कुछ नया नहीं।'));
+      EXT.manual=false;
+    }catch(err){EXT.manual=false}
+  }
+});
+extSend({type:'ping'});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)extAsk()});
+setInterval(()=>{if(!document.hidden)extAsk()},5*60000);
 document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act,d=t.dataset;
@@ -219,15 +251,16 @@ document.addEventListener('click',async e=>{
     case 'toolsheet':toolsSheet();break;
     case 'perm':await askPerm(d.k);if(document.getElementById('toolperms'))refreshToolsSheet();break;
     case 'permall':await askAllPerms();if(document.getElementById('toolperms'))refreshToolsSheet();break;
-    case 'trackon':setTrack(true);toast(H('Automatic tracking is on.','अपने-आप ट्रैकिंग चालू है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
+    case 'trackon':setTrack(true);extAsk();toast(H('Automatic tracking is on.','अपने-आप ट्रैकिंग चालू है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
     case 'trackoff':setTrack(false);toast(H('Automatic tracking is off.','अपने-आप ट्रैकिंग बंद है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
     case 'toolopen':openTool(d.t);break;
     case 'toolundo':if(lastAuto){S.logs=S.logs.filter(l=>l.id!==lastAuto.id);lastAuto=null;mark('logs');render(false);toast(H('Removed.','हटा दिया।'))}break;
-    case 'tooldel':S.plan.tools=PTOOLS().filter(x=>x.id!==d.t);mark('plan');refreshToolsSheet();if(tab==='today')render(false);break;
+    case 'tooldel':S.plan.tools=PTOOLS().filter(x=>x.id!==d.t);mark('plan');if(EXT.seen)extPushTools();refreshToolsSheet();if(tab==='today')render(false);break;
     case 'tooladd':{
-      try{addTool(document.getElementById('tn').value,document.getElementById('tu').value);mark('plan');refreshToolsSheet();if(tab==='today')render(false);toast(H('Added.','जोड़ दिया।'))}
+      try{addTool(document.getElementById('tn').value,document.getElementById('tu').value);mark('plan');if(EXT.seen)extPushTools();refreshToolsSheet();if(tab==='today')render(false);toast(H('Added.','जोड़ दिया।'))}
       catch(err){const el=document.getElementById('sferr');if(el)el.textContent=err.message}
       break}
+    case 'extsync':EXT.manual=true;if(!trackOn()){toast(H('Turn on automatic tracking first.','पहले अपने-आप ट्रैकिंग चालू करें।'));break}extPushTools();extSend({type:'getUsage'});break;
     case 'usagepick':{const f=document.getElementById('usef');if(f)f.click();break}
   }
 });

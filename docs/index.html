@@ -935,6 +935,10 @@ Object.assign(HI,{
 'Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.':'Abhyashify हर पढ़ाई के ब्लॉक पर अलार्म बजाता है, आपके असल पढ़े हुए घंटे दर्ज करता है, हर हफ़्ते उन्हें आपकी योजना से मिलाता है, और आपकी किताबों व शीट्स में कितना पूरा हुआ, इसका हिसाब रखता है।',
 'Set up your course':'अपना कोर्स सेट करें',
 'Pick your exam, confirm your date and tell me when you like to study. I build a day-by-day timetable up to your exam that you can follow as it is or change. Abhyashify then rings an alarm for each block, logs the hours you put in and checks them against your plan every week.':'अपनी परीक्षा चुनें, तारीख़ पक्की करें और बताएँ कि आप कब पढ़ना पसंद करते हैं। मैं परीक्षा तक की दिन-दर-दिन समय-सारणी बनाता हूँ, जिसे आप जैसी है वैसी चला सकते हैं या बदल सकते हैं। फिर Abhyashify हर ब्लॉक पर अलार्म बजाता है, आपके लगाए घंटे दर्ज करता है और हर हफ़्ते उन्हें आपकी योजना से मिलाता है।',
+'Time on your computer':'आपके कंप्यूटर पर समय',
+'The Abhyashify browser extension is connected. It counts time only on the sites you chose above, and the totals arrive here by themselves.':'Abhyashify ब्राउज़र एक्सटेंशन जुड़ा हुआ है। यह सिर्फ़ ऊपर चुनी हुई साइटों पर समय गिनता है और कुल समय अपने-आप यहाँ आ जाता है।',
+'On a laptop, the Abhyashify browser extension counts the time you spend on your study sites and sends the totals here by itself. It is in the extension folder of the project (see the README). It is not installed in this browser yet.':'लैपटॉप पर Abhyashify ब्राउज़र एक्सटेंशन आपकी पढ़ाई की साइटों पर बिताया समय गिनकर कुल समय अपने-आप यहाँ भेज देता है। यह प्रोजेक्ट के extension फ़ोल्डर में है (README देखें)। यह इस ब्राउज़र में अभी इंस्टॉल नहीं है।',
+'Get the latest from the extension':'एक्सटेंशन से ताज़ा समय लाएँ',
 'Set up my course':'मेरा कोर्स सेट करें',
 'Set up the course again (exam, subjects, timetable)':'कोर्स दोबारा सेट करें (परीक्षा, विषय, समय-सारणी)',
 'Study tools and permissions':'पढ़ाई के टूल और अनुमतियाँ',
@@ -2264,6 +2268,8 @@ function toolsBody(){
     <div class="stack" style="gap:0">${ts.length?ts.map(t=>`<div class="item" style="grid-template-columns:1fr auto"><span class="stack" style="gap:2px;min-width:0"><span class="t">${esc(t.name)}</span><span class="small muted" style="overflow-wrap:anywhere">${esc(t.url)}</span></span><button class="btn sm danger" type="button" data-act="tooldel" data-t="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">${ic('x')}</button></div>`).join(''):'<p class="small muted">None yet.</p>'}</div>
     <div class="grid2"><label class="field">Name<input type="text" id="tn" maxlength="40" placeholder="My YouTube playlist"></label><label class="field">Link<input type="url" id="tu" maxlength="300" placeholder="https://"></label></div>
     <button class="btn soft" type="button" data-act="tooladd">${ic('plus')}Add this tool</button>
+    <div class="stack" style="gap:2px"><h3>Time on your computer</h3><p class="small muted">${EXT.seen?'The Abhyashify browser extension is connected. It counts time only on the sites you chose above, and the totals arrive here by themselves.':'On a laptop, the Abhyashify browser extension counts the time you spend on your study sites and sends the totals here by itself. It is in the extension folder of the project (see the README). It is not installed in this browser yet.'}</p></div>
+    ${EXT.seen?`<button class="btn ghost" type="button" data-act="extsync">Get the latest from the extension</button>`:''}
     <div class="stack" style="gap:2px"><h3>Time from your phone</h3><p class="small muted">The Android companion app measures the time you spend in the study apps you chose and exports a file. Import it here and it is added to your logs, one entry per app per day. Days are filled from midnight because the file has totals, not start times.</p></div>
     <input type="file" id="usef" accept=".json,application/json" hidden>
     <button class="btn ghost" type="button" data-act="usagepick">${ic('upload')}Import the usage file (JSON)</button>`;
@@ -2289,6 +2295,7 @@ function addTool(name,url,list){
   arr.push({id,name:name.slice(0,40),url:u.href,pkg:known?known.pkg:''});
   return id;
 }
+const hostOf=u=>{try{return new URL(u).hostname.toLowerCase().replace(/^www\./,'')}catch(e){return ''}};
 function importUsage(o){
   if(!o||o.source!=='abhyashify-usage'||!Array.isArray(o.days))throw new Error('bad');
   let days=0,apps=0;const by=new Map(S.logs.map(l=>[l.id,l]));
@@ -2299,8 +2306,8 @@ function importUsage(o){
       const mins=Math.round(+a.minutes||0);if(!a.package||mins<1)continue;
       const m=Math.min(720,mins);if(off+m>23*60)break;
       const id='ph-'+d.date+'-'+String(a.package).replace(/[^a-z0-9._]/gi,'').slice(0,60);
-      const known=PTOOLS().find(t=>t.pkg&&t.pkg===a.package);
-      const rec=ensureT({id,d:d.date,st:fromMin(off),m,b:null,s:null,ps:null,pm:null,q:0,mid:null,mu:0,t0:base+off*60000,t1:base+(off+m)*60000,dev:'phone',src:'phone',tz:tzOff(),tool:known?known.id:String(a.label||a.package).slice(0,40)});
+      const known=PTOOLS().find(t=>(t.pkg&&t.pkg===a.package)||(/^web:/.test(a.package)&&hostOf(t.url)===String(a.package).slice(4)));
+      const rec=ensureT({id,d:d.date,st:fromMin(off),m,b:null,s:null,ps:null,pm:null,q:0,mid:null,mu:0,t0:base+off*60000,t1:base+(off+m)*60000,dev:o.origin==='browser'?'laptop':'phone',src:'phone',tz:tzOff(),tool:known?known.id:String(a.label||a.package).slice(0,40)});
       off+=m;any=true;apps++;
       const old=by.get(id);
       if(old)Object.assign(old,rec);else{S.logs.push(rec);by.set(id,rec)}
@@ -2311,6 +2318,35 @@ function importUsage(o){
   if(apps)mark('logs');
   return {days,apps};
 }
+
+/* ----- browser extension bridge (desktop Chrome / Edge) -----
+   The extension's content script talks to this page through window messages. The page only imports what passes importUsage's checks,
+   and only after the person turned tracking on once. */
+const EXT={seen:false,version:'',last:0};
+function extSend(o){try{window.postMessage(Object.assign({src:'abhyashify-app'},o),location.origin)}catch(e){}}
+function extPushTools(){
+  const list=PTOOLS().map(t=>({host:hostOf(t.url),label:t.name})).filter(t=>t.host&&t.host.includes('.'));
+  extSend({type:'tools',tools:list});
+}
+function extAsk(){if(EXT.seen&&trackOn()){extPushTools();extSend({type:'getUsage'})}}
+window.addEventListener('message',e=>{
+  if(e.source!==window||e.origin!==location.origin)return;
+  const m=e.data;if(!m||m.src!=='abhyashify-ext')return;
+  if(m.type==='hello'){EXT.seen=true;EXT.version=String(m.version||'').slice(0,12);if(document.getElementById('toolperms'))refreshToolsSheet();extAsk()}
+  else if(m.type==='usage'&&trackOn()){
+    try{
+      const before=S.logs.length,sig=JSON.stringify(S.logs.filter(l=>/^ph-/.test(l.id)).map(l=>l.id+l.m));
+      const x=importUsage(m.data);EXT.last=Date.now();
+      const after=JSON.stringify(S.logs.filter(l=>/^ph-/.test(l.id)).map(l=>l.id+l.m));
+      if(after!==sig){render(false);if(EXT.manual)toast(H('Got '+x.apps+' entries from the browser extension.',"ब्राउज़र एक्सटेंशन से "+x.apps+" प्रविष्टियाँ मिलीं।"))}
+      else if(EXT.manual)toast(H('Nothing new from the browser extension yet.','ब्राउज़र एक्सटेंशन से अभी कुछ नया नहीं।'));
+      EXT.manual=false;
+    }catch(err){EXT.manual=false}
+  }
+});
+extSend({type:'ping'});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)extAsk()});
+setInterval(()=>{if(!document.hidden)extAsk()},5*60000);
 document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-act]');if(!t)return;
   const a=t.dataset.act,d=t.dataset;
@@ -2318,15 +2354,16 @@ document.addEventListener('click',async e=>{
     case 'toolsheet':toolsSheet();break;
     case 'perm':await askPerm(d.k);if(document.getElementById('toolperms'))refreshToolsSheet();break;
     case 'permall':await askAllPerms();if(document.getElementById('toolperms'))refreshToolsSheet();break;
-    case 'trackon':setTrack(true);toast(H('Automatic tracking is on.','अपने-आप ट्रैकिंग चालू है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
+    case 'trackon':setTrack(true);extAsk();toast(H('Automatic tracking is on.','अपने-आप ट्रैकिंग चालू है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
     case 'trackoff':setTrack(false);toast(H('Automatic tracking is off.','अपने-आप ट्रैकिंग बंद है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
     case 'toolopen':openTool(d.t);break;
     case 'toolundo':if(lastAuto){S.logs=S.logs.filter(l=>l.id!==lastAuto.id);lastAuto=null;mark('logs');render(false);toast(H('Removed.','हटा दिया।'))}break;
-    case 'tooldel':S.plan.tools=PTOOLS().filter(x=>x.id!==d.t);mark('plan');refreshToolsSheet();if(tab==='today')render(false);break;
+    case 'tooldel':S.plan.tools=PTOOLS().filter(x=>x.id!==d.t);mark('plan');if(EXT.seen)extPushTools();refreshToolsSheet();if(tab==='today')render(false);break;
     case 'tooladd':{
-      try{addTool(document.getElementById('tn').value,document.getElementById('tu').value);mark('plan');refreshToolsSheet();if(tab==='today')render(false);toast(H('Added.','जोड़ दिया।'))}
+      try{addTool(document.getElementById('tn').value,document.getElementById('tu').value);mark('plan');if(EXT.seen)extPushTools();refreshToolsSheet();if(tab==='today')render(false);toast(H('Added.','जोड़ दिया।'))}
       catch(err){const el=document.getElementById('sferr');if(el)el.textContent=err.message}
       break}
+    case 'extsync':EXT.manual=true;if(!trackOn()){toast(H('Turn on automatic tracking first.','पहले अपने-आप ट्रैकिंग चालू करें।'));break}extPushTools();extSend({type:'getUsage'});break;
     case 'usagepick':{const f=document.getElementById('usef');if(f)f.click();break}
   }
 });
@@ -2828,7 +2865,7 @@ const KB_HI=[
 /*21 voice*/'मुझसे बात करने के लिए इस चैट में माइक्रोफ़ोन दबाएँ, मैं ज़ोर से जवाब {दूँगा|दूँगी}। स्लाइडर वाले आइकन में महिला (अनु) या पुरुष (आदि) आवाज़, गति और भाषा चुनें। आवाज़ पहचानना आपके ब्राउज़र पर निर्भर है (Chrome या Edge सबसे अच्छे चलते हैं)।',
 /*22 smart*/'आम अनुरोध मैं बिना API key और बिना ख़र्च के ख़ुद समझ {लेता|लेती} हूँ। खुले सवालों और अनुरोधों के लिए सहायक की सेटिंग्स में अपनी AI की चिपकाकर **स्मार्ट मोड** चालू कर सकते हैं (Google Gemini की मुफ़्त की चलती है)। की इसी डिवाइस पर रहती है।',
 /*23 android*/'वेब पेज यह नहीं देख सकता कि आप दूसरे कौन-से ऐप चलाते हैं। एक अलग Android साथी ऐप आपके चुने पढ़ाई वाले ऐप में बिताया समय मापता है और JSON फ़ाइल एक्सपोर्ट करता है। **योजना, पढ़ाई के टूल और अनुमतियाँ** में वह फ़ाइल इंपोर्ट करें और समय आपके लॉग में जुड़ जाएगा।',
-/*24 study tools*/'जिन ऐप, साइट और YouTube चैनल से आप पढ़ते हैं उन्हें **योजना, पढ़ाई के टूल और अनुमतियाँ** में जोड़ें (सेटअप भी पूछता है)। ट्रैकिंग एक बार चालू करें। उसके बाद आज स्क्रीन से कोई टूल खोलने पर टाइमर चलता है और लौटने तक का समय बिना कुछ पूछे दर्ज हो जाता है। वेब पेज दूसरे ऐप के अंदर नहीं देख सकता, सिर्फ़ यह कि आप गए और लौटे। जिन ऐप को आप खुद खोलते हैं उनका समय Android साथी फ़ाइल से आता है।',
+/*24 study tools*/'जिन ऐप, साइट और YouTube चैनल से आप पढ़ते हैं उन्हें **योजना, पढ़ाई के टूल और अनुमतियाँ** में जोड़ें (सेटअप भी पूछता है)। ट्रैकिंग एक बार चालू करें। उसके बाद आज स्क्रीन से कोई टूल खोलने पर टाइमर चलता है और लौटने तक का समय बिना कुछ पूछे दर्ज हो जाता है। वेब पेज दूसरे ऐप के अंदर नहीं देख सकता, सिर्फ़ यह कि आप गए और लौटे। जिन ऐप को आप खुद खोलते हैं उनका समय Android साथी फ़ाइल से आता है। लैपटॉप पर Abhyashify ब्राउज़र एक्सटेंशन (प्रोजेक्ट के extension फ़ोल्डर में) आपकी पढ़ाई की साइटों पर समय गिनकर उसे अपने-आप यहाँ भेज देता है।',
 /*25 setup*/'"मेरा कोर्स सेट करो" कहें या **मेरा कोर्स सेट करें** दबाएँ (पहला पेज, या दोबारा करने के लिए सेटिंग्स)। आप परीक्षा और उसका पेपर या शाखा चुनते हैं, वैकल्पिक विषय चुनते हैं, एक बार नोटिफ़िकेशन आदि की अनुमति देते हैं, पढ़ाई के टूल बताते हैं, परीक्षा या लक्ष्य की तारीख़ पक्की करते हैं, बताते हैं कितने घंटे और दिन का कौन-सा समय ठीक है, और उस तारीख़ तक का दिन-दर-दिन टाइम-टेबल पाते हैं। उसे जैसा है वैसा अपना सकते हैं या कोई भी ब्लॉक बदल सकते हैं।',
 /*26 permissions*/'सेटअप एक बार नोटिफ़िकेशन, ब्राउज़र द्वारा सँभाला जाने वाला स्टोरेज, माइक्रोफ़ोन और टूल ट्रैकिंग की अनुमति माँगता है। उन्हें **योजना, पढ़ाई के टूल और अनुमतियाँ** में देख और बदल सकते हैं। नोटिफ़िकेशन तभी दिख सकते हैं जब ब्राउज़र इस पेज को ज़िंदा रखे। लॉक फ़ोन पर भरोसेमंद अलार्म के लिए सेटिंग्स का कैलेंडर एक्सपोर्ट इस्तेमाल करें।',
 /*24 about*/'Abhyashify प्रतियोगी और बोर्ड परीक्षाओं (JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA और अन्य, या आपकी अपनी) के लिए एक पढ़ाई का प्लानर है। यह आपकी साप्ताहिक समय-सारणी बनाता है, अलार्म बजाता है, पढ़ाई का समय दर्ज करता है, सामग्री और टेस्ट का हिसाब रखता है, और हफ़्ते की रिपोर्ट देता है जो आपके किए की योजना से तुलना करती है।',
@@ -3371,7 +3408,7 @@ const KB=[
  {k:'voice speak talk listen microphone mic male female speaking hear',a:'Tap the microphone in this chat to talk to me, and I answer out loud. Open the gear icon to choose a female or male voice, the speed and the language. Voice recognition uses your browser (Chrome or Edge work best).'},
  {k:'assistant ai smart mode key api gemini claude model',a:'I understand common requests on my own, with no key and no cost. For free-form questions and requests you can switch on **Smart mode** in the gear menu by pasting your own AI key (a free Google Gemini key works). The key stays on this device.'},
  {k:'android usage tracker other apps phone apps study time track',a:'A web page cannot see which other apps you use. A separate Android companion app measures time in the study apps you choose and exports a JSON file. In **Plan, Study tools and permissions** you can import that file and the time is added to your logs.'},
- {k:'study tools youtube website apps track automatically consent open nptel unacademy',a:'Add the apps, sites and YouTube channels you study with in **Plan, Study tools and permissions** (the setup asks too). Turn on tracking once. After that, opening a tool from the Today screen starts a timer and the time until you come back is logged, with no questions. A web page cannot see inside other apps, only that you left and came back. Time in apps you open yourself comes from the Android companion file.'},
+ {k:'study tools youtube website apps track automatically consent open nptel unacademy',a:'Add the apps, sites and YouTube channels you study with in **Plan, Study tools and permissions** (the setup asks too). Turn on tracking once. After that, opening a tool from the Today screen starts a timer and the time until you come back is logged, with no questions. A web page cannot see inside other apps, only that you left and came back. Time in apps you open yourself comes from the Android companion file. On a laptop, the Abhyashify browser extension (in the project\'s extension folder) counts time on your study sites and sends it here by itself.'},
  {k:'setup set up course exam choose jee neet gate upsc ssc nda cds cat clat ca wizard timetable create generate new start begin',a:'Say "set up my course" or tap **Set up my course** (front page, or Settings to redo it). You pick your exam and its paper or branch, choose any optional subjects, allow notifications and the other permissions once, name your study tools, confirm your exam date or target date, say how many hours and which parts of the day suit you, and get a day-by-day timetable up to that date. You can follow it as it is or edit any block.'},
  {k:'permission permissions permissions need allow notifications microphone storage notification banner access',a:'The setup asks once for notifications, storage that the browser keeps, the microphone and tool tracking. You can see and change them in **Plan, Study tools and permissions**. Notifications can only appear while the browser keeps this page alive. On a locked phone the calendar export in Settings is the reliable alarm.'},
  {k:'what is abhyashify about app purpose',a:'Abhyashify is a study planner for competitive and board exams (JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA and more, or your own). It builds your weekly schedule, rings alarms, logs your study time, tracks your materials and tests, and gives a weekly report that compares what you did with the plan.'},
