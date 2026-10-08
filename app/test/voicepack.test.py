@@ -28,7 +28,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errs.append(str(e)))
     base = 'http://127.0.0.1:%d/' % port
     pg.goto(base, wait_until='domcontentloaded'); pg.evaluate("localStorage.setItem('pl.mode','\"local\"')"); pg.reload(wait_until='domcontentloaded')
-    pg.wait_for_selector('[data-act=tpl]', timeout=40000); pg.click('[data-act=tpl]'); pg.wait_for_timeout(300)
+    pg.wait_for_selector('[data-act=wiz]', timeout=40000); pg.evaluate('applyTemplate();0'); pg.wait_for_timeout(300)
     pg.evaluate("window.__wav=[];window.CV_PLAY=(b,m,r)=>{window.__wav.push(Array.from(new Uint8Array(b)));return Promise.resolve()};0")
     pg.evaluate("window.__spoken=[];if(window.speechSynthesis){speechSynthesis.speak=u=>{window.__spoken.push(u.text);setTimeout(()=>u.onend&&u.onend(),2)}};0")
     pg.click('#asstfab'); pg.click('[data-asa=cfg]'); pg.wait_for_timeout(200)
@@ -64,7 +64,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1500); pg.evaluate("navigator.serviceWorker.ready.then(()=>1)")
     cached = pg.evaluate("caches.keys().then(async ks=>{let out=[];for(const k of ks){const c=await caches.open(k);out=out.concat((await c.keys()).map(r=>new URL(r.url).pathname))}return out})")
     ok('the service worker saved the voice engine files for offline use', any(x.endswith('espeak-ng.wasm') for x in cached) and any(x.endswith('ort-wasm-simd-threaded.wasm') for x in cached) and any(x.endswith('worker.mjs') for x in cached))
-    ctx.set_offline(True); pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('[data-act=tpl],#asstfab', timeout=40000)
+    ctx.set_offline(True); pg.reload(wait_until='domcontentloaded'); pg.wait_for_selector('[data-act=wiz],#asstfab', timeout=40000)
     pg.evaluate("window.__wav=[];window.CV_PLAY=(b,m,r)=>{window.__wav.push(Array.from(new Uint8Array(b)));return Promise.resolve()};0")
     pg.evaluate("speak('Hello, how are you?')"); pg.wait_for_function("window.__wav.length>=1", timeout=60000)
     ok('OFFLINE after a reload: the voice pack still speaks', wav_ids(pg.evaluate("window.__wav[0]"), max(exp[0]))[1] == exp[0])

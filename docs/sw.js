@@ -1,6 +1,6 @@
 /* Abhyashify service worker: keeps the app shell available offline.
    Only same-origin files are cached. Firebase, Google sign-in and fonts always go straight to the network. */
-const CACHE = 'abhyashify-v6';
+const CACHE = 'abhyashify-v7';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -29,5 +29,14 @@ self.addEventListener('fetch', e => {
   e.respondWith(caches.match(req).then(hit => {
     const net = fetch(req).then(r => { if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return r; }).catch(() => hit);
     return hit || net;
+  }));
+});
+
+// Tapping a study-block banner brings the app forward (or opens it).
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    for (const c of cs) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
   }));
 });

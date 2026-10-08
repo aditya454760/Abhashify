@@ -34,6 +34,11 @@ function closeSheet(quick){
 const need=(v,msg)=>{if(!v)throw new Error(msg);return v};
 const switchRow=(label,name,on)=>`<label class="switch"><span>${label}</span><input type="checkbox" name="${name}"${on?' checked':''}></label>`;
 
+/* a block added by hand while a phase is open belongs to that phase's dates and is kept when the timetable is rebuilt */
+function phaseTag(){
+  const p=PH().find(x=>x.id===selPhase());
+  return p?{from:p.from,to:p.to,ph:p.id,man:true}:{};
+}
 function blockForm(b){
   b=b||{id:'',days:[planDay],st:'06:30',m:90,s:S.plan.subjects[0]?S.plan.subjects[0].id:'',k:'theory',sh:0,al:true,t:''};
   const body=`<div class="stack" style="gap:8px"><span class="kick">Days</span><div class="days">${DAYS.map((d,i)=>`<label><input type="checkbox" name="day" value="${i}"${b.days.includes(i)?' checked':''}>${d}</label>`).join('')}</div></div>
@@ -46,7 +51,7 @@ function blockForm(b){
     ${b.id?`<button class="btn lg danger" type="button" data-act="delblock" data-b="${b.id}">Delete block</button>`:''}`;
   openSheet(b.id?'Edit block':'New block',body,fd=>{
     const days=fd.getAll('day').map(Number);need(days.length,'Pick at least one day.');need(S.plan.subjects.length,'Add a subject first.');
-    const nb={id:b.id||uid(),days,st:fd.get('st'),m:Math.max(5,+fd.get('m')||60),s:fd.get('s'),k:fd.get('k'),sh:Math.max(0,+fd.get('sh')||0),al:fd.get('al')==='on',t:(fd.get('t')||'').trim()};
+    const nb=Object.assign({},b.id?b:phaseTag(),{id:b.id||uid(),days,st:fd.get('st'),m:Math.max(5,+fd.get('m')||60),s:fd.get('s'),k:fd.get('k'),sh:Math.max(0,+fd.get('sh')||0),al:fd.get('al')==='on',t:(fd.get('t')||'').trim()});
     const i=S.plan.blocks.findIndex(x=>x.id===nb.id);if(i<0)S.plan.blocks.push(nb);else S.plan.blocks[i]=nb;
     mark('plan');closeSheet();render(false);toast(b.id?'Block saved':'Block added');
   });
@@ -119,15 +124,24 @@ function settingsForm(){
     <div class="stack" style="gap:8px"><span class="kick">Language</span>${langSeg()}</div>
     ${lookPickers()}
     <div class="grid2"><label class="field">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="field">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
+    ${p.setup?`<label class="switch" id="rebrow"><span>Rebuild the timetable if I change the date</span><input type="checkbox" name="reb" checked></label><p class="small muted">Blocks and mock tests made by the setup are replaced, including ones you edited. Blocks you added yourself and scored tests stay.</p>`:''}
     <div class="grid2"><label class="field">Alarm minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}" inputmode="numeric"></label><label class="field">Revision buffer (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}" inputmode="numeric"></label></div>
     <button class="btn lg" type="submit">Save settings</button>
+    <button class="btn lg ghost" type="button" data-act="wiz">${ic('spark')}Set up the course again (exam, subjects, timetable)</button>
+    <button class="btn lg ghost" type="button" data-act="toolsheet">${ic('open')}Study tools and permissions</button>
     <button class="btn lg ghost" type="button" data-act="exportcsv">${ic('upload')}Export schedule for Google Calendar (CSV)</button>
     <p class="small muted">Import the file in Google Calendar on a computer. Your calendar's own notifications then work when this page is closed.</p>
     ${installBtn()}
     <button class="btn lg ghost" type="button" data-act="exportjson">${ic('upload')}Download a backup (JSON)</button>`,fd=>{
     if(CL){const cn=(fd.get('cn')||'').trim();if(cn&&cn!==CL.name){CL.name=cn;const c=CL.courses.find(x=>x.id===CL.cid);if(c)c.name=cn;FB.updateDoc(courseRef(),{name:cn,updatedAt:FB.serverTimestamp()}).catch(()=>toast('Could not rename the course.'))}}
+    const oldEx=p.exam;
     p.examName=(fd.get('en')||'').trim();p.exam=fd.get('ex')||'';p.lead=Math.max(0,+fd.get('lead')||0);p.buffer=Math.max(0,+fd.get('buf')||0);
-    mark('plan');closeSheet();render(false);toast('Settings saved');
+    let msg='Settings saved';
+    if(p.setup&&p.exam&&p.exam!==oldEx&&fd.get('reb')==='on'){
+      try{rebuildPlan(p.exam);if(p.setup.dateKind==='typical')p.setup.dateKind='date';msg='Timetable rebuilt for '+wFmt(p.exam)}
+      catch(err){p.exam=oldEx;throw err}
+    }
+    mark('plan');closeSheet();render(false);toast(msg);
   });
 }
 function saveFile(name,data,type){
@@ -151,7 +165,7 @@ function calendarCsv(){
   return rows.map(r=>r.map(csvQ).join(',')).join('\n');
 }
 
-/* ---------- template ---------- */
+/* ---------- GATE DA sample plan (no longer on the front page; kept for the test suite and as a sample) ---------- */
 function gateTemplate(){
   const subs=[['prob','Probability & Statistics',5,3],['la','Linear Algebra',4,3],['calc','Calculus & Optimization',3,3],['py','Python & DSA',3,3],['db','Databases & Warehousing',2,3],['ml','Machine Learning',5,3],['ai','Artificial Intelligence',4,3],['ga','General Aptitude',3,3],['mix','Revision & full mocks',3,3]];
   const P=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
@@ -194,10 +208,11 @@ function ring(b,late){
     <button class="btn lg" type="button" data-act="alarmstart" data-b="${b.id}">${ic('play')}Start now</button>
     <div class="grid2" style="width:100%"><button class="btn ghost" type="button" data-act="snooze" data-b="${b.id}">Snooze 5 min</button><button class="btn ghost" type="button" data-act="dismiss">Dismiss</button></div></div>`;
   el.hidden=false;beep();clearInterval(ringTimer);let n=0;ringTimer=setInterval(()=>{if(++n>40)return stopRing();beep()},2200);
+  notify(H(late?'Missed alarm':'Time to study',late?'छूटा हुआ अलार्म':'पढ़ने का समय')+': '+L(blockTitle(b)),b.st+' · '+FD(b.m),'b|'+b.id);
 }
 function stopRing(){clearInterval(ringTimer);document.getElementById('alarm').hidden=true}
 function alarmTick(){
-  tickTimer();extraAlarms();
+  tickTimer();extraAlarms();finishToolRun();
   const now=new Date(),ds=ymd(now),nm=now.getHours()*60+now.getMinutes();
   for(const b of blocksOn(S.plan,now)){
     if(!b.al)continue;
@@ -235,7 +250,8 @@ document.addEventListener('click',async e=>{
     case 'sel':selIdx=+d.v;render(false);break;
     case 'pday':planDay=+d.v;render(false);break;
     case 'close':closeSheet();break;
-    case 'tpl':applyTemplate();toast('Template added');break;
+    case 'wiz':openWizard();break;
+    case 'pph':planPh=d.v;render(false);break;
     case 'blank':S.plan.subjects=[{id:uid(),name:'Subject 1',w:3,c:3}];mark('plan');tab='plan';render();break;
     case 'start':startRun(d.b);break;
     case 'stop':logForm(run&&run.b);break;
@@ -320,13 +336,14 @@ function importBackup(o){
   for(const m of o.materials){if(!m||!m.id||haveM.has(m.id)||!m.title)continue;
     S.materials.push({id:String(m.id),title:String(m.title).slice(0,160),subj:m.subj||null,kind:m.kind||'theory',unit:m.unit||'pages',total:Math.max(0,+m.total||0),done:Math.max(0,+m.done||0),file:/^https?:\/\//i.test(m.file||'')?m.file:null,asset:null});addedM++}
   for(const l of o.logs){if(!l||!l.id||haveL.has(l.id)||!l.d||!l.st)continue;
-    const x=ensureT({id:String(l.id),d:l.d,st:l.st,m:Math.min(720,Math.max(1,+l.m||1)),b:l.b||null,s:l.s||null,ps:l.ps||null,pm:l.pm||null,q:+l.q||0,mid:l.mid||null,mu:+l.mu||0,t0:+l.t0||0,t1:+l.t1||0,dev:l.dev||deviceId(),src:l.src||'manual',tz:l.tz==null?tzOff():l.tz});
+    const x=ensureT({id:String(l.id),d:l.d,st:l.st,m:Math.min(720,Math.max(1,+l.m||1)),b:l.b||null,s:l.s||null,ps:l.ps||null,pm:l.pm||null,q:+l.q||0,mid:l.mid||null,mu:+l.mu||0,t0:+l.t0||0,t1:+l.t1||0,dev:l.dev||deviceId(),src:l.src||'manual',tz:l.tz==null?tzOff():l.tz,tool:l.tool||null});
     if(!(x.t0>0))continue;x.t1=x.t0+x.m*60000;S.logs.push(x);addedL++}
   if(addedM)mark('materials');if(addedL)mark('logs');
   closeSheet();render(false);toast(`Imported ${addedM} materials and ${addedL} sessions`);
 }
-function courseForm(){
-  openSheet('New course',`<label class="field">Course name<input type="text" name="n" maxlength="80" placeholder="GATE DA 2027" required></label><button class="btn lg" type="submit">Create course</button>`,async fd=>{
+function courseForm(){closeSheet(true);openWizard({ctx:'newcourse'})}
+function emptyCourseForm(){
+  openSheet('New course',`<label class="field">Course name<input type="text" name="n" maxlength="80" placeholder="My course" required></label><button class="btn lg" type="submit">Create course</button>`,async fd=>{
     const name=need((fd.get('n')||'').trim(),'Enter a name.');
     const id=await createCourse(name);CL.courses.push({id,name});closeSheet();await openCourse(id);toast('Course created');
   });

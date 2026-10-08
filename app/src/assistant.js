@@ -286,12 +286,16 @@ const AX={
     S.plan.blocks.push({id:uid(),days,st,m,s:sub.id,k,sh:Math.max(0,Math.min(20,Math.round(+a.sheets||0))),al:a.alarm!==false,t:''});mark('plan');
     return {msg:H(`Added a ${KINDS[k].toLowerCase()} block for ${sub.name}: ${dayNames(days)} at ${st} for ${fmtDur(m)}.`,`${L(sub.name)} के लिए ${L(KINDS[k])} ब्लॉक जोड़ दिया: ${dayNames(days)}, ${st} बजे से, ${FD(m)} के लिए।`)};
   },
+  open_setup(a){
+    const had=S.plan.subjects.length||S.plan.blocks.length;
+    closeAssistant();
+    setTimeout(()=>openWizard({ctx:had?'redo':'onboard'}),180);
+    return {msg:H('Opening the course setup. Pick your exam, check the date, tell me when you like to study, and I will build the timetable.','कोर्स सेटअप खोल रहा हूँ। अपनी परीक्षा चुनें, तारीख़ जाँचें, बताएँ आप कब पढ़ना चाहते हैं, और मैं टाइम-टेबल बना दूँगा।')};
+  },
   new_schedule(a){
     const hasSubs=S.plan.subjects.length>0;
     if(a.mode==='template'||!hasSubs){
-      const T=gateTemplate(),keep={tests:S.plan.tests||[],reminders:S.plan.reminders||[]};
-      S.plan=Object.assign(T,keep);mark('plan');
-      return {msg:H('Loaded the GATE DA 2027 template: nine subjects and a weekly timetable. Your tests and reminders are untouched. Change anything in the Plan tab.','GATE DA 2027 टेम्पलेट लग गया: नौ विषय और साप्ताहिक समय-सारणी। आपके टेस्ट और रिमाइंडर जैसे थे वैसे हैं। कुछ भी बदलना हो तो योजना टैब में बदलें।')};
+      return AX.open_setup({});
     }
     const r=buildSchedule(a);S.plan.blocks=r.blocks;mark('plan');
     const top=Object.entries(r.got).sort((x,y)=>y[1]-x[1]).slice(0,4).map(([id,m])=>H(subjName(id)+' '+fmtDur(m)+'/week',L(subjName(id))+' '+FD(m)+'/हफ़्ता')).join(', ');
@@ -357,7 +361,7 @@ const AX={
     if(!CL)throw new Error(H('Separate courses need sign-in so each one keeps its own data. Sign in from the Account button, then ask me again.','अलग-अलग कोर्स के लिए साइन इन ज़रूरी है, ताकि हर कोर्स का अपना डेटा रहे। खाता बटन से साइन इन करें, फिर मुझसे दोबारा कहें।'));
     const name=String(a.name||'').trim().slice(0,80);if(!name)throw new Error(H('What should the course be called?','कोर्स का नाम क्या रखें?'));
     const id=await createCourse(name);CL.courses.push({id,name});await openCourse(id);
-    return {msg:H(`Created the course "${name}" and switched to it. Ask me to load the GATE DA template or build a schedule for it.`,`"${name}" कोर्स बना दिया और उसी पर आ गया। मुझसे GATE DA टेम्पलेट लगाने या इसकी समय-सारणी बनाने को कहें।`)};
+    return {msg:H(`Created the course "${name}" and switched to it. Say "set up my course" and I will open the setup to pick the exam and build a timetable.`,`"${name}" कोर्स बना दिया और उसी पर आ गया। मुझसे GATE DA टेम्पलेट लगाने या इसकी समय-सारणी बनाने को कहें।`)};
   },
   async open_course(a){
     if(!CL)throw new Error(H('Sign in to switch between courses.','कोर्स बदलने के लिए साइन इन करें।'));
@@ -369,7 +373,7 @@ const SPEC_TYPES=new Set([...Object.keys(AX)]);
 async function runActions(list,opts){
   opts=opts||{};const msgs=[],errs=[];let close=false;
   list=(Array.isArray(list)?list:[]).filter(a=>a&&SPEC_TYPES.has(a.type)).slice(0,6);
-  if(!opts.confirmed&&list.some(a=>NEEDS_SURE.has(a.type))&&(S.plan.blocks.length||list.some(a=>a.type==='new_schedule'&&a.mode==='template'&&S.plan.subjects.length))){
+  if(!opts.confirmed&&list.some(a=>NEEDS_SURE.has(a.type))&&list.some(a=>a.type==='new_schedule'&&a.mode!=='template')&&S.plan.blocks.length){
     PENDING={actions:list};
     const n=S.plan.blocks.length;
     return {msgs:[H(`This will replace your ${n} schedule block${n===1?'':'s'}. Your subjects, materials, tests and reminders stay. Go ahead? (yes or no)`,`इससे आपके ${n} ब्लॉक बदल जाएँगे। आपके विषय, सामग्री, टेस्ट और रिमाइंडर वैसे ही रहेंगे। आगे बढ़ूँ? (हाँ या नहीं)`)],pending:true,close:false};
@@ -411,8 +415,11 @@ const KB=[
  {k:'theme color colour dark light mode accent background look appearance wallpaper change',a:'Ask me, for example "dark mode", "make the accent green" or "background mint". You can also pick them in Settings. Say "reset the look" to go back to the default.'},
  {k:'voice speak talk listen microphone mic male female speaking hear',a:'Tap the microphone in this chat to talk to me, and I answer out loud. Open the gear icon to choose a female or male voice, the speed and the language. Voice recognition uses your browser (Chrome or Edge work best).'},
  {k:'assistant ai smart mode key api gemini claude model',a:'I understand common requests on my own, with no key and no cost. For free-form questions and requests you can switch on **Smart mode** in the gear menu by pasting your own AI key (a free Google Gemini key works). The key stays on this device.'},
- {k:'android usage tracker other apps phone apps study time track',a:'A web page cannot see which other apps you use. A separate Android companion app measures time in the study apps you choose and gives you JSON. Reading that JSON into the weekly report is not built yet.'},
- {k:'what is abhyashify about app purpose',a:'Abhyashify is a study planner for GATE DA 2027. It builds your weekly schedule, rings alarms, logs your study time, tracks your materials and tests, and gives a weekly report that compares what you did with the plan.'},
+ {k:'android usage tracker other apps phone apps study time track',a:'A web page cannot see which other apps you use. A separate Android companion app measures time in the study apps you choose and exports a JSON file. In **Plan, Study tools and permissions** you can import that file and the time is added to your logs.'},
+ {k:'study tools youtube website apps track automatically consent open nptel unacademy',a:'Add the apps, sites and YouTube channels you study with in **Plan, Study tools and permissions** (the setup asks too). Turn on tracking once. After that, opening a tool from the Today screen starts a timer and the time until you come back is logged, with no questions. A web page cannot see inside other apps, only that you left and came back. Time in apps you open yourself comes from the Android companion file.'},
+ {k:'setup set up course exam choose jee neet gate upsc ssc nda cds cat clat ca wizard timetable create generate new start begin',a:'Say "set up my course" or tap **Set up my course** (front page, or Settings to redo it). You pick your exam and its paper or branch, choose any optional subjects, allow notifications and the other permissions once, name your study tools, confirm your exam date or target date, say how many hours and which parts of the day suit you, and get a day-by-day timetable up to that date. You can follow it as it is or edit any block.'},
+ {k:'permission permissions permissions need allow notifications microphone storage notification banner access',a:'The setup asks once for notifications, storage that the browser keeps, the microphone and tool tracking. You can see and change them in **Plan, Study tools and permissions**. Notifications can only appear while the browser keeps this page alive. On a locked phone the calendar export in Settings is the reliable alarm.'},
+ {k:'what is abhyashify about app purpose',a:'Abhyashify is a study planner for competitive and board exams (JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA and more, or your own). It builds your weekly schedule, rings alarms, logs your study time, tracks your materials and tests, and gives a weekly report that compares what you did with the plan.'},
  {k:'sign out logout switch account',a:'Open the Account sheet (top right) and tap **Sign out**. That also clears the local copy on this device.'},
 ];
 function askKB(q){
@@ -529,6 +536,7 @@ async function brain(text){
     }
   }
   if(/^(undo|revert|take (that|it) back|go back)\b/.test(t))return {reply:undoLast()};
+  if(/\b(set ?up|setup)\b.{0,25}\b(course|exam|prep|preparation|timetable|wizard)\b|\b(course|exam) set ?up\b|\bsetup wizard\b|\b(choose|pick|select|change) (my |the )?exam\b|\b(i am|i'm|im) (preparing|studying|getting ready) for\b|\bhelp me (prepare|plan) for\b/.test(t))return doActs([ex_('open_setup',{})],'');
   {const lm=t.match(/\b(?:switch|change|speak|talk|reply|answer|set|use)\b.*\b(hindi|english)\b/)||t.match(/\blanguage\b.*\b(hindi|english)\b/)||t.match(/\b(hindi|english) (?:language|mode)\b/);
    if(lm&&!/\b(voice|accent)\b/.test(t))return doActs([ex_('set_language',{lang:lm[1]==='hindi'?'hi':'en'})],'');
    const vm=t.match(/\b(male|female) voice\b|\b(?:switch to|talk to|speak to|use|call you|be) (adi|anu)\b|\bvoice (?:to )?(male|female)\b/);
@@ -692,7 +700,7 @@ add_material {title (required), subject, kind:"theory"|"sheet"|"notes"|"mock", t
 set_exam {date (required), name}
 log_session {subject, minutes (required), date, time}
 start_timer {subject}   stop_timer {}
-create_course {name}   open_course {name}
+create_course {name}   open_course {name}   open_setup {} (opens the course setup: pick the exam, subjects, date, study times, timetable)
 navigate {to:"today"|"plan"|"materials"|"report"|"settings"|"account"}
 alarms_on {on:true|false}
 set_language {lang:"en"|"hi"}   set_voice {gender:"male"|"female"}`;

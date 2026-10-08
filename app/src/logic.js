@@ -16,9 +16,11 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const fmtDur=m=>{m=Math.round(m);if(m<=0)return '0m';const h=Math.floor(m/60),r=m%60;return h?(r?h+'h '+r+'m':h+'h'):r+'m'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+/* a block may carry from/to dates (the setup wizard makes one set of blocks per phase of the plan) */
+const blockLive=(b,ds)=>(!b.from||ds>=b.from)&&(!b.to||ds<=b.to);
 function blocksOn(plan,date){
-  const w=dow(date);
-  return plan.blocks.filter(b=>b.days.includes(w)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+  const w=dow(date),ds=ymd(date);
+  return plan.blocks.filter(b=>b.days.includes(w)&&blockLive(b,ds)).sort((a,b)=>toMin(a.st)-toMin(b.st));
 }
 function addHours(arr,start,len){
   while(len>0){const h=Math.floor(start/60)%24,room=60-(start%60),take=Math.min(room,len);arr[h]+=take;start+=take;len-=take}
@@ -41,7 +43,7 @@ function weekReport(S,ws,now){
     }
     for(const l of S.logs){
       if(l.d!==ds)continue;
-      a+=l.m;shA+=l.q||0;sub(l.s).a+=l.m;sub(l.s).shA+=l.q||0;addHours(actH,toMin(l.st),l.m);
+      a+=l.m;shA+=l.q||0;sub(l.s).a+=l.m;sub(l.s).shA+=l.q||0;if(l.src!=='phone')addHours(actH,toMin(l.st),l.m);   // phone totals have no real start time
       if(l.ps){const diff=toMin(l.st)-toMin(l.ps);tN++;if(Math.abs(diff)<=30)tOn++;tSum+=diff;sessions.push({d:ds,s:l.s,ps:l.ps,st:l.st,diff})}
     }
     days.push({ds,label:DAYS[i],p,due,a});tp+=p;td+=due;ta+=a;
@@ -60,8 +62,10 @@ function planner(S,today){
   const exam=plan.exam?parseYmd(plan.exam):null;
   const daysLeft=exam?Math.max(1,Math.round((exam-new Date(today.getFullYear(),today.getMonth(),today.getDate()))/864e5)):90;
   const contentDays=Math.max(7,daysLeft-(plan.buffer||0));
-  const bpw={};
-  for(const b of plan.blocks){if(b.k==='theory'||b.k==='practice')bpw[b.s]=(bpw[b.s]||0)+b.days.length}
+  const bpw={},tds=ymd(today);
+  let live=plan.blocks.filter(b=>blockLive(b,tds));
+  if(!live.length)live=plan.blocks.filter(b=>!b.to||b.to>=tds);   // before the plan starts: use the blocks that are still ahead
+  for(const b of live){if(b.k==='theory'||b.k==='practice'||b.k==='revision')bpw[b.s]=(bpw[b.s]||0)+b.days.length}
   const theory={};
   for(const m of S.materials){if(m.kind==='theory'&&m.total>0){const t=theory[m.subj]||(theory[m.subj]={d:0,n:0});t.d+=Math.min(m.done,m.total);t.n+=m.total}}
   const out=[];

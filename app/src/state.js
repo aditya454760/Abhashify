@@ -60,15 +60,18 @@ const courseRef=()=>cref('courses',CL.cid);
 const sessCol=()=>ccol('courses',CL.cid,'people',CL.uid,'sessions');
 const matCol=()=>ccol('courses',CL.cid,'people',CL.uid,'materials');
 
+/* The security rules only allow a fixed set of fields on a session, so the study tool is carried inside `device`
+   as "<device id>|<tool>" (a tool session is stored with source "timer"). docLog undoes this. */
+const logDevice=l=>{const d=String(l.dev||deviceId()).split('|')[0];return (l.tool?d+'|'+String(l.tool).replace(/\|/g,'/'):d).slice(0,64)};
 function logDoc(l){
   const t1=l.t1>l.t0?l.t1:l.t0+60000;
   return {uid:CL.uid,s:l.t0,e:Math.min(t1,l.t0+43200000),subj:l.s||null,block:l.b||null,planStart:l.ps||null,sheets:l.q||0,
-    device:l.dev||deviceId(),source:l.src||'manual',mid:l.mid||null,mu:l.mu||0,tz:l.tz==null?tzOff():l.tz};
+    device:logDevice(l),source:l.src==='tool'?'timer':(l.src||'manual'),mid:l.mid||null,mu:l.mu||0,tz:l.tz==null?tzOff():l.tz};
 }
 function docLog(id,x){
   const t=new Date(x.s);
   return {id,d:ymd(t),st:fromMin(t.getHours()*60+t.getMinutes()),m:Math.max(1,Math.round((x.e-x.s)/60000)),b:x.block||null,s:x.subj||null,ps:x.planStart||null,pm:null,
-    q:x.sheets||0,mid:x.mid||null,mu:x.mu||0,t0:x.s,t1:x.e,dev:x.device,src:x.source,tz:x.tz};
+    q:x.sheets||0,mid:x.mid||null,mu:x.mu||0,t0:x.s,t1:x.e,dev:String(x.device||'').split('|')[0],src:(String(x.device||'').includes('|')&&x.source==='timer')?'tool':x.source,tz:x.tz,tool:String(x.device||'').split('|').slice(1).join('|')||null};
 }
 const matDoc=m=>({title:String(m.title||'Untitled').slice(0,160),subj:m.subj||null,kind:m.kind||'theory',unit:m.unit||'pages',total:+m.total||0,done:+m.done||0,file:m.file||null});
 const docMat=(id,x)=>({id,title:x.title,subj:x.subj||null,kind:x.kind,unit:x.unit||'pages',total:x.total||0,done:x.done||0,file:x.file||null,asset:null});
@@ -125,6 +128,7 @@ function applyRaw(){
   GATE=null;
   const first=firstApply;firstApply=false;
   render(first);
+  if(first)setTimeout(()=>{try{finishToolRun()}catch(e){}},800);
 }
 function subscribe(){
   CL.unsubs.forEach(u=>u());CL.unsubs=[];
@@ -143,9 +147,9 @@ async function listCourses(){
     lsSet(key,list);return list;
   }catch(e){console.error(e);return lsGet(key,[])}
 }
-async function createCourse(name){
+async function createCourse(name,plan){
   const id='c'+uid()+uid();
-  await FB.setDoc(cref('courses',id),{name:String(name||'My course').slice(0,80),ownerUid:CL.uid,members:[],plan:defaultPlan(),updatedAt:FB.serverTimestamp()});
+  await FB.setDoc(cref('courses',id),{name:String(name||'My course').slice(0,80),ownerUid:CL.uid,members:[],plan:plan?JSON.parse(JSON.stringify(plan)):defaultPlan(),updatedAt:FB.serverTimestamp()});
   return id;
 }
 async function openCourse(cid){
@@ -199,4 +203,5 @@ async function deleteCourseData(){
 }
 function enterLocal(){
   GATE=null;loadLocal();firstApply=true;render();
+  setTimeout(()=>{try{finishToolRun()}catch(e){}},800);
 }

@@ -22,6 +22,13 @@ const KIC={theory:'book',practice:'target',revision:'spark',mock:'clock',other:'
 const tone=p=>p===null||p===undefined?'':p>=85?'good':p>=60?'warn':'bad';
 const unitN=(n,u)=>n+' '+(n===1?String(u||'unit').replace(/s$/,''):(u||'units'));
 const sheetsLabel=n=>n+(n===1?' sheet':' sheets');
+/* a plan made by the setup wizard has phases (learn, revise, final); the Plan tab shows one phase at a time */
+let planPh=null;
+const PH=()=>S.plan.phases||[];
+function phaseNow(){const ph=PH(),t=ymd(new Date());return (ph.find(p=>t>=p.from&&t<=p.to)||ph.find(p=>p.from>t)||ph[ph.length-1]||{}).id}
+function selPhase(){const ph=PH();if(!ph.length)return null;if(!ph.some(p=>p.id===planPh))planPh=phaseNow();return planPh}
+const phVis=b=>!PH().length||!b.ph||b.ph===selPhase();
+const phDate=ds=>parseYmd(ds).toLocaleDateString(LOC(),{day:'numeric',month:'short'});
 
 function ringSvg(p,size,sw,cls){
   const r=(size-sw)/2,C=2*Math.PI*r,c=size/2;
@@ -120,11 +127,11 @@ function render(anim){
 
 /* ---------- views ---------- */
 function onboarding(){
-  return `<div class="card" style="gap:14px"><span class="tile-ic" style="--c:var(--accent)">${ic('spark')}</span><div class="stack"><h2>Set up your schedule</h2>
-    <p class="muted">Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.</p></div>
-    <button class="btn lg" type="button" data-act="tpl">Start with the GATE DA 2027 template</button>
+  return `<div class="card" style="gap:14px"><span class="tile-ic" style="--c:var(--accent)">${ic('spark')}</span><div class="stack"><h2>Set up your course</h2>
+    <p class="muted">Pick your exam, confirm your date and tell me when you like to study. I build a day-by-day timetable up to your exam that you can follow as it is or change. Abhyashify then rings an alarm for each block, logs the hours you put in and checks them against your plan every week.</p></div>
+    <button class="btn lg" type="button" data-act="wiz">${ic('spark')}Set up my course</button>
     <button class="btn lg ghost" type="button" data-act="blank">Start empty and build my own</button>
-    <p class="small muted">The template sets the exam date to 6 February 2027 and adds a weekly timetable with nine subjects. Change anything afterwards.</p></div>`;
+    <p class="small muted">JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA and more, each with its branches and subjects. There is always an Other option for anything not listed.</p></div>`;
 }
 function vToday(){
   if(!S.plan.subjects.length&&!S.plan.blocks.length)return onboarding();
@@ -164,7 +171,7 @@ function vToday(){
   }
   if(isToday)h+=`<button class="btn lg soft" type="button" data-act="log" data-b="" data-d="${ds}">${ic('plus')}Log an extra session</button>`;
 
-  if(isToday)h+=vUpcoming();
+  if(isToday)h+=vUpcoming()+vToolsCard()+vDateNote();
   const seen=new Set(),nextUp=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,4);
   if(isToday&&nextUp.length)h+=`<section class="card"><div class="stack"><h3>Study next</h3><p class="small muted">Ordered by importance, your confidence, what is left and what needs to come first.</p></div>`+
     nextUp.map((o,i)=>`<div class="item" style="${cvar(o.m.subj)};grid-template-columns:auto 1fr"><span class="num">${i+1}</span><div class="stack" style="gap:3px;min-width:0"><span class="t">${esc(o.m.title)}</span><span class="small muted">${subjChip(o.m.subj)}${o.chunk?` <span style="margin-left:4px">about ${esc(unitN(o.chunk,o.m.unit))} per session</span>`:''}</span></div></div>`).join('')+`</section>`;
@@ -176,14 +183,19 @@ function vToday(){
 function vPlan(){
   let h=`<div class="sec-h"><h1>Plan</h1><button class="btn sm" type="button" data-act="addblock">${ic('plus')}Add block</button></div>`;
   if(!S.plan.subjects.length&&!S.plan.blocks.length)return h+onboarding();
+  if(PH().length>1){
+    const sp=selPhase();
+    h+=`<div class="seg" role="group" aria-label="Phase">`+PH().map(p=>`<button type="button" data-act="pph" data-v="${p.id}" aria-pressed="${p.id===sp}">${esc(L(p.name))}</button>`).join('')+`</div>`;
+  }
+  if(PH().length){const p=PH().find(x=>x.id===selPhase());if(p)h+=`<p class="small muted">${esc(phDate(p.from))} to ${esc(phDate(p.to))}${PH().length>1?'. The weekly timetable below applies to these dates.':''}</p>`}
   h+=`<div class="seg" role="group" aria-label="Day">`+DAYS.map((d,i)=>`<button type="button" data-act="pday" data-v="${i}" aria-pressed="${i===planDay}">${d}</button>`).join('')+`</div>`;
-  const bl=S.plan.blocks.filter(b=>b.days.includes(planDay)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+  const bl=S.plan.blocks.filter(b=>b.days.includes(planDay)&&phVis(b)).sort((a,b)=>toMin(a.st)-toMin(b.st));
   h+=`<div class="stack" style="gap:10px"><div class="sec-h"><h3>${DAYS_LONG[planDay]}</h3><span class="small muted">${fmtDur(bl.reduce((x,b)=>x+b.m,0))} planned</span></div><div class="blist">`+
     (bl.length?bl.map(b=>`<button type="button" class="blk pl" style="${cvar(b.s)}" data-act="editblock" data-b="${b.id}"><div class="tm"><b>${b.st}</b><span>${endTime(b)}</span></div>
       <div class="bd"><h3>${esc(blockTitle(b))}</h3><span class="bs">${fmtDur(b.m)}${b.sh?' · '+sheetsLabel(b.sh):''} · ${b.al?'alarm '+(S.plan.lead||0)+' min early':'no alarm'}</span></div>${ic('chev')}</button>`).join(''):
       `<div class="card flat empty">${ic('plan')}<p class="muted">Free day. Tap Add block to schedule something.</p></div>`)+`</div></div>`;
 
-  const by={};let tot=0;for(const b of S.plan.blocks){const m=b.m*b.days.length;by[b.s]=(by[b.s]||0)+m;tot+=m}
+  const by={};let tot=0;for(const b of S.plan.blocks.filter(phVis)){const m=b.m*b.days.length;by[b.s]=(by[b.s]||0)+m;tot+=m}
   const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]);
   if(ents.length)h+=`<section class="card"><div class="sec-h"><h3>Week at a glance</h3><span class="small muted">${fmtDur(tot)}</span></div>
     <div class="stackbar">`+ents.map(([id,m])=>`<i style="${cvar(id)};flex:${m} 1 0"></i>`).join('')+`</div>
@@ -194,6 +206,7 @@ function vPlan(){
     S.plan.subjects.map(s=>`<button type="button" class="item" data-act="editsubj" data-s="${esc(s.id)}" style="${cvar(s.id)};grid-template-columns:1fr auto"><span class="stack" style="gap:6px"><span class="t">${subjChip(s.id)}</span><span class="small muted row" style="gap:14px"><span class="row" style="gap:6px">Importance ${pips(s.w)}</span><span class="row" style="gap:6px">Confidence ${pips(s.c)}</span></span></span>${ic('chev')}</button>`).join('')+`</section>`;
   h+=vTestsPlan();
   h+=`<button class="btn lg ghost" type="button" data-act="settings">${ic('sliders')}Exam date, appearance, exports</button>`;
+  h+=`<button class="btn lg ghost" type="button" data-act="toolsheet">${ic('open')}Study tools and permissions</button>`;
   h+=`<section class="card flat aboutapp">${ic('spark')}<p class="small muted">A web page cannot see what you do in other apps, so this app counts what you log or time here. For alarms that ring when this page is closed, export the schedule to your calendar from Settings. Automatic tracking of other apps is done by the Android companion app.</p></section>`;
   return h;
 }
@@ -244,6 +257,7 @@ function vReport(){
   h+=`<section class="card"><h3>Hours per day</h3>${dayChart(r)}<p class="small muted">Dashed outline is planned, solid is logged.</p></section>`;
   const rows=Object.entries(r.bySub).filter(([,v])=>v.p||v.a||v.sh||v.shA);
   if(rows.length)h+=`<section class="card"><h3>By subject</h3>`+rows.map(([id,v])=>`<div class="stack" style="gap:7px"><div class="row between">${subjChip(id)}<span class="small muted">${fmtDur(v.a)} / ${fmtDur(v.p)}${v.sh||v.shA?' · '+v.shA+'/'+v.sh+' sheets':''}</span></div><div class="meter ${tone(v.p?pct(v.a,v.p):null)}"><i data-w="${pct(v.a,v.p)}"></i></div></div>`).join('')+`</section>`;
+  h+=vToolReport(r);
   h+=`<section class="card"><h3>Study time of day</h3>${hourChart(r)}<p class="small muted">Dashed is when the plan puts study, solid is when you studied.${r.avgShift!==null?` Sessions started ${Math.abs(Math.round(r.avgShift))} minutes ${r.avgShift>=0?'later':'earlier'} than planned on average.`:''}</p></section>`;
   if(r.sessions.length)h+=`<section class="card"><h3>Planned and actual start</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Day</th><th>Subject</th><th>Plan</th><th>Actual</th><th>Shift</th></tr></thead><tbody>`+
     r.sessions.map(s=>`<tr><td>${DAYS[dow(parseYmd(s.d))]}</td><td>${esc(subjName(s.s))}</td><td>${s.ps}</td><td>${s.st}</td><td>${s.diff>0?'+':''}${s.diff}m</td></tr>`).join('')+`</tbody></table></div></section>`;

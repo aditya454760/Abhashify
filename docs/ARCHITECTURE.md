@@ -31,6 +31,15 @@ Custom voices are also local: the cloned voice id, the ElevenLabs key, the saved
 
 Tests, mock tests and reminders live inside the course plan, so they sync with it and only the course owner edits them. The assistant's chat history, voice settings, theme and any AI key stay on the device (local storage) and never go to Firestore.
 
+## Course setup, exam catalogue and study tools
+
+- `app/src/exams.js` is a plain data file: exam families, their papers, default subjects with weights, optional-subject groups, typical hours and mock length, and a registry of study tools. Dates in it are hints, never official.
+- `app/src/plangen.js` turns a choice (subjects, end date, hours for weekdays and weekends, parts of the day, days off, mocks) into a plan: three phases (learn, revise, final), a weighted round-robin so subjects are spread, a weekly mock day, and a hard stop above 280 blocks so the course document stays under the 300-block rule. `app/src/wizard.js` is the guided screen flow on top of it.
+- New plan fields: `phases`, `setup` (what was chosen, so the timetable can be rebuilt if the date moves), `tools`. Blocks may carry `from`/`to` (the date range of their phase), `ph` (the phase) and `man` (added by hand, kept when rebuilding). Blocks still repeat weekly by weekday; `blockLive()` hides them outside their phase.
+- Study-tool time is stored as an ordinary session. The Firestore rules only allow fixed session fields and the sources manual, timer, phone, laptop and tablet, so the tool is encoded in `device` as `<deviceId>|<tool>` with source `timer`. Phone-usage imports use source `phone`. No rules change is needed.
+- Tracking is limited by the web platform: a page cannot see other apps. Tracking consent is stored on the device (`pl.track`). Opening a tool from the app stores a pending run; when the page is shown again the elapsed time (2 minutes to 8 hours) is logged. Android companion exports (`source: "abhyashify-usage"`) are imported as `ph-<date>-<package>` sessions.
+- Permissions (notifications, persistent storage, microphone, tracking) are asked together once after the course is chosen and can be changed later under Plan, Study tools and permissions.
+
 ## Counting overlapping time once
 
 The code for this is in `sync/core/overlap.js`. It works in three steps:
@@ -56,7 +65,7 @@ When a course has more than one person, each person is merged on their own first
 ## Where things stand
 
 Working and tested:
-- The assistant (45 tests), its Hindi support (33 tests), the custom-voice logic (30 tests), the offline voice engine in a real browser (13 tests) and the recorder (17 tests), apart from the real microphone, real voices and real AI calls.
+- Course setup (118 + 78 tests) and the assistant (51 tests), its Hindi support (33 tests), the custom-voice logic (30 tests), the offline voice engine in a real browser (13 tests) and the recorder (17 tests), apart from the real microphone, real voices and real AI calls.
 - The overlap code (12 tests passing).
 - The website's sign-in and sync, tested against a stand-in for Firestore (22 tests passing).
 - The site is live on GitHub Pages and can be installed like an app. It loads offline too.

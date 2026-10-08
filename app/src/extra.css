@@ -81,3 +81,48 @@ html[lang=hi] body{line-height:1.6}
 html[lang=hi] h1,html[lang=hi] h2,html[lang=hi] h3,html[lang=hi] .disp{letter-spacing:0;line-height:1.3}
 html[lang=hi] .kick{letter-spacing:.02em;text-transform:none}
 html[lang=hi] .btn,html[lang=hi] .seg button{letter-spacing:0}
+
+/* ---------- course setup wizard ---------- */
+#wiz{position:fixed;inset:0;z-index:22;background:var(--bg);background-image:var(--bgimg,none);background-attachment:fixed;background-size:cover;display:flex;justify-content:center}
+.wz{width:min(100%,560px);height:100%;display:flex;flex-direction:column}
+.wz-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 8px}
+.wz-t{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+.wz-t b{font-family:var(--f-display);font-size:1.1rem;line-height:1.25}
+.wz-h .icb.leave{width:auto;padding:0 10px;color:var(--bad)}
+.wz-bar{height:3px;background:var(--track);margin:0 16px;border-radius:3px;overflow:hidden}
+.wz-bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
+.wz-b{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px}
+.wz-in-b{display:flex;flex-direction:column;gap:14px}
+.wz-f{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 90%,transparent)}
+.wz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wz-list{display:flex;flex-direction:column;gap:10px}
+.wz-opt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:13px 14px;border:0;border-radius:16px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow),inset 0 0 0 1px var(--line);transition:box-shadow .15s,background .15s}
+.wz-opt .wz-ot{font-weight:600;overflow-wrap:anywhere}
+.wz-opt[aria-pressed="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.wz-card{gap:12px}
+.wz-chips{display:flex;flex-wrap:wrap;gap:8px}
+.wz-chip{border:0;border-radius:999px;padding:8px 13px;background:var(--surface2);color:var(--ink2);font-weight:600;font-size:.86rem;box-shadow:inset 0 0 0 1px var(--line);text-align:left}
+.wz-chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.wz-chip:disabled{opacity:.45}
+.wz-add{display:flex;gap:8px;align-items:center}
+.wz-add input,.wz-in,#wiz textarea{flex:1;min-width:0;min-height:44px;border-radius:12px;border:0;padding:0 12px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);font:inherit;font-size:16px;outline:none}
+#wiz textarea{padding:10px 12px;resize:vertical}
+.wz-add input:focus,.wz-in:focus,#wiz textarea:focus,#wiz .field input:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.wz-in{width:100%;flex:none;margin-top:-4px}
+.wz-sub{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.wz-sub:first-of-type{border-top:0}
+.wz-sub.off{opacity:.6}
+.wz-chk{display:flex;align-items:center;gap:10px;font-weight:600}
+.wz-chk input{width:20px;height:20px;accent-color:var(--accent)}
+.wz-rate button{font-size:.8rem}
+.wz-ph{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface2)}
+.wz-blk{display:grid;grid-template-columns:96px 74px minmax(0,1fr) auto;gap:8px;align-items:center}
+.wz-blk input,.wz-blk select{min-height:42px;border-radius:10px;border:0;padding:0 8px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);font:inherit;font-size:15px;min-width:0;width:100%}
+.wz-blk .wz-bk{grid-column:1/-1;margin-top:-4px}
+.perm{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.perm:first-child{border-top:0}
+.perms{display:flex;flex-direction:column}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 13px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:.9rem}
+.tool .ic{width:16px;height:16px}
+html[lang=hi] .wz-chip,html[lang=hi] .wz-opt{letter-spacing:0}

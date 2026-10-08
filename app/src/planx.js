@@ -114,6 +114,7 @@ function ringItem(o){
     <div class="grid2" style="width:100%">${o.side}</div></div>`;
   el.hidden=false;beep();clearInterval(ringTimer);let n=0;ringTimer=setInterval(()=>{if(++n>40)return stopRing();beep()},2200);
   if(window.AsstSpeak&&o.say)AsstSpeak(o.say);
+  notify(o.title,(o.kicker||'')+(o.time?' · '+o.time:''),'x|'+o.title);
 }
 function ringReminder(r){
   ringItem({kicker:r.kind==='alarm'?'Alarm':'Reminder',title:r.text,time:timeTxt(new Date(r.at)),sub:r.rep?REPS[r.rep]:'',say:r.kind==='alarm'?'Alarm. '+r.text:'Reminder. '+r.text,

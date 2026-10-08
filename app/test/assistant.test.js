@@ -18,7 +18,7 @@ const V = (name, lang) => ({ name, lang });
 (async () => {
   /* ---- panel, chat, undo ---- */
   let A = await H.open({});
-  A.click('[data-act=tpl]'); await H.sleep(100);
+  A.ev('applyTemplate()'); await H.sleep(100);
   ok('assistant button is visible', !A.d.getElementById('asstfab').hidden);
   A.click('#asstfab'); await H.sleep(50);
   ok('panel opens and the button hides', !A.d.getElementById('asst').hidden && A.d.getElementById('asstfab').hidden);
@@ -79,7 +79,7 @@ const V = (name, lang) => ({ name, lang });
   /* ---- settings view and voices ---- */
   const FX = speechFakes([], [V('Microsoft Heera - English (India)', 'en-IN'), V('Microsoft Ravi - English (India)', 'en-IN'), V('Google US English', 'en-US')]);
   let B = await H.open({ before: FX.before });
-  B.click('[data-act=tpl]'); await H.sleep(100);
+  B.ev('applyTemplate()'); await H.sleep(100);
   B.click('#asstfab'); await H.sleep(30); B.click('[data-asa=cfg]'); await H.sleep(30);
   ok('settings view shows voice and Smart mode', /Voice/.test(B.d.getElementById('as-cfg').textContent) && /Smart mode/.test(B.d.getElementById('as-cfg').textContent));
   B.click('[data-asa=gender][data-v=male]'); await H.sleep(30);
@@ -104,7 +104,7 @@ const V = (name, lang) => ({ name, lang });
   B.click('[data-asa=close]'); await H.sleep(30);
   ok('closing the panel stops everything', B.d.getElementById('asst').hidden && !B.ev('listening'));
   const D = await H.open({});
-  D.click('[data-act=tpl]'); D.click('#asstfab'); await H.sleep(30); D.click('#as-mic'); await H.sleep(50);
+  D.ev('applyTemplate()'); D.click('#asstfab'); await H.sleep(30); D.click('#as-mic'); await H.sleep(50);
   ok('no speech API: a clear message instead of a crash', /not supported/.test(text(D)) && D.errs.length === 0);
 
   /* ---- Smart mode (fake network) ---- */
@@ -113,7 +113,7 @@ const V = (name, lang) => ({ name, lang });
   const jr = (obj, ok_ = true, status = 200) => ({ ok: ok_, status, json: async () => obj });
   const tomorrow9 = () => { const d = new Date(Date.now() + 86400000), p = x => String(x).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} 09:00`; };
   const E = await H.open({ store: { 'pl.asst': JSON.stringify({ provider: 'gemini', key: 'KEY123' }) }, before: mkFetch((u) => jr({ candidates: [{ content: { parts: [{ text: '```json\n' + JSON.stringify({ reply: 'Done, I set it.', actions: [{ type: 'set_reminder', at: tomorrow9(), text: 'Revise graphs' }, { type: 'delete_everything' }, { type: 'set_accent', color: 'purple' }] }) + '\n```' }] } }] })) });
-  E.click('[data-act=tpl]'); await H.sleep(100);
+  E.ev('applyTemplate()'); await H.sleep(100);
   const s1 = await E.w.eval('respond("remind me to revise graphs tomorrow morning")');
   ok('Gemini request goes to the right place with the key in a header', /generativelanguage\.googleapis\.com\/v1beta\/models\/gemini-2\.5-flash:generateContent/.test(calls[0].url) && calls[0].o.headers['x-goog-api-key'] === 'KEY123' && !/KEY123/.test(calls[0].url));
   ok('the system prompt carries the app state but not the key', /Current data/.test(calls[0].o.body) && !/KEY123/.test(calls[0].o.body));
@@ -125,17 +125,34 @@ const V = (name, lang) => ({ name, lang });
   const ac = calls[calls.length - 1];
   ok('Anthropic request uses the browser-access header and a small model', ac.url === 'https://api.anthropic.com/v1/messages' && ac.o.headers['anthropic-dangerous-direct-browser-access'] === 'true' && /haiku/.test(ac.o.body) && s2.reply === 'Hello there');
   const G = await H.open({ store: { 'pl.asst': JSON.stringify({ provider: 'gemini', key: 'bad' }) }, before: mkFetch(() => jr({ error: { message: 'API key not valid' } }, false, 400)) });
-  G.click('[data-act=tpl]'); await H.sleep(50);
+  G.ev('applyTemplate()'); await H.sleep(50);
   const s3 = await G.w.eval('respond("dark mode")');
   ok('a bad key falls back to the built-in brain with a note', /built-in/.test(s3.reply) && G.d.documentElement.getAttribute('data-theme') === 'dark');
   const Hh = await H.open({ store: { 'pl.asst': JSON.stringify({ provider: 'gemini', key: 'k' }) }, before: mkFetch(() => { throw new TypeError('Failed to fetch'); }) });
   const s4 = await Hh.w.eval('respond("how do I log a session")');
   ok('offline: falls back and still answers', /Could not reach/.test(s4.reply) && /Log time/.test(s4.reply));
   const I = await H.open({ store: { 'pl.asst': JSON.stringify({ provider: 'gemini', key: 'k' }) }, before: mkFetch(() => jr({ candidates: [{ content: { parts: [{ text: JSON.stringify({ reply: 'Replacing.', actions: [{ type: 'new_schedule', mode: 'template' }] }) }] } }] })) });
-  I.click('[data-act=tpl]'); await H.sleep(50);
+  I.ev('applyTemplate()'); await H.sleep(50);
   const b0 = I.ev('S.plan.blocks.length');
   const s5 = await I.w.eval('respond("redo my whole schedule")');
-  ok('Smart mode also has to ask before replacing the schedule', /Go ahead/.test(s5.reply) && I.ev('S.plan.blocks.length') === b0 && I.ev('PENDING') !== null);
+  await H.sleep(400);
+  ok('Smart mode: a "template" request opens the setup wizard and leaves the schedule alone', I.ev('S.plan.blocks.length') === b0 && !!I.d.getElementById('wiz'));
+  const J = await H.open({ store: { 'pl.asst': JSON.stringify({ provider: 'gemini', key: 'k' }) }, before: mkFetch(() => jr({ candidates: [{ content: { parts: [{ text: JSON.stringify({ reply: 'Replacing.', actions: [{ type: 'new_schedule', mode: 'custom', subjects: [{ name: 'Maths', hours: 5 }] }] }) }] } }] })) });
+  J.ev('applyTemplate()'); await H.sleep(50);
+  const bj = J.ev('S.plan.blocks.length');
+  const s6 = await J.w.eval('respond("redo my whole schedule with maths")');
+  ok('Smart mode still has to ask before replacing the schedule with a custom one', /Go ahead/.test(s6.reply) && J.ev('S.plan.blocks.length') === bj && J.ev('PENDING') !== null);
+  const K = await H.open({});
+  for (const q of ['set up my course', 'make me a timetable', 'I want to change my exam']) {
+    const r = await K.w.eval('respond(' + JSON.stringify(q) + ')');
+    await H.sleep(400);
+    ok('"' + q + '" opens the setup wizard', !!K.d.getElementById('wiz') && /set/i.test(r.reply || ''));
+    K.ev('closeWizard && closeWizard(true)');
+  }
+  const kb1 = await K.w.eval('respond("which apps can you track")');
+  ok('the knowledge base answers about study tools', /tool|app/i.test(kb1.reply) && /consent|permission|once|ask/i.test(kb1.reply));
+  const kb2 = await K.w.eval('respond("what permissions do you need")');
+  ok('the knowledge base answers about permissions', /notification/i.test(kb2.reply));
 
   console.log('\n' + n + ' assistant tests passed');
   process.exit(0);

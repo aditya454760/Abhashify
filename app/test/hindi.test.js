@@ -8,7 +8,7 @@ const body = A => { const c = A.d.body.cloneNode(true); c.querySelectorAll('scri
 (async () => {
   /* ---- switching the whole app ---- */
   let A = await H.open({});
-  A.click('[data-act=tpl]'); await H.sleep(100);
+  A.ev('applyTemplate()'); await H.sleep(100);
   const enText = body(A);
   ok('English is the default', A.ev('LANG') === 'en' && A.d.documentElement.lang === 'en');
   A.ev("setLang('hi')"); await H.sleep(80);
@@ -19,7 +19,7 @@ const body = A => { const c = A.d.body.cloneNode(true); c.querySelectorAll('scri
 
   /* ---- language remembered on reload ---- */
   A = await H.open({ store: { 'pl.lang': '"hi"' } });
-  A.click('[data-act=tpl]'); await H.sleep(100);
+  A.ev('applyTemplate()'); await H.sleep(100);
   ok('Hindi is remembered', A.ev('LANG') === 'hi' && dev.test(body(A)));
   ok('Hindi uses a Devanagari-capable font stack', /Devanagari/.test(A.ev("getComputedStyle(document.body).fontFamily") + A.d.head.innerHTML));
 
@@ -95,7 +95,7 @@ const body = A => { const c = A.d.body.cloneNode(true); c.querySelectorAll('scri
     w.speechSynthesis = { getVoices: () => [{ name: 'Google हिन्दी', lang: 'hi-IN' }, { name: 'Google US English', lang: 'en-US' }], addEventListener() {}, cancel() {}, speak(u) { spoken.push(u); setTimeout(() => u.onend && u.onend(), 5); } };
     w.SpeechRecognition = class { start() { recLang = this.lang; this.onstart && this.onstart(); } stop() {} abort() {} };
   } });
-  C.click('[data-act=tpl]'); await H.sleep(100);
+  C.ev('applyTemplate()'); await H.sleep(100);
   C.ev("speak('नमस्ते। आप कैसे हैं?')"); await H.sleep(60);
   ok('Hindi speech uses the Hindi language and voice', spoken.length >= 1 && spoken.every(u => u.lang === 'hi-IN') && /हिन्दी/.test(spoken[0].voice ? spoken[0].voice.name : ''));
   ok('the sentence splitter also splits on the Hindi full stop', spoken.length === 2);

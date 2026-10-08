@@ -30,7 +30,7 @@ const change = (A, sel, set) => { const el = A.d.querySelector(sel); set(el); el
 (async () => {
   const W = world(); const st = W.st;
   const A = await H.open({ before: W.before });
-  A.click('[data-act=tpl]'); await H.sleep(100);
+  A.ev('applyTemplate()'); await H.sleep(100);
   await openCfg(A);
   ok('settings show a custom voice section for Anu', /Custom voice for Anu/.test(A.d.getElementById('as-cfg').textContent) && !!A.d.getElementById('cv-files'));
   ok('the permission box starts unticked', !A.d.querySelector('[data-cv=consent]').checked);

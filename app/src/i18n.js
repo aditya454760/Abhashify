@@ -91,6 +91,7 @@ function setLang(l){
   try{render(false)}catch(e){}
   document.querySelectorAll('[data-act=lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===LANG)));
   if(typeof asstOpen!=='undefined'&&asstOpen)paintAssistant();
+  if(typeof W!=='undefined'&&W)try{wizPaint(true)}catch(e){}
   const fab=document.getElementById('asstfab');if(fab)fab.setAttribute('aria-label','Open assistant');
   applyLangToPage();
 }

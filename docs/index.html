@@ -318,6 +318,51 @@ html[lang=hi] body{line-height:1.6}
 html[lang=hi] h1,html[lang=hi] h2,html[lang=hi] h3,html[lang=hi] .disp{letter-spacing:0;line-height:1.3}
 html[lang=hi] .kick{letter-spacing:.02em;text-transform:none}
 html[lang=hi] .btn,html[lang=hi] .seg button{letter-spacing:0}
+
+/* ---------- course setup wizard ---------- */
+#wiz{position:fixed;inset:0;z-index:22;background:var(--bg);background-image:var(--bgimg,none);background-attachment:fixed;background-size:cover;display:flex;justify-content:center}
+.wz{width:min(100%,560px);height:100%;display:flex;flex-direction:column}
+.wz-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 10px 8px}
+.wz-t{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+.wz-t b{font-family:var(--f-display);font-size:1.1rem;line-height:1.25}
+.wz-h .icb.leave{width:auto;padding:0 10px;color:var(--bad)}
+.wz-bar{height:3px;background:var(--track);margin:0 16px;border-radius:3px;overflow:hidden}
+.wz-bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s}
+.wz-b{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px}
+.wz-in-b{display:flex;flex-direction:column;gap:14px}
+.wz-f{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 90%,transparent)}
+.wz-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wz-list{display:flex;flex-direction:column;gap:10px}
+.wz-opt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:13px 14px;border:0;border-radius:16px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow),inset 0 0 0 1px var(--line);transition:box-shadow .15s,background .15s}
+.wz-opt .wz-ot{font-weight:600;overflow-wrap:anywhere}
+.wz-opt[aria-pressed="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.wz-card{gap:12px}
+.wz-chips{display:flex;flex-wrap:wrap;gap:8px}
+.wz-chip{border:0;border-radius:999px;padding:8px 13px;background:var(--surface2);color:var(--ink2);font-weight:600;font-size:.86rem;box-shadow:inset 0 0 0 1px var(--line);text-align:left}
+.wz-chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.wz-chip:disabled{opacity:.45}
+.wz-add{display:flex;gap:8px;align-items:center}
+.wz-add input,.wz-in,#wiz textarea{flex:1;min-width:0;min-height:44px;border-radius:12px;border:0;padding:0 12px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);font:inherit;font-size:16px;outline:none}
+#wiz textarea{padding:10px 12px;resize:vertical}
+.wz-add input:focus,.wz-in:focus,#wiz textarea:focus,#wiz .field input:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.wz-in{width:100%;flex:none;margin-top:-4px}
+.wz-sub{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.wz-sub:first-of-type{border-top:0}
+.wz-sub.off{opacity:.6}
+.wz-chk{display:flex;align-items:center;gap:10px;font-weight:600}
+.wz-chk input{width:20px;height:20px;accent-color:var(--accent)}
+.wz-rate button{font-size:.8rem}
+.wz-ph{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface2)}
+.wz-blk{display:grid;grid-template-columns:96px 74px minmax(0,1fr) auto;gap:8px;align-items:center}
+.wz-blk input,.wz-blk select{min-height:42px;border-radius:10px;border:0;padding:0 8px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink);font:inherit;font-size:15px;min-width:0;width:100%}
+.wz-blk .wz-bk{grid-column:1/-1;margin-top:-4px}
+.perm{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.perm:first-child{border-top:0}
+.perms{display:flex;flex-direction:column}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.tool{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 13px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:.9rem}
+.tool .ic{width:16px;height:16px}
+html[lang=hi] .wz-chip,html[lang=hi] .wz-opt{letter-spacing:0}
 </style>
 </head>
 <body>
@@ -505,9 +550,11 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const fmtDur=m=>{m=Math.round(m);if(m<=0)return '0m';const h=Math.floor(m/60),r=m%60;return h?(r?h+'h '+r+'m':h+'h'):r+'m'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+/* a block may carry from/to dates (the setup wizard makes one set of blocks per phase of the plan) */
+const blockLive=(b,ds)=>(!b.from||ds>=b.from)&&(!b.to||ds<=b.to);
 function blocksOn(plan,date){
-  const w=dow(date);
-  return plan.blocks.filter(b=>b.days.includes(w)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+  const w=dow(date),ds=ymd(date);
+  return plan.blocks.filter(b=>b.days.includes(w)&&blockLive(b,ds)).sort((a,b)=>toMin(a.st)-toMin(b.st));
 }
 function addHours(arr,start,len){
   while(len>0){const h=Math.floor(start/60)%24,room=60-(start%60),take=Math.min(room,len);arr[h]+=take;start+=take;len-=take}
@@ -530,7 +577,7 @@ function weekReport(S,ws,now){
     }
     for(const l of S.logs){
       if(l.d!==ds)continue;
-      a+=l.m;shA+=l.q||0;sub(l.s).a+=l.m;sub(l.s).shA+=l.q||0;addHours(actH,toMin(l.st),l.m);
+      a+=l.m;shA+=l.q||0;sub(l.s).a+=l.m;sub(l.s).shA+=l.q||0;if(l.src!=='phone')addHours(actH,toMin(l.st),l.m);   // phone totals have no real start time
       if(l.ps){const diff=toMin(l.st)-toMin(l.ps);tN++;if(Math.abs(diff)<=30)tOn++;tSum+=diff;sessions.push({d:ds,s:l.s,ps:l.ps,st:l.st,diff})}
     }
     days.push({ds,label:DAYS[i],p,due,a});tp+=p;td+=due;ta+=a;
@@ -549,8 +596,10 @@ function planner(S,today){
   const exam=plan.exam?parseYmd(plan.exam):null;
   const daysLeft=exam?Math.max(1,Math.round((exam-new Date(today.getFullYear(),today.getMonth(),today.getDate()))/864e5)):90;
   const contentDays=Math.max(7,daysLeft-(plan.buffer||0));
-  const bpw={};
-  for(const b of plan.blocks){if(b.k==='theory'||b.k==='practice')bpw[b.s]=(bpw[b.s]||0)+b.days.length}
+  const bpw={},tds=ymd(today);
+  let live=plan.blocks.filter(b=>blockLive(b,tds));
+  if(!live.length)live=plan.blocks.filter(b=>!b.to||b.to>=tds);   // before the plan starts: use the blocks that are still ahead
+  for(const b of live){if(b.k==='theory'||b.k==='practice'||b.k==='revision')bpw[b.s]=(bpw[b.s]||0)+b.days.length}
   const theory={};
   for(const m of S.materials){if(m.kind==='theory'&&m.total>0){const t=theory[m.subj]||(theory[m.subj]={d:0,n:0});t.d+=Math.min(m.done,m.total);t.n+=m.total}}
   const out=[];
@@ -633,15 +682,18 @@ const courseRef=()=>cref('courses',CL.cid);
 const sessCol=()=>ccol('courses',CL.cid,'people',CL.uid,'sessions');
 const matCol=()=>ccol('courses',CL.cid,'people',CL.uid,'materials');
 
+/* The security rules only allow a fixed set of fields on a session, so the study tool is carried inside `device`
+   as "<device id>|<tool>" (a tool session is stored with source "timer"). docLog undoes this. */
+const logDevice=l=>{const d=String(l.dev||deviceId()).split('|')[0];return (l.tool?d+'|'+String(l.tool).replace(/\|/g,'/'):d).slice(0,64)};
 function logDoc(l){
   const t1=l.t1>l.t0?l.t1:l.t0+60000;
   return {uid:CL.uid,s:l.t0,e:Math.min(t1,l.t0+43200000),subj:l.s||null,block:l.b||null,planStart:l.ps||null,sheets:l.q||0,
-    device:l.dev||deviceId(),source:l.src||'manual',mid:l.mid||null,mu:l.mu||0,tz:l.tz==null?tzOff():l.tz};
+    device:logDevice(l),source:l.src==='tool'?'timer':(l.src||'manual'),mid:l.mid||null,mu:l.mu||0,tz:l.tz==null?tzOff():l.tz};
 }
 function docLog(id,x){
   const t=new Date(x.s);
   return {id,d:ymd(t),st:fromMin(t.getHours()*60+t.getMinutes()),m:Math.max(1,Math.round((x.e-x.s)/60000)),b:x.block||null,s:x.subj||null,ps:x.planStart||null,pm:null,
-    q:x.sheets||0,mid:x.mid||null,mu:x.mu||0,t0:x.s,t1:x.e,dev:x.device,src:x.source,tz:x.tz};
+    q:x.sheets||0,mid:x.mid||null,mu:x.mu||0,t0:x.s,t1:x.e,dev:String(x.device||'').split('|')[0],src:(String(x.device||'').includes('|')&&x.source==='timer')?'tool':x.source,tz:x.tz,tool:String(x.device||'').split('|').slice(1).join('|')||null};
 }
 const matDoc=m=>({title:String(m.title||'Untitled').slice(0,160),subj:m.subj||null,kind:m.kind||'theory',unit:m.unit||'pages',total:+m.total||0,done:+m.done||0,file:m.file||null});
 const docMat=(id,x)=>({id,title:x.title,subj:x.subj||null,kind:x.kind,unit:x.unit||'pages',total:x.total||0,done:x.done||0,file:x.file||null,asset:null});
@@ -698,6 +750,7 @@ function applyRaw(){
   GATE=null;
   const first=firstApply;firstApply=false;
   render(first);
+  if(first)setTimeout(()=>{try{finishToolRun()}catch(e){}},800);
 }
 function subscribe(){
   CL.unsubs.forEach(u=>u());CL.unsubs=[];
@@ -716,9 +769,9 @@ async function listCourses(){
     lsSet(key,list);return list;
   }catch(e){console.error(e);return lsGet(key,[])}
 }
-async function createCourse(name){
+async function createCourse(name,plan){
   const id='c'+uid()+uid();
-  await FB.setDoc(cref('courses',id),{name:String(name||'My course').slice(0,80),ownerUid:CL.uid,members:[],plan:defaultPlan(),updatedAt:FB.serverTimestamp()});
+  await FB.setDoc(cref('courses',id),{name:String(name||'My course').slice(0,80),ownerUid:CL.uid,members:[],plan:plan?JSON.parse(JSON.stringify(plan)):defaultPlan(),updatedAt:FB.serverTimestamp()});
   return id;
 }
 async function openCourse(cid){
@@ -772,6 +825,7 @@ async function deleteCourseData(){
 }
 function enterLocal(){
   GATE=null;loadLocal();firstApply=true;render();
+  setTimeout(()=>{try{finishToolRun()}catch(e){}},800);
 }
 /* ---------- language: English and Hindi ----------
    The screens are written in English. When Hindi is on, every piece of text that lands on the page is
@@ -866,6 +920,7 @@ function setLang(l){
   try{render(false)}catch(e){}
   document.querySelectorAll('[data-act=lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===LANG)));
   if(typeof asstOpen!=='undefined'&&asstOpen)paintAssistant();
+  if(typeof W!=='undefined'&&W)try{wizPaint(true)}catch(e){}
   const fab=document.getElementById('asstfab');if(fab)fab.setAttribute('aria-label','Open assistant');
   applyLangToPage();
 }
@@ -877,11 +932,14 @@ Object.assign(HI,{
 'Sign in with Google':'Google से साइन इन करें',
 'Continue on this device only':'सिर्फ़ इसी डिवाइस पर जारी रखें',
 'Your data is private to your account. Only you can read it.':'आपका डेटा आपके खाते तक ही सीमित है। इसे सिर्फ़ आप पढ़ सकते हैं।',
-'Set up your schedule':'अपनी समय-सारणी बनाएँ',
 'Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.':'Abhyashify हर पढ़ाई के ब्लॉक पर अलार्म बजाता है, आपके असल पढ़े हुए घंटे दर्ज करता है, हर हफ़्ते उन्हें आपकी योजना से मिलाता है, और आपकी किताबों व शीट्स में कितना पूरा हुआ, इसका हिसाब रखता है।',
-'Start with the GATE DA 2027 template':'GATE DA 2027 टेम्पलेट से शुरू करें',
+'Set up your course':'अपना कोर्स सेट करें',
+'Pick your exam, confirm your date and tell me when you like to study. I build a day-by-day timetable up to your exam that you can follow as it is or change. Abhyashify then rings an alarm for each block, logs the hours you put in and checks them against your plan every week.':'अपनी परीक्षा चुनें, तारीख़ पक्की करें और बताएँ कि आप कब पढ़ना पसंद करते हैं। मैं परीक्षा तक की दिन-दर-दिन समय-सारणी बनाता हूँ, जिसे आप जैसी है वैसी चला सकते हैं या बदल सकते हैं। फिर Abhyashify हर ब्लॉक पर अलार्म बजाता है, आपके लगाए घंटे दर्ज करता है और हर हफ़्ते उन्हें आपकी योजना से मिलाता है।',
+'Set up my course':'मेरा कोर्स सेट करें',
+'Set up the course again (exam, subjects, timetable)':'कोर्स दोबारा सेट करें (परीक्षा, विषय, समय-सारणी)',
+'Study tools and permissions':'पढ़ाई के टूल और अनुमतियाँ',
+'Rebuild the timetable if I change the date':'तारीख़ बदलने पर समय-सारणी फिर से बनाएँ',
 'Start empty and build my own':'खाली शुरू करके अपनी बनाएँ',
-'The template sets the exam date to 6 February 2027 and adds a weekly timetable with nine subjects. Change anything afterwards.':'टेम्पलेट परीक्षा की तारीख़ 6 फ़रवरी 2027 रखता है और नौ विषयों की साप्ताहिक समय-सारणी जोड़ देता है। बाद में कुछ भी बदल सकते हैं।',
 /* header, tabs */
 'Today':'आज','Plan':'योजना','Materials':'सामग्री','Report':'रिपोर्ट','Sections':'अनुभाग',
 'Account':'खाता','Alarms':'अलार्म','Open assistant':'सहायक खोलें','Close':'बंद करें',
@@ -1034,6 +1092,455 @@ PAT.pop();
 Object.assign(HI,{'Paper':'पेपर','Mint':'मिंट','Sky':'आसमानी','Blush':'गुलाबी-सी','Lavender':'लैवेंडर','Slate':'स्लेट','Sunrise':'सूर्योदय','Aurora':'अरोरा','Midnight':'आधी रात','Black':'काला'});
 const HI_COL={indigo:'नीला-बैंगनी',blue:'नीला',teal:'हरा-नीला',green:'हरा',lime:'हल्का हरा',yellow:'पीला',gold:'सुनहरा',orange:'नारंगी',red:'लाल',pink:'गुलाबी',magenta:'मैजेंटा',purple:'बैंगनी',violet:'जामुनी',brown:'भूरा',grey:'स्लेटी',gray:'स्लेटी',slate:'स्लेटी',cyan:'आसमानी-हरा',navy:'गहरा नीला',maroon:'मरून',white:'सफ़ेद',black:'काला',cream:'क्रीम',beige:'क्रीम'};
 const colName=n=>{n=String(n||'');if(LANG!=='hi')return n;const k=n.toLowerCase();if(HI_COL[k])return HI_COL[k];const c=k.charAt(0).toUpperCase()+k.slice(1);return HI[c]||n};
+
+/* ---------- exam catalogue for the course-setup wizard ----------
+   Every exam family has variants (GATE: CS, DA, ECE ...). A variant carries a preloaded subject list, optional
+   groups the student picks from ("choose your optional subject"), and typical study hours and mock-test length.
+   `when` and `wm` (months) only describe when the exam is *usually* held. They are a hint for the student to
+   check against the official notice. The wizard never treats them as the real date.
+   Subject strings: "English name|हिन्दी नाम|importance 1-5; ..." */
+const SUBJ=str=>str.split(';').map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split('|');return {name:p[0].trim(),hi:(p[1]||'').trim(),w:Math.min(5,Math.max(1,+p[2]||3))}});
+const OPTG=(q,qh,n,min,list)=>({q,qh,n,min,l:SUBJ(list)});
+const VAR=(id,name,hi,when,wm,hrs,mk,subjects,opts)=>({id,name,hi,when,wm,hrs,mk,s:SUBJ(subjects),o:opts||[]});
+const GA='General Aptitude|सामान्य अभिक्षमता|3';
+const GATE_V=(id,name,hi,subjects,opts)=>VAR(id,name,hi,'Usually early February (some years late January). The dates change every year.',[2],[4,7],[180,100],subjects+';'+GA+';Revision & full mocks|रिवीज़न और पूरे मॉक|3',opts);
+const SSB_OPT=OPTG('Also include these?','इन्हें भी जोड़ें?',2,0,'SSB interview preparation|एसएसबी इंटरव्यू की तैयारी|3;Physical fitness|शारीरिक फिटनेस|3');
+
+const EXAMS=[
+{id:'jee',name:'JEE',hi:'जेईई',d:'Engineering and architecture entrance',dh:'इंजीनियरिंग और आर्किटेक्चर प्रवेश परीक्षा',tools:'pw,unacad,khan,ncert,yt,drive,tg',v:[
+ VAR('main','JEE Main (B.E. / B.Tech)','जेईई मेन (बी.ई. / बी.टेक)','Usually January and April sessions.',[1,4],[5,8],[180,300],
+  'Physics|भौतिकी|4;Chemistry|रसायन विज्ञान|4;Mathematics|गणित|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('adv','JEE Advanced','जेईई एडवांस्ड','Usually May or June, after JEE Main.',[5,6],[6,9],[180,360],
+  'Physics|भौतिकी|5;Chemistry|रसायन विज्ञान|4;Mathematics|गणित|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('both','JEE Main + Advanced','जेईई मेन + एडवांस्ड','Main usually January and April, Advanced May or June.',[1,4,5],[6,9],[180,300],
+  'Physics|भौतिकी|5;Chemistry|रसायन विज्ञान|4;Mathematics|गणित|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('arch','JEE Main Paper 2A (B.Arch)','जेईई मेन पेपर 2A (बी.आर्क)','Usually the January and April sessions.',[1,4],[3,5],[180,400],
+  'Mathematics|गणित|4;Aptitude test (architecture)|एप्टीट्यूड टेस्ट (आर्किटेक्चर)|4;Drawing test|ड्रॉइंग टेस्ट|4;Revision & full mocks|रिवीज़न और पूरे मॉक|2'),
+ VAR('plan','JEE Main Paper 2B (B.Planning)','जेईई मेन पेपर 2B (बी.प्लानिंग)','Usually the January and April sessions.',[1,4],[3,5],[180,400],
+  'Mathematics|गणित|4;Aptitude test|एप्टीट्यूड टेस्ट|4;Planning-based questions|प्लानिंग आधारित प्रश्न|4;Revision & full mocks|रिवीज़न और पूरे मॉक|2'),
+ VAR('aat','JEE Advanced + AAT (architecture)','जेईई एडवांस्ड + एएटी (आर्किटेक्चर)','Advanced usually May or June, the architecture test just after.',[5,6],[5,8],[180,360],
+  'Physics|भौतिकी|4;Chemistry|रसायन विज्ञान|4;Mathematics|गणित|5;Architecture aptitude test (drawing, 3D perception)|आर्किटेक्चर एप्टीट्यूड टेस्ट (ड्रॉइंग, 3D समझ)|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'neet',name:'NEET',hi:'नीट',d:'Medical entrance (UG and PG)',dh:'मेडिकल प्रवेश परीक्षा (UG और PG)',tools:'pw,unacad,khan,ncert,yt,drive,tg',v:[
+ VAR('ug','NEET UG','नीट यूजी','Usually early May.',[5],[6,9],[180,720],
+  'Physics|भौतिकी|4;Chemistry|रसायन विज्ञान|4;Botany|वनस्पति विज्ञान|5;Zoology|जंतु विज्ञान|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('pg','NEET PG','नीट पीजी','The date changes a lot between years. In recent years it was in summer.',[],[4,7],[210,800],
+  'Anatomy|एनाटॉमी|3;Physiology|फिजियोलॉजी|3;Biochemistry|बायोकैमिस्ट्री|3;Pathology|पैथोलॉजी|5;Pharmacology|फार्माकोलॉजी|4;Microbiology|माइक्रोबायोलॉजी|4;Forensic Medicine|फॉरेंसिक मेडिसिन|2;Community Medicine (PSM)|कम्युनिटी मेडिसिन (PSM)|4;Medicine|मेडिसिन|5;Surgery|सर्जरी|5;Obstetrics & Gynaecology|प्रसूति एवं स्त्री रोग|5;Paediatrics|बाल रोग|4;Orthopaedics|ऑर्थोपेडिक्स|2;ENT|ईएनटी|2;Ophthalmology|नेत्र रोग|2;Dermatology|त्वचा रोग|1;Psychiatry|मनोचिकित्सा|1;Anaesthesia|एनेस्थीसिया|2;Radiology|रेडियोलॉजी|2;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'gate',name:'GATE',pf:'GATE',hi:'गेट',d:'Postgraduate engineering and science entrance (M.Tech, IISc, PSUs)',dh:'एम.टेक, IISc और PSU के लिए इंजीनियरिंग/विज्ञान परीक्षा',tools:'nptel,gato,yt,tb,pw,drive,tg',v:[
+ GATE_V('cs','CS (Computer Science & IT)','सीएस (कंप्यूटर साइंस और आईटी)','Engineering Mathematics (discrete, linear algebra, calculus, probability)|इंजीनियरिंग गणित|4;Digital Logic|डिजिटल लॉजिक|3;Computer Organization & Architecture|कंप्यूटर संगठन और आर्किटेक्चर|4;Programming & Data Structures|प्रोग्रामिंग और डेटा स्ट्रक्चर|5;Algorithms|एल्गोरिदम|5;Theory of Computation|थ्योरी ऑफ कम्प्यूटेशन|4;Compiler Design|कंपाइलर डिज़ाइन|3;Operating Systems|ऑपरेटिंग सिस्टम|5;Databases|डेटाबेस|5;Computer Networks|कंप्यूटर नेटवर्क|4'),
+ GATE_V('da','DA (Data Science & AI)','डीए (डेटा साइंस और एआई)','Probability & Statistics|प्रायिकता और सांख्यिकी|5;Linear Algebra|रैखिक बीजगणित|4;Calculus & Optimization|कैलकुलस और ऑप्टिमाइज़ेशन|3;Python Programming & DSA|पायथन प्रोग्रामिंग और DSA|3;Databases & Warehousing|डेटाबेस और वेयरहाउसिंग|2;Machine Learning|मशीन लर्निंग|5;Artificial Intelligence|आर्टिफिशियल इंटेलिजेंस|4'),
+ GATE_V('ece','ECE (Electronics & Communication)','ईसीई (इलेक्ट्रॉनिक्स और संचार)','Engineering Mathematics|इंजीनियरिंग गणित|3;Networks, Signals & Systems|नेटवर्क, सिग्नल और सिस्टम|5;Electronic Devices|इलेक्ट्रॉनिक डिवाइस|3;Analog Circuits|एनालॉग सर्किट|4;Digital Circuits|डिजिटल सर्किट|4;Control Systems|कंट्रोल सिस्टम|3;Communications|संचार|4;Electromagnetics|विद्युत चुम्बकत्व|3'),
+ GATE_V('ee','EE (Electrical)','ईई (इलेक्ट्रिकल)','Engineering Mathematics|इंजीनियरिंग गणित|3;Electric Circuits|विद्युत परिपथ|4;Electromagnetic Fields|विद्युत चुम्बकीय क्षेत्र|3;Signals & Systems|सिग्नल और सिस्टम|3;Electrical Machines|विद्युत मशीनें|5;Power Systems|पावर सिस्टम|5;Control Systems|कंट्रोल सिस्टम|4;Measurements|मापन|3;Analog & Digital Electronics|एनालॉग और डिजिटल इलेक्ट्रॉनिक्स|4;Power Electronics & Drives|पावर इलेक्ट्रॉनिक्स और ड्राइव|4'),
+ GATE_V('me','ME (Mechanical)','एमई (मैकेनिकल)','Engineering Mathematics|इंजीनियरिंग गणित|3;Engineering Mechanics|इंजीनियरिंग मैकेनिक्स|3;Mechanics of Materials|पदार्थों की मैकेनिक्स|4;Theory of Machines & Vibrations|थ्योरी ऑफ मशीन और कंपन|4;Machine Design|मशीन डिज़ाइन|4;Fluid Mechanics & Machines|द्रव यांत्रिकी और मशीनें|5;Heat Transfer|ऊष्मा स्थानांतरण|4;Thermodynamics|ऊष्मागतिकी|5;Thermal applications (engines, turbines, refrigeration)|तापीय अनुप्रयोग (इंजन, टरबाइन, रेफ्रिजरेशन)|3;Materials, Manufacturing & Industrial Engineering|पदार्थ, विनिर्माण और औद्योगिक इंजीनियरिंग|5'),
+ GATE_V('ce','CE (Civil)','सीई (सिविल)','Engineering Mathematics|इंजीनियरिंग गणित|3;Engineering Mechanics & Solid Mechanics|इंजीनियरिंग मैकेनिक्स और ठोस यांत्रिकी|4;Structural Analysis|संरचनात्मक विश्लेषण|4;Concrete & Steel Structures|कंक्रीट और स्टील संरचनाएँ|4;Construction Materials & Management|निर्माण सामग्री और प्रबंधन|2;Geotechnical Engineering|भू-तकनीकी इंजीनियरिंग|5;Fluid Mechanics & Hydrology|द्रव यांत्रिकी और जल विज्ञान|4;Environmental Engineering|पर्यावरण इंजीनियरिंग|4;Transportation Engineering|परिवहन इंजीनियरिंग|3;Geomatics (surveying)|जियोमैटिक्स (सर्वेक्षण)|2'),
+ GATE_V('ch','CH (Chemical)','सीएच (केमिकल)','Engineering Mathematics|इंजीनियरिंग गणित|3;Process Calculations & Thermodynamics|प्रोसेस कैलकुलेशन और ऊष्मागतिकी|4;Fluid Mechanics & Mechanical Operations|द्रव यांत्रिकी और यांत्रिक संक्रियाएँ|4;Heat Transfer|ऊष्मा स्थानांतरण|4;Mass Transfer|द्रव्यमान स्थानांतरण|4;Chemical Reaction Engineering|रासायनिक अभिक्रिया इंजीनियरिंग|4;Instrumentation & Process Control|इंस्ट्रूमेंटेशन और प्रोसेस कंट्रोल|3;Plant Design & Economics|प्लांट डिज़ाइन और अर्थशास्त्र|2;Chemical Technology|रासायनिक प्रौद्योगिकी|2'),
+ GATE_V('in','IN (Instrumentation)','आईएन (इंस्ट्रूमेंटेशन)','Engineering Mathematics|इंजीनियरिंग गणित|3;Electrical Circuits & Machines|विद्युत परिपथ और मशीनें|3;Signals & Systems|सिग्नल और सिस्टम|4;Control Systems|कंट्रोल सिस्टम|4;Analog & Digital Electronics|एनालॉग और डिजिटल इलेक्ट्रॉनिक्स|4;Measurements|मापन|5;Sensors & Industrial Instrumentation|सेंसर और औद्योगिक इंस्ट्रूमेंटेशन|4;Communication & Optical Instrumentation|संचार और ऑप्टिकल इंस्ट्रूमेंटेशन|3'),
+ GATE_V('bt','BT (Biotechnology)','बीटी (बायोटेक्नोलॉजी)','Engineering Mathematics|इंजीनियरिंग गणित|2;General Biotechnology|सामान्य बायोटेक्नोलॉजी|4;Biochemistry|बायोकैमिस्ट्री|4;Molecular Biology & Genetics|आणविक जीव विज्ञान और आनुवंशिकी|5;Cell Biology|कोशिका विज्ञान|3;Microbiology|माइक्रोबायोलॉजी|3;Immunology|प्रतिरक्षा विज्ञान|3;Bioprocess Engineering|बायोप्रोसेस इंजीनियरिंग|4;Bioinformatics|बायोइन्फॉर्मेटिक्स|3'),
+ GATE_V('pi','PI (Production & Industrial)','पीआई (प्रोडक्शन और इंडस्ट्रियल)','Engineering Mathematics|इंजीनियरिंग गणित|3;General Engineering (mechanics, materials, thermo)|सामान्य इंजीनियरिंग (मैकेनिक्स, पदार्थ, ऊष्मा)|3;Manufacturing Processes|विनिर्माण प्रक्रियाएँ|5;Metrology & Inspection|मेट्रोलॉजी और निरीक्षण|3;Machine Tools & Tool Engineering|मशीन टूल और टूल इंजीनियरिंग|4;Production Planning & Control|उत्पादन योजना और नियंत्रण|4;Operations Research|ऑपरेशन्स रिसर्च|4;Quality & Reliability|गुणवत्ता और विश्वसनीयता|3'),
+ VAR('xe','XE (Engineering Sciences)','एक्सई (इंजीनियरिंग साइंसेज़)','Usually early February.',[2],[4,7],[180,100],
+  'Engineering Mathematics|इंजीनियरिंग गणित|4;Fluid Mechanics|द्रव यांत्रिकी|3;'+GA+';Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your two optional sections','अपने दो वैकल्पिक सेक्शन चुनें',2,2,'Materials Science|मटेरियल साइंस|4;Solid Mechanics|ठोस यांत्रिकी|4;Thermodynamics|ऊष्मागतिकी|4;Polymer Science & Engineering|पॉलीमर साइंस और इंजीनियरिंग|4;Food Technology|खाद्य प्रौद्योगिकी|4;Atmospheric & Oceanic Sciences|वायुमंडलीय और समुद्री विज्ञान|4')]),
+ VAR('xl','XL (Life Sciences)','एक्सएल (लाइफ साइंसेज़)','Usually early February.',[2],[4,7],[180,100],
+  'Chemistry|रसायन विज्ञान|4;'+GA+';Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your two optional sections','अपने दो वैकल्पिक सेक्शन चुनें',2,2,'Biochemistry|बायोकैमिस्ट्री|4;Botany|वनस्पति विज्ञान|4;Microbiology|माइक्रोबायोलॉजी|4;Zoology|जंतु विज्ञान|4;Food Technology|खाद्य प्रौद्योगिकी|4')])]},
+
+{id:'upsc',name:'UPSC',hi:'यूपीएससी',d:'Civil Services and engineering services',dh:'सिविल सेवा और इंजीनियरिंग सेवा',tools:'yt,unacad,ncert,drive,tg',v:[
+ VAR('cse','Civil Services (IAS): Prelims + Mains','सिविल सेवा (IAS): प्रारंभिक + मुख्य','Prelims is usually late May or June, Mains about three months later.',[5,6],[6,9],[120,200],
+  'Indian Polity & Governance|भारतीय राजव्यवस्था और शासन|5;History, Art & Culture|इतिहास, कला और संस्कृति|5;Geography|भूगोल|5;Indian Economy|भारतीय अर्थव्यवस्था|5;Environment & Ecology|पर्यावरण और पारिस्थितिकी|4;Science & Technology|विज्ञान और प्रौद्योगिकी|3;International Relations|अंतर्राष्ट्रीय संबंध|4;Internal Security & Disaster Management|आंतरिक सुरक्षा और आपदा प्रबंधन|3;Ethics, Integrity & Aptitude|नीतिशास्त्र, सत्यनिष्ठा और अभिक्षमता|4;Essay|निबंध|3;CSAT (aptitude, comprehension, reasoning)|सीसैट (अभिक्षमता, बोधगम्यता, तर्क)|3;Current Affairs|समसामयिकी|4;Answer writing practice|उत्तर लेखन अभ्यास|4',
+  [OPTG('Choose your optional subject','अपना वैकल्पिक विषय चुनें',1,1,'Agriculture|कृषि|4;Animal Husbandry & Veterinary Science|पशुपालन एवं पशु चिकित्सा विज्ञान|4;Anthropology|मानवविज्ञान|4;Botany|वनस्पति विज्ञान|4;Chemistry|रसायन विज्ञान|4;Civil Engineering|सिविल इंजीनियरिंग|4;Commerce & Accountancy|वाणिज्य और लेखा|4;Economics|अर्थशास्त्र|4;Electrical Engineering|इलेक्ट्रिकल इंजीनियरिंग|4;Geography|भूगोल (वैकल्पिक)|4;Geology|भूविज्ञान|4;History|इतिहास (वैकल्पिक)|4;Law|विधि|4;Management|प्रबंधन|4;Mathematics|गणित|4;Mechanical Engineering|मैकेनिकल इंजीनियरिंग|4;Medical Science|चिकित्सा विज्ञान|4;Philosophy|दर्शनशास्त्र|4;Physics|भौतिकी|4;Political Science & International Relations|राजनीति विज्ञान और अंतर्राष्ट्रीय संबंध|4;Psychology|मनोविज्ञान|4;Public Administration|लोक प्रशासन|4;Sociology|समाजशास्त्र|4;Statistics|सांख्यिकी|4;Zoology|जंतु विज्ञान|4;Literature of a language|भाषा का साहित्य|4')]),
+ VAR('pre','Civil Services (IAS): Prelims only','सिविल सेवा (IAS): केवल प्रारंभिक','Usually late May or June.',[5,6],[6,9],[120,200],
+  'Indian Polity & Governance|भारतीय राजव्यवस्था और शासन|5;History, Art & Culture|इतिहास, कला और संस्कृति|5;Geography|भूगोल|5;Indian Economy|भारतीय अर्थव्यवस्था|5;Environment & Ecology|पर्यावरण और पारिस्थितिकी|4;Science & Technology|विज्ञान और प्रौद्योगिकी|3;CSAT (aptitude, comprehension, reasoning)|सीसैट (अभिक्षमता, बोधगम्यता, तर्क)|3;Current Affairs|समसामयिकी|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('ese','Engineering Services (ESE / IES) Stage 1','इंजीनियरिंग सेवा (ESE / IES) चरण 1','The date changes every year. Check the UPSC notice.',[],[5,8],[120,200],
+  'General Studies & Engineering Aptitude|सामान्य अध्ययन और इंजीनियरिंग अभिक्षमता|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your engineering branch','अपनी इंजीनियरिंग शाखा चुनें',1,1,'Civil Engineering (Paper I & II)|सिविल इंजीनियरिंग (पेपर I और II)|5;Mechanical Engineering (Paper I & II)|मैकेनिकल इंजीनियरिंग (पेपर I और II)|5;Electrical Engineering (Paper I & II)|इलेक्ट्रिकल इंजीनियरिंग (पेपर I और II)|5;Electronics & Telecommunication (Paper I & II)|इलेक्ट्रॉनिक्स और दूरसंचार (पेपर I और II)|5')])]},
+
+{id:'ssc',name:'SSC',hi:'एसएससी',d:'Staff Selection Commission exams',dh:'कर्मचारी चयन आयोग की परीक्षाएँ',tools:'yt,unacad,tb,drive,tg',v:[
+ VAR('cgl','SSC CGL','एसएससी सीजीएल','Dates change every year. Check the SSC calendar.',[],[4,7],[60,200],
+  'Quantitative Aptitude|संख्यात्मक अभिक्षमता|5;General Intelligence & Reasoning|सामान्य बुद्धिमत्ता और तर्क|5;English Language|अंग्रेज़ी भाषा|5;General Awareness|सामान्य जागरूकता|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Extra paper for some posts (Tier 2)','कुछ पदों के लिए अतिरिक्त पेपर (टियर 2)',1,0,'Statistics|सांख्यिकी|4;Finance & Economics|वित्त और अर्थशास्त्र|4')]),
+ VAR('chsl','SSC CHSL','एसएससी सीएचएसएल','Dates change every year. Check the SSC calendar.',[],[3,6],[60,200],
+  'Quantitative Aptitude|संख्यात्मक अभिक्षमता|4;General Intelligence & Reasoning|सामान्य बुद्धिमत्ता और तर्क|5;English Language|अंग्रेज़ी भाषा|5;General Awareness|सामान्य जागरूकता|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Skill test','स्किल टेस्ट',1,0,'Typing practice|टाइपिंग अभ्यास|3')]),
+ VAR('mts','SSC MTS','एसएससी एमटीएस','Dates change every year. Check the SSC calendar.',[],[3,5],[90,150],
+  'Numerical & Mathematical Ability|संख्यात्मक और गणितीय योग्यता|4;Reasoning Ability & Problem Solving|तर्क क्षमता और समस्या समाधान|5;General English|सामान्य अंग्रेज़ी|4;General Awareness|सामान्य जागरूकता|4;Revision & full mocks|रिवीज़न और पूरे मॉक|2'),
+ VAR('gd','SSC GD Constable','एसएससी जीडी कांस्टेबल','Dates change every year. Check the SSC calendar.',[],[3,5],[60,80],
+  'General Knowledge & Awareness|सामान्य ज्ञान और जागरूकता|4;Elementary Mathematics|प्रारंभिक गणित|4;Reasoning|तर्कशक्ति|5;English / Hindi|अंग्रेज़ी / हिन्दी|4;Physical fitness (running, PET)|शारीरिक फिटनेस (दौड़, PET)|4;Revision & full mocks|रिवीज़न और पूरे मॉक|2'),
+ VAR('cpo','SSC CPO (Sub-Inspector)','एसएससी सीपीओ (सब-इंस्पेक्टर)','Dates change every year. Check the SSC calendar.',[],[4,6],[120,200],
+  'General Intelligence & Reasoning|सामान्य बुद्धिमत्ता और तर्क|5;General Knowledge & Awareness|सामान्य ज्ञान और जागरूकता|4;Quantitative Aptitude|संख्यात्मक अभिक्षमता|4;English Comprehension|अंग्रेज़ी बोधगम्यता|5;Physical fitness (PET / PST)|शारीरिक फिटनेस (PET / PST)|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'nda',name:'NDA',hi:'एनडीए',d:'National Defence Academy and Naval Academy',dh:'राष्ट्रीय रक्षा अकादमी और नौसेना अकादमी',tools:'yt,unacad,ncert,drive,tg',v:[
+ VAR('nda','NDA & NA written exam','एनडीए और एनए लिखित परीक्षा','Held twice a year, usually April and September.',[4,9],[5,8],[150,300],
+  'Mathematics|गणित|5;English|अंग्रेज़ी|4;Physics|भौतिकी|3;Chemistry|रसायन विज्ञान|2;General Science (biology)|सामान्य विज्ञान (जीव विज्ञान)|2;History & Freedom Movement|इतिहास और स्वतंत्रता आंदोलन|2;Geography|भूगोल|2;Current Events|समसामयिक घटनाएँ|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3',[SSB_OPT])]},
+
+{id:'cds',name:'CDS',hi:'सीडीएस',d:'Combined Defence Services (officer entry)',dh:'संयुक्त रक्षा सेवा (अधिकारी प्रवेश)',tools:'yt,unacad,drive,tg',v:[
+ VAR('ima','CDS: IMA / INA / AFA (3 papers)','सीडीएस: IMA / INA / AFA (3 पेपर)','Held twice a year, usually April and September.',[4,9],[4,7],[120,100],
+  'English|अंग्रेज़ी|5;General Knowledge|सामान्य ज्ञान|4;Elementary Mathematics|प्रारंभिक गणित|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',[SSB_OPT]),
+ VAR('ota','CDS: OTA (2 papers)','सीडीएस: OTA (2 पेपर)','Held twice a year, usually April and September.',[4,9],[3,6],[120,100],
+  'English|अंग्रेज़ी|5;General Knowledge|सामान्य ज्ञान|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3',[SSB_OPT])]},
+
+{id:'cat',name:'CAT / MBA',hi:'कैट / एमबीए',d:'Management entrance exams',dh:'प्रबंधन प्रवेश परीक्षाएँ',tools:'yt,unacad,tb,drive,tg',v:[
+ VAR('cat','CAT','कैट','Usually the last Sunday of November.',[11],[3,6],[120,198],
+  'Quantitative Aptitude|संख्यात्मक अभिक्षमता|5;Data Interpretation & Logical Reasoning|डेटा इंटरप्रिटेशन और लॉजिकल रीज़निंग|5;Verbal Ability & Reading Comprehension|वर्बल एबिलिटी और रीडिंग कॉम्प्रिहेंशन|5;Revision & full mocks|रिवीज़न और पूरे मॉक|4'),
+ VAR('xat','XAT','एक्सएटी','Usually early January.',[1],[3,6],[180,100],
+  'Verbal & Logical Ability|वर्बल और लॉजिकल एबिलिटी|5;Decision Making|निर्णय क्षमता|4;Quantitative Ability & Data Interpretation|क्वांटिटेटिव एबिलिटी और डेटा इंटरप्रिटेशन|5;General Knowledge|सामान्य ज्ञान|3;Revision & full mocks|रिवीज़न और पूरे मॉक|4'),
+ VAR('cmat','CMAT','सीमैट','Dates change every year. Check the NTA notice.',[],[3,5],[180,400],
+  'Quantitative Techniques & Data Interpretation|क्वांटिटेटिव टेक्निक्स और डेटा इंटरप्रिटेशन|5;Logical Reasoning|लॉजिकल रीज़निंग|4;Language Comprehension|भाषा बोधगम्यता|4;General Awareness|सामान्य जागरूकता|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('nmat','NMAT','एनमैट','Held in a window of several weeks. Check the official site.',[],[3,5],[120,120],
+  'Language Skills|भाषा कौशल|4;Quantitative Skills|क्वांटिटेटिव स्किल्स|5;Logical Reasoning|लॉजिकल रीज़निंग|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('ipmat','IPMAT (integrated MBA)','आईपीमैट (इंटीग्रेटेड एमबीए)','Usually around May.',[5],[3,6],[120,100],
+  'Quantitative Ability|क्वांटिटेटिव एबिलिटी|5;Verbal Ability|वर्बल एबिलिटी|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'clat',name:'CLAT / Law',hi:'क्लैट / विधि',d:'Law entrance exams',dh:'विधि प्रवेश परीक्षाएँ',tools:'yt,unacad,drive,tg',v:[
+ VAR('ug','CLAT UG','क्लैट यूजी','Usually the first Sunday of December.',[12],[3,6],[120,120],
+  'English Language|अंग्रेज़ी भाषा|4;Current Affairs & General Knowledge|समसामयिकी और सामान्य ज्ञान|5;Legal Reasoning|लीगल रीज़निंग|5;Logical Reasoning|लॉजिकल रीज़निंग|4;Quantitative Techniques|क्वांटिटेटिव टेक्निक्स|2;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('pg','CLAT PG','क्लैट पीजी','Usually December.',[12],[3,6],[120,120],
+  'Constitutional Law|संवैधानिक विधि|5;Jurisprudence|विधिशास्त्र|4;Administrative Law|प्रशासनिक विधि|3;Law of Contracts|संविदा विधि|4;Law of Torts|अपकृत्य विधि|4;Family Law|पारिवारिक विधि|3;Criminal Law|आपराधिक विधि|4;Property Law|संपत्ति विधि|3;Company Law|कंपनी विधि|3;Public International Law|लोक अंतर्राष्ट्रीय विधि|3;Environmental Law|पर्यावरण विधि|2;Intellectual Property Law|बौद्धिक संपदा विधि|2;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('ailet','AILET (NLU Delhi)','एआईएलईटी (NLU दिल्ली)','Usually around December.',[12],[3,6],[90,150],
+  'English|अंग्रेज़ी|4;General Knowledge & Current Affairs|सामान्य ज्ञान और समसामयिकी|5;Legal Aptitude|लीगल एप्टीट्यूड|5;Reasoning|तर्कशक्ति|4;Elementary Mathematics|प्रारंभिक गणित|2;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'ca',name:'CA',hi:'सीए',d:'Chartered Accountancy (ICAI)',dh:'चार्टर्ड अकाउंटेंसी (ICAI)',tools:'yt,drive,tg',v:[
+ VAR('fnd','CA Foundation','सीए फाउंडेशन','ICAI holds it more than once a year. Check the ICAI schedule.',[1,5,9],[4,7],[180,100],
+  'Principles & Practice of Accounting|अकाउंटिंग के सिद्धांत और व्यवहार|5;Business Laws|व्यावसायिक विधि|4;Quantitative Aptitude (maths, reasoning, statistics)|क्वांटिटेटिव एप्टीट्यूड (गणित, तर्क, सांख्यिकी)|4;Business Economics|व्यावसायिक अर्थशास्त्र|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('int1','CA Intermediate: Group 1','सीए इंटरमीडिएट: ग्रुप 1','ICAI holds it more than once a year. Check the ICAI schedule.',[1,5,9],[5,8],[180,100],
+  'Advanced Accounting|एडवांस्ड अकाउंटिंग|5;Corporate & Other Laws|कॉर्पोरेट और अन्य विधि|4;Taxation (income tax & GST)|कराधान (आयकर और GST)|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('int2','CA Intermediate: Group 2','सीए इंटरमीडिएट: ग्रुप 2','ICAI holds it more than once a year. Check the ICAI schedule.',[1,5,9],[5,8],[180,100],
+  'Cost & Management Accounting|लागत और प्रबंधन लेखांकन|5;Auditing & Ethics|अंकेक्षण और नैतिकता|5;Financial Management & Strategic Management|वित्तीय प्रबंधन और रणनीतिक प्रबंधन|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('int','CA Intermediate: both groups','सीए इंटरमीडिएट: दोनों ग्रुप','ICAI holds it more than once a year. Check the ICAI schedule.',[1,5,9],[6,9],[180,100],
+  'Advanced Accounting|एडवांस्ड अकाउंटिंग|5;Corporate & Other Laws|कॉर्पोरेट और अन्य विधि|4;Taxation (income tax & GST)|कराधान (आयकर और GST)|5;Cost & Management Accounting|लागत और प्रबंधन लेखांकन|5;Auditing & Ethics|अंकेक्षण और नैतिकता|5;Financial Management & Strategic Management|वित्तीय प्रबंधन और रणनीतिक प्रबंधन|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('fin','CA Final: both groups','सीए फाइनल: दोनों ग्रुप','Usually May and November. Check the ICAI schedule.',[5,11],[6,9],[180,100],
+  'Financial Reporting|वित्तीय रिपोर्टिंग|5;Advanced Financial Management|एडवांस्ड फाइनेंशियल मैनेजमेंट|5;Advanced Auditing & Professional Ethics|एडवांस्ड ऑडिटिंग और व्यावसायिक नैतिकता|5;Corporate & Economic Laws|कॉर्पोरेट और आर्थिक विधि|4;Strategic Cost & Performance Management|रणनीतिक लागत और प्रदर्शन प्रबंधन|5;Direct Tax Laws & International Taxation|प्रत्यक्ष कर विधि और अंतर्राष्ट्रीय कराधान|5;Indirect Tax Laws|अप्रत्यक्ष कर विधि|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your elective paper','अपना इलेक्टिव पेपर चुनें',1,1,'Risk Management|जोखिम प्रबंधन|4;Financial Services & Capital Markets|वित्तीय सेवाएँ और पूँजी बाज़ार|4;International Taxation|अंतर्राष्ट्रीय कराधान|4;Economic Laws|आर्थिक विधि|4;Global Financial Reporting Standards|वैश्विक वित्तीय रिपोर्टिंग मानक|4;Multi-Disciplinary Case Study|बहु-विषयक केस स्टडी|4')])]},
+
+{id:'bank',name:'Banking',hi:'बैंकिंग',d:'IBPS, SBI and other bank exams',dh:'IBPS, SBI और अन्य बैंक परीक्षाएँ',tools:'yt,unacad,tb,drive,tg',v:[
+ VAR('po','Bank PO (IBPS / SBI)','बैंक पीओ (IBPS / SBI)','Dates change every year. Check the official notice.',[],[4,7],[60,100],
+  'Reasoning Ability|तर्क क्षमता|5;Quantitative Aptitude & Data Interpretation|संख्यात्मक अभिक्षमता और डेटा इंटरप्रिटेशन|5;English Language|अंग्रेज़ी भाषा|5;General & Financial Awareness|सामान्य और वित्तीय जागरूकता|4;Computer Aptitude|कंप्यूटर अभिक्षमता|2;Descriptive writing (letter, essay)|वर्णनात्मक लेखन (पत्र, निबंध)|2;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('clerk','Bank Clerk (IBPS / SBI)','बैंक क्लर्क (IBPS / SBI)','Dates change every year. Check the official notice.',[],[3,6],[60,100],
+  'Reasoning Ability|तर्क क्षमता|5;Numerical Ability|संख्यात्मक क्षमता|5;English Language|अंग्रेज़ी भाषा|5;General & Financial Awareness|सामान्य और वित्तीय जागरूकता|4;Computer Aptitude|कंप्यूटर अभिक्षमता|2;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'rail',name:'Railways (RRB)',hi:'रेलवे (RRB)',d:'RRB NTPC, Group D, ALP',dh:'RRB NTPC, ग्रुप D, ALP',tools:'yt,unacad,tb,drive,tg',v:[
+ VAR('ntpc','RRB NTPC','आरआरबी एनटीपीसी','Dates change every year. Check the RRB notice.',[],[3,6],[90,100],
+  'Mathematics|गणित|5;General Intelligence & Reasoning|सामान्य बुद्धिमत्ता और तर्क|5;General Awareness|सामान्य जागरूकता|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('gd','RRB Group D','आरआरबी ग्रुप D','Dates change every year. Check the RRB notice.',[],[3,5],[90,100],
+  'Mathematics|गणित|4;General Intelligence & Reasoning|सामान्य बुद्धिमत्ता और तर्क|4;General Science|सामान्य विज्ञान|5;General Awareness & Current Affairs|सामान्य जागरूकता और समसामयिकी|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('alp','RRB ALP / Technician','आरआरबी एएलपी / टेक्नीशियन','Dates change every year. Check the RRB notice.',[],[3,6],[75,75],
+  'Mathematics|गणित|4;General Intelligence & Reasoning|सामान्य बुद्धिमत्ता और तर्क|4;Basic Science & Engineering|मूल विज्ञान और इंजीनियरिंग|5;General Awareness|सामान्य जागरूकता|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'cuet',name:'CUET UG',hi:'सीयूईटी यूजी',d:'Central university entrance',dh:'केंद्रीय विश्वविद्यालय प्रवेश परीक्षा',tools:'yt,pw,unacad,ncert,drive,tg',v:[
+ VAR('ug','CUET UG','सीयूईटी यूजी','Usually May to June.',[5,6],[4,7],[60,250],
+  'General Test|सामान्य परीक्षा|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your language','अपनी भाषा चुनें',1,1,'English|अंग्रेज़ी|4;Hindi|हिन्दी|4;Other language|अन्य भाषा|4'),
+   OPTG('Choose your domain subjects (up to 5)','अपने डोमेन विषय चुनें (अधिकतम 5)',5,1,'Physics|भौतिकी|4;Chemistry|रसायन विज्ञान|4;Mathematics|गणित|4;Biology|जीव विज्ञान|4;Accountancy|लेखाशास्त्र|4;Business Studies|व्यवसाय अध्ययन|4;Economics|अर्थशास्त्र|4;History|इतिहास|4;Geography|भूगोल|4;Political Science|राजनीति विज्ञान|4;Psychology|मनोविज्ञान|4;Sociology|समाजशास्त्र|4;Computer Science / Informatics Practices|कंप्यूटर विज्ञान / इन्फॉर्मेटिक्स प्रैक्टिसेज़|4;Physical Education|शारीरिक शिक्षा|4;Legal Studies|विधि अध्ययन|4;Environmental Science|पर्यावरण विज्ञान|4')])]},
+
+{id:'net',name:'NET / JAM',hi:'नेट / जैम',d:'UGC NET, CSIR NET, IIT JAM',dh:'UGC NET, CSIR NET, IIT JAM',tools:'nptel,yt,khan,drive,tg',v:[
+ VAR('ugc','UGC NET','यूजीसी नेट','Usually twice a year, around June and December.',[6,12],[4,7],[180,300],
+  'Paper 1: Teaching & Research Aptitude|पेपर 1: शिक्षण और अनुसंधान अभिक्षमता|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your Paper 2 subject','अपना पेपर 2 विषय चुनें',1,1,'Computer Science & Applications|कंप्यूटर साइंस और एप्लिकेशन|5;Commerce|वाणिज्य|5;Economics|अर्थशास्त्र|5;English|अंग्रेज़ी|5;Hindi|हिन्दी|5;History|इतिहास|5;Political Science|राजनीति विज्ञान|5;Sociology|समाजशास्त्र|5;Education|शिक्षा|5;Management|प्रबंधन|5;Law|विधि|5;Philosophy|दर्शनशास्त्र|5;Psychology|मनोविज्ञान|5;Public Administration|लोक प्रशासन|5;Mathematics|गणित|5;Geography|भूगोल|5;Library & Information Science|पुस्तकालय एवं सूचना विज्ञान|5;Home Science|गृह विज्ञान|5;Physical Education|शारीरिक शिक्षा|5')]),
+ VAR('csir','CSIR NET','सीएसआईआर नेट','Usually twice a year, around June and December.',[6,12],[5,8],[180,200],
+  'General Aptitude|सामान्य अभिक्षमता|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your subject area','अपना विषय क्षेत्र चुनें',1,1,'Chemical Sciences|रासायनिक विज्ञान|5;Earth Sciences|पृथ्वी विज्ञान|5;Life Sciences|जीवन विज्ञान|5;Mathematical Sciences|गणितीय विज्ञान|5;Physical Sciences|भौतिक विज्ञान|5')]),
+ VAR('jphy','IIT JAM: Physics','आईआईटी जैम: भौतिकी','Usually early February.',[2],[5,8],[180,100],
+  'Mathematical Methods|गणितीय विधियाँ|4;Mechanics & General Properties of Matter|यांत्रिकी और पदार्थ के सामान्य गुण|4;Oscillations, Waves & Optics|दोलन, तरंगें और प्रकाशिकी|4;Electricity & Magnetism|विद्युत और चुम्बकत्व|5;Kinetic Theory & Thermodynamics|गैस गतिज सिद्धांत और ऊष्मागतिकी|4;Modern Physics|आधुनिक भौतिकी|5;Solid State & Electronics|ठोस अवस्था और इलेक्ट्रॉनिक्स|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('jchem','IIT JAM: Chemistry','आईआईटी जैम: रसायन विज्ञान','Usually early February.',[2],[5,8],[180,100],
+  'Physical Chemistry|भौतिक रसायन|5;Organic Chemistry|कार्बनिक रसायन|5;Inorganic Chemistry|अकार्बनिक रसायन|5;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('jmath','IIT JAM: Mathematics','आईआईटी जैम: गणित','Usually early February.',[2],[5,8],[180,100],
+  'Real Analysis|वास्तविक विश्लेषण|5;Calculus of One & Several Variables|एक और अनेक चरों का कैलकुलस|4;Differential Equations|अवकल समीकरण|4;Linear Algebra|रैखिक बीजगणित|5;Abstract Algebra|अमूर्त बीजगणित|4;Vector Calculus|सदिश कैलकुलस|3;Sequences & Series|अनुक्रम और श्रेणी|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('jstat','IIT JAM: Mathematical Statistics','आईआईटी जैम: गणितीय सांख्यिकी','Usually early February.',[2],[5,8],[180,100],
+  'Mathematics (calculus, linear algebra)|गणित (कैलकुलस, रैखिक बीजगणित)|3;Probability|प्रायिकता|5;Random Variables & Distributions|यादृच्छिक चर और बंटन|5;Estimation|आकलन|4;Testing of Hypotheses|परिकल्पना परीक्षण|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]},
+
+{id:'tet',name:'Teaching (CTET / TET)',hi:'शिक्षण (CTET / TET)',d:'Teacher eligibility tests',dh:'शिक्षक पात्रता परीक्षाएँ',tools:'yt,unacad,ncert,drive,tg',v:[
+ VAR('p1','CTET Paper 1 (classes 1 to 5)','सीटीईटी पेपर 1 (कक्षा 1 से 5)','Held once or twice a year. Check the CBSE notice.',[],[3,5],[150,150],
+  'Child Development & Pedagogy|बाल विकास और शिक्षाशास्त्र|5;Language I|भाषा I|4;Language II|भाषा II|4;Mathematics|गणित|4;Environmental Studies|पर्यावरण अध्ययन|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('p2','CTET Paper 2 (classes 6 to 8)','सीटीईटी पेपर 2 (कक्षा 6 से 8)','Held once or twice a year. Check the CBSE notice.',[],[3,5],[150,150],
+  'Child Development & Pedagogy|बाल विकास और शिक्षाशास्त्र|5;Language I|भाषा I|4;Language II|भाषा II|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Choose your subject group','अपना विषय समूह चुनें',1,1,'Mathematics & Science|गणित और विज्ञान|5;Social Studies / Social Science|सामाजिक अध्ययन / सामाजिक विज्ञान|5')])]},
+
+{id:'board',name:'School boards',hi:'स्कूल बोर्ड',d:'Class 10 and class 12',dh:'कक्षा 10 और कक्षा 12',tools:'yt,khan,ncert,pw,drive',v:[
+ VAR('c10','Class 10','कक्षा 10','Usually February to March.',[2,3],[3,5],[180,80],
+  'Mathematics|गणित|5;Science|विज्ञान|5;Social Science|सामाजिक विज्ञान|4;English|अंग्रेज़ी|4;Hindi / second language|हिन्दी / द्वितीय भाषा|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3'),
+ VAR('c12pcm','Class 12 Science (PCM)','कक्षा 12 विज्ञान (PCM)','Usually February to March.',[2,3],[4,7],[180,70],
+  'Physics|भौतिकी|5;Chemistry|रसायन विज्ञान|5;Mathematics|गणित|5;English|अंग्रेज़ी|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Fifth subject','पाँचवाँ विषय',1,0,'Computer Science|कंप्यूटर विज्ञान|4;Physical Education|शारीरिक शिक्षा|3;Hindi|हिन्दी|3')]),
+ VAR('c12pcb','Class 12 Science (PCB)','कक्षा 12 विज्ञान (PCB)','Usually February to March.',[2,3],[4,7],[180,70],
+  'Physics|भौतिकी|5;Chemistry|रसायन विज्ञान|5;Biology|जीव विज्ञान|5;English|अंग्रेज़ी|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Fifth subject','पाँचवाँ विषय',1,0,'Mathematics|गणित|4;Physical Education|शारीरिक शिक्षा|3;Hindi|हिन्दी|3')]),
+ VAR('c12com','Class 12 Commerce','कक्षा 12 वाणिज्य','Usually February to March.',[2,3],[3,6],[180,80],
+  'Accountancy|लेखाशास्त्र|5;Business Studies|व्यवसाय अध्ययन|4;Economics|अर्थशास्त्र|4;English|अंग्रेज़ी|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Fifth subject','पाँचवाँ विषय',1,0,'Mathematics|गणित|4;Informatics Practices|इन्फॉर्मेटिक्स प्रैक्टिसेज़|3;Physical Education|शारीरिक शिक्षा|3')]),
+ VAR('c12arts','Class 12 Humanities','कक्षा 12 मानविकी','Usually February to March.',[2,3],[3,6],[180,80],
+  'English|अंग्रेज़ी|3;Political Science|राजनीति विज्ञान|4;History|इतिहास|4;Geography|भूगोल|4;Revision & full mocks|रिवीज़न और पूरे मॉक|3',
+  [OPTG('Other subject','अन्य विषय',1,0,'Economics|अर्थशास्त्र|4;Sociology|समाजशास्त्र|4;Psychology|मनोविज्ञान|4;Hindi|हिन्दी|3')])]},
+
+{id:'psc',name:'State PSC',hi:'राज्य लोक सेवा आयोग',d:'State civil services',dh:'राज्य सिविल सेवाएँ',tools:'yt,unacad,ncert,drive,tg',v:[
+ VAR('psc','State PSC (prelims + mains)','राज्य PSC (प्रारंभिक + मुख्य)','Each state has its own schedule. Check your state commission.',[],[5,8],[120,200],
+  'History & Culture|इतिहास और संस्कृति|4;Geography|भूगोल|4;Polity & Governance|राजव्यवस्था और शासन|4;Economy|अर्थव्यवस्था|4;Science & Technology|विज्ञान और प्रौद्योगिकी|3;Environment|पर्यावरण|3;Your state: history, geography, economy|आपका राज्य: इतिहास, भूगोल, अर्थव्यवस्था|5;Aptitude & Reasoning|अभिक्षमता और तर्क|3;Current Affairs|समसामयिकी|4;Essay & answer writing|निबंध और उत्तर लेखन|3;Revision & full mocks|रिवीज़न और पूरे मॉक|3')]}
+];
+
+/* the starting tools offered in the "what do you study with" step */
+const TOOLS=[
+ {id:'yt',name:'YouTube',url:'https://www.youtube.com',pkg:'com.google.android.youtube'},
+ {id:'nptel',name:'NPTEL',url:'https://nptel.ac.in',pkg:''},
+ {id:'pw',name:'Physics Wallah (PW)',url:'https://www.pw.live',pkg:'xyz.penpencil.physicswala'},
+ {id:'unacad',name:'Unacademy',url:'https://unacademy.com',pkg:'com.unacademyapp'},
+ {id:'khan',name:'Khan Academy',url:'https://www.khanacademy.org',pkg:'org.khanacademy.android'},
+ {id:'tb',name:'Testbook',url:'https://testbook.com',pkg:'com.testbook.tbapp'},
+ {id:'gato',name:'GATE Overflow',url:'https://gateoverflow.in',pkg:''},
+ {id:'ncert',name:'NCERT books',url:'https://ncert.nic.in/textbook.php',pkg:''},
+ {id:'drive',name:'Google Drive (PDFs, notes)',url:'https://drive.google.com',pkg:'com.google.android.apps.docs'},
+ {id:'tg',name:'Telegram (study channels)',url:'https://web.telegram.org',pkg:'org.telegram.messenger'}
+];
+const TOOLS_HI={'NCERT books':'NCERT की किताबें','Google Drive (PDFs, notes)':'Google Drive (PDF, नोट्स)','Telegram (study channels)':'Telegram (पढ़ाई के चैनल)'};
+
+const WHEN_HI={
+"Usually January and April sessions.": "आम तौर पर जनवरी और अप्रैल के सत्र।",
+"Usually May or June, after JEE Main.": "आम तौर पर मई या जून, JEE Main के बाद।",
+"Main usually January and April, Advanced May or June.": "Main आम तौर पर जनवरी और अप्रैल में, Advanced मई या जून में।",
+"Usually the January and April sessions.": "आम तौर पर जनवरी और अप्रैल के सत्र।",
+"Advanced usually May or June, the architecture test just after.": "Advanced आम तौर पर मई या जून में, आर्किटेक्चर टेस्ट उसके तुरंत बाद।",
+"Usually early May.": "आम तौर पर मई की शुरुआत में।",
+"The date changes a lot between years. In recent years it was in summer.": "तारीख़ हर साल काफ़ी बदलती है। हाल के सालों में यह गर्मियों में हुई।",
+"Usually early February.": "आम तौर पर फ़रवरी की शुरुआत में।",
+"Usually early February (some years late January). The dates change every year.": "आम तौर पर फ़रवरी की शुरुआत में (कुछ सालों में जनवरी के अंत में)। तारीख़ें हर साल बदलती हैं।",
+"Prelims is usually late May or June, Mains about three months later.": "प्रिलिम्स आम तौर पर मई के अंत या जून में, मेन्स लगभग तीन महीने बाद।",
+"Usually late May or June.": "आम तौर पर मई के अंत या जून में।",
+"The date changes every year. Check the UPSC notice.": "तारीख़ हर साल बदलती है। UPSC की सूचना देखें।",
+"Dates change every year. Check the SSC calendar.": "तारीख़ें हर साल बदलती हैं। SSC का कैलेंडर देखें।",
+"Held twice a year, usually April and September.": "साल में दो बार, आम तौर पर अप्रैल और सितंबर में।",
+"Usually the last Sunday of November.": "आम तौर पर नवंबर का आख़िरी रविवार।",
+"Usually early January.": "आम तौर पर जनवरी की शुरुआत में।",
+"Dates change every year. Check the NTA notice.": "तारीख़ें हर साल बदलती हैं। NTA की सूचना देखें।",
+"Held in a window of several weeks. Check the official site.": "कई हफ़्तों की अवधि में होती है। आधिकारिक साइट देखें।",
+"Usually around May.": "आम तौर पर मई के आसपास।",
+"Usually the first Sunday of December.": "आम तौर पर दिसंबर का पहला रविवार।",
+"Usually December.": "आम तौर पर दिसंबर में।",
+"Usually around December.": "आम तौर पर दिसंबर के आसपास।",
+"ICAI holds it more than once a year. Check the ICAI schedule.": "ICAI इसे साल में एक से ज़्यादा बार कराता है। ICAI का कार्यक्रम देखें।",
+"Usually May and November. Check the ICAI schedule.": "आम तौर पर मई और नवंबर में। ICAI का कार्यक्रम देखें।",
+"Dates change every year. Check the official notice.": "तारीख़ें हर साल बदलती हैं। आधिकारिक सूचना देखें।",
+"Dates change every year. Check the RRB notice.": "तारीख़ें हर साल बदलती हैं। RRB की सूचना देखें।",
+"Usually May to June.": "आम तौर पर मई से जून।",
+"Usually twice a year, around June and December.": "आम तौर पर साल में दो बार, जून और दिसंबर के आसपास।",
+"Held once or twice a year. Check the CBSE notice.": "साल में एक या दो बार होती है। CBSE की सूचना देखें।",
+"Usually February to March.": "आम तौर पर फ़रवरी से मार्च।",
+"Each state has its own schedule. Check your state commission.": "हर राज्य का अपना कार्यक्रम होता है। अपने राज्य के आयोग की साइट देखें।"
+};
+/* Hindi for every name above, so the screens and the saved subjects can follow the language switch */
+(function(){
+  const put=(en,hi)=>{if(en&&hi&&!Object.prototype.hasOwnProperty.call(HI,en))HI[en]=hi};
+  for(const f of EXAMS){
+    put(f.name,f.hi);put(f.d,f.dh);
+    for(const v of f.v){put(v.name,v.hi);put(v.when,WHEN_HI[v.when]);for(const s of v.s)put(s.name,s.hi);for(const g of v.o){put(g.q,g.qh);for(const s of g.l)put(s.name,s.hi)}}
+  }
+  for(const k in TOOLS_HI)put(k,TOOLS_HI[k]);
+  put(SSB_OPT.q,SSB_OPT.qh);
+})();
+
+/* ---------- timetable generator (pure: no DOM, no state) ----------
+   genPlan(cfg) turns the answers from the setup wizard into a plan: subjects, weekly study blocks that apply to
+   a date range each (learn, revise, final stretch), dated mock tests, and a list of honest warnings.
+   cfg = { start:'YYYY-MM-DD', end:'YYYY-MM-DD', subjects:[{id,name,w,c}], hw, he (hours per weekday / weekend day),
+           off:[0-6] (Mon=0), periods:['morning','evening'...], sess (longest session, minutes), brk (break, minutes),
+           cover:0|1|2 (nothing / about half / most of the syllabus done), mock:{m,marks}, mocks:bool, alarm:bool, lead }  */
+const PERIODS=[
+ {id:'early',name:'Early morning',sub:'5 to 8',a:300,b:480},
+ {id:'morning',name:'Morning',sub:'8 to 12',a:480,b:720},
+ {id:'afternoon',name:'Afternoon',sub:'12 to 5',a:720,b:1020},
+ {id:'evening',name:'Evening',sub:'5 to 9',a:1020,b:1260},
+ {id:'night',name:'Night',sub:'9 to 11:30',a:1260,b:1410}
+];
+const MIX_ID='mix';
+const r5=n=>Math.round(n/5)*5;
+function slugify(name,taken){
+  let b=String(name||'subject').toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,22)||'subject',id=b,i=2;
+  while(taken&&taken.has(id))id=b+'-'+(i++);
+  if(taken)taken.add(id);
+  return id;
+}
+/* largest-remainder split of N sessions across items by priority p; returns {id:count} */
+function shareOut(items,N){
+  const out={},sum=items.reduce((a,x)=>a+x.p,0)||1,rem=[];let used=0;
+  for(const x of items){const q=x.p/sum*N;out[x.id]=Math.floor(q);used+=out[x.id];rem.push([q-out[x.id],x.id])}
+  rem.sort((a,b)=>b[0]-a[0]);
+  for(let i=0;used<N&&rem.length;i++,used++)out[rem[i%rem.length][1]]++;
+  // everyone gets at least one session a week while there are enough sessions
+  if(N>=items.length){
+    for(const x of items){
+      while(out[x.id]<1){
+        const big=Object.keys(out).sort((a,b)=>out[b]-out[a])[0];
+        if(out[big]<=1)break;out[big]--;out[x.id]++;
+      }
+    }
+  }
+  return out;
+}
+/* smooth weighted round robin: same subject spread as evenly as possible through the week */
+function spread(counts){
+  const ids=Object.keys(counts).filter(k=>counts[k]>0),tot=ids.reduce((a,k)=>a+counts[k],0),cur={},seq=[];
+  ids.forEach(k=>{cur[k]=0});
+  for(let i=0;i<tot;i++){
+    let best=null;
+    for(const k of ids){cur[k]+=counts[k];if(best===null||cur[k]>cur[best])best=k}
+    cur[best]-=tot;seq.push(best);
+  }
+  return seq;
+}
+/* place sessions for one day inside the chosen parts of the day. Returns {slots:[{st,m,mock}], lost} */
+function daySlots(minutes,cfg,mockMin){
+  const wins=PERIODS.filter(p=>(cfg.periods||[]).includes(p.id)).map(p=>({a:p.a,b:p.b}));
+  if(!wins.length)wins.push({a:480,b:1260});
+  const brk=cfg.brk==null?10:cfg.brk,slots=[];let floor=0,lost=0;
+  const put=(st,m,mock)=>{slots.push({st:fromMin(st),m,mock:!!mock});floor=st+m+brk};
+  if(mockMin){const st=Math.max(wins[0].a,floor);put(st,mockMin,true);minutes=Math.max(0,minutes-mockMin)}
+  if(minutes>0){
+    const mx=Math.max(30,cfg.sess||90);
+    let n=Math.max(1,Math.ceil(minutes/mx)),sz=r5(minutes/n);
+    while(n>1&&sz<30){n--;sz=r5(minutes/n)}
+    let left=minutes;
+    while(left>=15){
+      const want=Math.min(sz,left);
+      let done=false;
+      for(const w of wins){const s=Math.max(w.a,floor);if(s+want<=w.b){put(s,want);left-=want;done=true;break}}
+      if(done)continue;
+      for(const w of wins){const s=Math.max(w.a,floor),room=Math.floor((w.b-s)/5)*5;if(room>=30){const m=Math.min(want,room);put(s,m);left-=m;done=true;break}}
+      if(done)continue;
+      const s=Math.max(floor,wins[wins.length-1].b),room=Math.floor((1425-s)/5)*5;
+      if(room>=30){const m=Math.min(want,room);put(s,m);left-=m;continue}
+      lost+=left;break;
+    }
+  }
+  return {slots,lost};
+}
+function bestMockDay(off){
+  for(const d of [6,5,4,3,2,1,0])if(!off.includes(d))return d;
+  return 6;
+}
+function phaseSplit(D,cover){
+  const F=D>=28?Math.min(28,Math.max(10,Math.round(D*0.2))):Math.max(1,Math.round(D*0.5));
+  const R=Math.max(0,D-F);
+  let L=cover===0?Math.round(R*0.65):cover===1?Math.round(R*0.35):0;
+  if(L<14)L=0;
+  return {L,V:R-L,F};
+}
+const FOCUS={
+ learn:['Learn the syllabus','Mostly new theory, with practice at the end of each topic.','पाठ्यक्रम सीखना','ज़्यादातर नया सिद्धांत, हर टॉपिक के अंत में अभ्यास।'],
+ revise:['Revise and practise','Revision and problem practice, with regular mock tests.','रिवीज़न और अभ्यास','रिवीज़न और सवालों का अभ्यास, नियमित मॉक टेस्ट के साथ।'],
+ final:['Final stretch','Weekly mock tests, then fixing the weak spots they show.','अंतिम चरण','हर हफ़्ते मॉक टेस्ट, फिर उनमें दिखी कमज़ोरियों पर काम।']
+};
+function genPlan(cfg){
+  const warn=[],start=parseYmd(cfg.start),end=parseYmd(cfg.end);
+  const D=Math.round((end-start)/864e5);
+  if(!(D>=1))throw new Error('The end date must be after the start date.');
+  const taken=new Set(),subjects=cfg.subjects.map(s=>({id:s.id||slugify(s.name,taken),name:s.name,w:s.w||3,c:s.c||3}));
+  subjects.forEach(s=>taken.add(s.id));
+  const mocks=cfg.mocks!==false;
+  if(mocks&&!subjects.some(s=>s.id===MIX_ID))subjects.push({id:MIX_ID,name:'Revision & full mocks',w:3,c:3});
+  const study=subjects.filter(s=>s.id!==MIX_ID),hasMix=subjects.some(s=>s.id===MIX_ID);
+  if(!study.length)throw new Error('Add at least one subject.');
+  const off=(cfg.off||[]).filter(d=>d>=0&&d<=6);
+  if(off.length>=7)throw new Error('Leave at least one day for studying.');
+  const mock=cfg.mock||{m:180,marks:100},mockDay=bestMockDay(off);
+  const capOf=(d,isMockDay,withMock)=>{
+    if(off.includes(d))return 0;
+    let c=Math.round((d>=5?cfg.he:cfg.hw)*60/5)*5;
+    if(withMock&&isMockDay)c=Math.max(c,mock.m+60);
+    return c;
+  };
+  // phases
+  const {L,V,F}=phaseSplit(D,cfg.cover||0);
+  const phases=[];let cur=start;
+  const addPh=(id,days)=>{
+    if(days<=0)return;
+    const from=ymd(cur),to=ymd(addDays(cur,days-1));
+    phases.push({id,name:FOCUS[id][0],note:H(FOCUS[id][1],FOCUS[id][3]),from,to,days});
+    cur=addDays(cur,days);
+  };
+  addPh('learn',L);addPh('revise',V);addPh('final',F);
+  if((cfg.cover||0)===0&&D<120&&D>=1)warn.push(H('Only about '+Math.round(D/7)+' weeks for a full syllabus from scratch. The plan puts learning first and keeps a short revision window. Add hours or cut optional topics if it feels tight.','शुरू से पूरे पाठ्यक्रम के लिए सिर्फ़ लगभग '+Math.round(D/7)+' हफ़्ते हैं। प्लान में पहले सीखना रखा है और रिवीज़न का समय कम है। ज़्यादा लगे तो घंटे बढ़ाएँ या वैकल्पिक टॉपिक कम करें।'));
+  const blocks=[],tests=[];let lostTotal=0;
+  const droppedAll=new Set();
+  for(const ph of phases){
+    const withMock=mocks&&ph.id!=='learn';
+    const slotsByDay=[];let N=0;
+    for(let d=0;d<7;d++){
+      const isMock=withMock&&d===mockDay,cap=capOf(d,isMock,withMock);
+      if(!cap){slotsByDay.push([]);continue}
+      const r=daySlots(cap,cfg,isMock?mock.m:0);lostTotal+=r.lost;slotsByDay.push(r.slots);
+    }
+    const free=[];  // study slots (not the mock slot)
+    slotsByDay.forEach((sl,d)=>sl.forEach(x=>{if(!x.mock)free.push({d,x})}));
+    N=free.length;
+    const mixN=hasMix?(ph.id==='final'?Math.max(2,Math.round(N*0.18)):ph.id==='revise'?Math.max(1,Math.round(N*0.1)):0):0;
+    const sN=Math.max(0,N-mixN);
+    // subjects ranked by priority; when there are fewer sessions than subjects the lowest drop out of the weekly template
+    const pri=study.map(s=>({id:s.id,p:Math.max(1,s.w)*(6-Math.min(5,Math.max(1,s.c)))})).sort((a,b)=>b.p-a.p);
+    let items=pri;
+    if(sN<pri.length){items=pri.slice(0,sN);pri.slice(sN).forEach(x=>droppedAll.add(x.id))}
+    const counts=sN>0?shareOut(items,sN):{};
+    if(mixN)counts[MIX_ID]=mixN;
+    const seq=spread(counts);
+    // put the sequence into the day slots in day order, then untangle same-subject repeats within a day
+    const asg=free.map((f,i)=>({d:f.d,x:f.x,s:seq[i]})).filter(a=>a.s);
+    for(let pass=0;pass<4;pass++){
+      let moved=false;
+      for(let i=0;i<asg.length;i++){
+        const a=asg[i];
+        if(!asg.some((b,j)=>j!==i&&b.d===a.d&&b.s===a.s))continue;
+        for(let j=0;j<asg.length;j++){
+          const b=asg[j];
+          if(b.d===a.d||b.s===a.s)continue;
+          const aOk=!asg.some((z,k)=>k!==j&&k!==i&&z.d===b.d&&z.s===a.s),bOk=!asg.some((z,k)=>k!==i&&k!==j&&z.d===a.d&&z.s===b.s);
+          if(aOk&&bOk){const t=a.s;a.s=b.s;b.s=t;moved=true;break}
+        }
+      }
+      if(!moved)break;
+    }
+    // kinds per subject, in week order
+    const seen={};
+    asg.sort((a,b)=>a.d-b.d||toMin(a.x.st)-toMin(b.x.st));
+    for(const a of asg){
+      const c=counts[a.s]||1,i=seen[a.s]=(seen[a.s]||0)+1;let k;
+      if(a.s===MIX_ID)k='revision';
+      else if(ph.id==='learn')k=(i<=Math.max(1,Math.round(c*0.6)))?'theory':'practice';
+      else k=(i<=Math.ceil(c/2))?'revision':'practice';
+      const t=a.s===MIX_ID?'Mock review & weak topics':'';
+      blocks.push({id:uid(),days:[a.d],st:a.x.st,m:a.x.m,s:a.s,k,sh:(k==='practice'&&a.x.m>=45)?1:0,al:cfg.alarm!==false,t,from:ph.from,to:ph.to,ph:ph.id});
+    }
+    if(withMock){
+      const mk=slotsByDay[mockDay].find(x=>x.mock);
+      if(mk)blocks.push({id:uid(),days:[mockDay],st:mk.st,m:mk.m,s:MIX_ID,k:'mock',sh:0,al:cfg.alarm!==false,t:'Mock test day (test or review)',from:ph.from,to:ph.to,ph:ph.id});
+      // dated mock tests: every week in the final stretch, every second week while revising
+      const md=[];
+      for(let t=parseYmd(ph.from);t<=parseYmd(ph.to);t=addDays(t,1))if(dow(t)===mockDay)md.push(t);
+      md.forEach((t,i)=>{
+        if(ph.id==='revise'&&i%2===0)return;
+        if(ymd(t)>ymd(addDays(end,-3))||tests.length>=80)return;
+        tests.push({id:uid(),title:'Mock test '+(tests.length+1),kind:'mock',subj:'',date:ymd(t),st:mk?mk.st:'09:00',m:mock.m,marks:mock.marks,al:cfg.alarm!==false,score:null,gen:1});
+      });
+    }
+  }
+  if(droppedAll.size)warn.push(H(droppedAll.size+' subject(s) do not fit in the weekly sessions: '+[...droppedAll].map(id=>(subjects.find(s=>s.id===id)||{}).name).join(', ')+'. Add study hours, or drop a subject.',droppedAll.size+' विषय हफ़्ते के सत्रों में फ़िट नहीं हुए: '+[...droppedAll].map(id=>(subjects.find(s=>s.id===id)||{}).name).join(', ')+'। पढ़ाई के घंटे बढ़ाएँ या कोई विषय हटाएँ।'));
+  if(lostTotal>0)warn.push(H('Some hours did not fit inside the parts of the day you chose, so a few sessions are shorter than your target. Pick another part of the day to get them back.','चुने हुए समय में कुछ घंटे नहीं समा पाए, इसलिए कुछ सत्र लक्ष्य से छोटे हैं। वे घंटे वापस पाने के लिए दिन का कोई और हिस्सा चुनें।'));
+  if(mocks&&capOf(mockDay,false,false)<mock.m+60&&phases.some(p=>p.id!=='learn'))warn.push(H('Your '+DAYS_LONG[mockDay]+' hours were short for a full '+fmtDur(mock.m)+' paper, so that day is longer in the revision and final stretch.',DAYS_LONG[mockDay]+' के घंटे '+fmtDur(mock.m)+' के पूरे पेपर के लिए कम थे, इसलिए रिवीज़न और अंतिम चरण में उस दिन को लंबा किया है।'));
+  if(blocks.length>280)throw new Error(H('That makes '+blocks.length+' separate weekly sessions, more than the app can store (280). Choose a longer sitting, fewer hours or fewer subjects.',blocks.length+' अलग साप्ताहिक सत्र बन रहे हैं, जो ऐप के सीमा (280) से ज़्यादा है। लंबी बैठक, कम घंटे या कम विषय चुनें।'));
+  const weekMin=ph=>blocks.filter(b=>b.ph===ph.id).reduce((a,b)=>a+b.m,0);
+  phases.forEach(p=>{p.weekMin=weekMin(p)});
+  let totalMin=0;
+  for(const ph of phases){
+    for(let t=parseYmd(ph.from);t<=parseYmd(ph.to);t=addDays(t,1))totalMin+=blocks.filter(b=>b.ph===ph.id&&b.days.includes(dow(t))).reduce((a,b)=>a+b.m,0);
+  }
+  const plan=Object.assign(defaultPlan(),{exam:cfg.end,examName:cfg.examName||'',buffer:phases.length&&phases[phases.length-1].id==='final'?phases[phases.length-1].days:21,lead:cfg.lead==null?5:cfg.lead,subjects,blocks,tests,phases:phases.map(p=>({id:p.id,name:p.name,from:p.from,to:p.to}))});
+  return {plan,phases,warnings:warn,totalMin,days:D,studyDays:D};
+}
+
+(function(){
+  const put=(en,hi)=>{if(!Object.prototype.hasOwnProperty.call(HI,en))HI[en]=hi};
+  for(const k in FOCUS)put(FOCUS[k][0],FOCUS[k][2]);
+  put('Mock review & weak topics','मॉक की समीक्षा और कमज़ोर टॉपिक');
+  put('Mock test day (test or review)','मॉक टेस्ट का दिन (टेस्ट या समीक्षा)');
+  PAT.push([/^Mock test (\d+)$/,'मॉक टेस्ट $1']);
+  for(const p of PERIODS){put(p.name,{early:'तड़के सुबह',morning:'सुबह',afternoon:'दोपहर',evening:'शाम',night:'रात'}[p.id])}
+  put('5 to 8','5 से 8');put('8 to 12','8 से 12');put('12 to 5','12 से 5');put('5 to 9','5 से 9');put('9 to 11:30','9 से 11:30');
+})();
 /* ---------- look: accent colour and background, on top of light/dark ---------- */
 const ACCENTS={indigo:'#4349C9',blue:'#1D6FD8',teal:'#0F8B8D',green:'#1F8A57',lime:'#5B8A12',yellow:'#B8860B',gold:'#B8860B',orange:'#D9631A',red:'#C23B35',pink:'#C93C7C',magenta:'#B5389E',purple:'#7A3FC4',violet:'#6A45D1',brown:'#8A5A3C',grey:'#58677A',gray:'#58677A',slate:'#4A5B6A',cyan:'#0E87A8',navy:'#26407A',maroon:'#8E2B3A'};
 // Each background has a light and a dark version. tone 'dark' means it only makes sense in dark mode.
@@ -1143,6 +1650,13 @@ const KIC={theory:'book',practice:'target',revision:'spark',mock:'clock',other:'
 const tone=p=>p===null||p===undefined?'':p>=85?'good':p>=60?'warn':'bad';
 const unitN=(n,u)=>n+' '+(n===1?String(u||'unit').replace(/s$/,''):(u||'units'));
 const sheetsLabel=n=>n+(n===1?' sheet':' sheets');
+/* a plan made by the setup wizard has phases (learn, revise, final); the Plan tab shows one phase at a time */
+let planPh=null;
+const PH=()=>S.plan.phases||[];
+function phaseNow(){const ph=PH(),t=ymd(new Date());return (ph.find(p=>t>=p.from&&t<=p.to)||ph.find(p=>p.from>t)||ph[ph.length-1]||{}).id}
+function selPhase(){const ph=PH();if(!ph.length)return null;if(!ph.some(p=>p.id===planPh))planPh=phaseNow();return planPh}
+const phVis=b=>!PH().length||!b.ph||b.ph===selPhase();
+const phDate=ds=>parseYmd(ds).toLocaleDateString(LOC(),{day:'numeric',month:'short'});
 
 function ringSvg(p,size,sw,cls){
   const r=(size-sw)/2,C=2*Math.PI*r,c=size/2;
@@ -1241,11 +1755,11 @@ function render(anim){
 
 /* ---------- views ---------- */
 function onboarding(){
-  return `<div class="card" style="gap:14px"><span class="tile-ic" style="--c:var(--accent)">${ic('spark')}</span><div class="stack"><h2>Set up your schedule</h2>
-    <p class="muted">Abhyashify rings an alarm for each study block, logs the hours you actually put in, checks them against your plan every week, and keeps track of what you have finished in your books and sheets.</p></div>
-    <button class="btn lg" type="button" data-act="tpl">Start with the GATE DA 2027 template</button>
+  return `<div class="card" style="gap:14px"><span class="tile-ic" style="--c:var(--accent)">${ic('spark')}</span><div class="stack"><h2>Set up your course</h2>
+    <p class="muted">Pick your exam, confirm your date and tell me when you like to study. I build a day-by-day timetable up to your exam that you can follow as it is or change. Abhyashify then rings an alarm for each block, logs the hours you put in and checks them against your plan every week.</p></div>
+    <button class="btn lg" type="button" data-act="wiz">${ic('spark')}Set up my course</button>
     <button class="btn lg ghost" type="button" data-act="blank">Start empty and build my own</button>
-    <p class="small muted">The template sets the exam date to 6 February 2027 and adds a weekly timetable with nine subjects. Change anything afterwards.</p></div>`;
+    <p class="small muted">JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA and more, each with its branches and subjects. There is always an Other option for anything not listed.</p></div>`;
 }
 function vToday(){
   if(!S.plan.subjects.length&&!S.plan.blocks.length)return onboarding();
@@ -1285,7 +1799,7 @@ function vToday(){
   }
   if(isToday)h+=`<button class="btn lg soft" type="button" data-act="log" data-b="" data-d="${ds}">${ic('plus')}Log an extra session</button>`;
 
-  if(isToday)h+=vUpcoming();
+  if(isToday)h+=vUpcoming()+vToolsCard()+vDateNote();
   const seen=new Set(),nextUp=order.filter(o=>!seen.has(o.m.subj)&&seen.add(o.m.subj)).slice(0,4);
   if(isToday&&nextUp.length)h+=`<section class="card"><div class="stack"><h3>Study next</h3><p class="small muted">Ordered by importance, your confidence, what is left and what needs to come first.</p></div>`+
     nextUp.map((o,i)=>`<div class="item" style="${cvar(o.m.subj)};grid-template-columns:auto 1fr"><span class="num">${i+1}</span><div class="stack" style="gap:3px;min-width:0"><span class="t">${esc(o.m.title)}</span><span class="small muted">${subjChip(o.m.subj)}${o.chunk?` <span style="margin-left:4px">about ${esc(unitN(o.chunk,o.m.unit))} per session</span>`:''}</span></div></div>`).join('')+`</section>`;
@@ -1297,14 +1811,19 @@ function vToday(){
 function vPlan(){
   let h=`<div class="sec-h"><h1>Plan</h1><button class="btn sm" type="button" data-act="addblock">${ic('plus')}Add block</button></div>`;
   if(!S.plan.subjects.length&&!S.plan.blocks.length)return h+onboarding();
+  if(PH().length>1){
+    const sp=selPhase();
+    h+=`<div class="seg" role="group" aria-label="Phase">`+PH().map(p=>`<button type="button" data-act="pph" data-v="${p.id}" aria-pressed="${p.id===sp}">${esc(L(p.name))}</button>`).join('')+`</div>`;
+  }
+  if(PH().length){const p=PH().find(x=>x.id===selPhase());if(p)h+=`<p class="small muted">${esc(phDate(p.from))} to ${esc(phDate(p.to))}${PH().length>1?'. The weekly timetable below applies to these dates.':''}</p>`}
   h+=`<div class="seg" role="group" aria-label="Day">`+DAYS.map((d,i)=>`<button type="button" data-act="pday" data-v="${i}" aria-pressed="${i===planDay}">${d}</button>`).join('')+`</div>`;
-  const bl=S.plan.blocks.filter(b=>b.days.includes(planDay)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+  const bl=S.plan.blocks.filter(b=>b.days.includes(planDay)&&phVis(b)).sort((a,b)=>toMin(a.st)-toMin(b.st));
   h+=`<div class="stack" style="gap:10px"><div class="sec-h"><h3>${DAYS_LONG[planDay]}</h3><span class="small muted">${fmtDur(bl.reduce((x,b)=>x+b.m,0))} planned</span></div><div class="blist">`+
     (bl.length?bl.map(b=>`<button type="button" class="blk pl" style="${cvar(b.s)}" data-act="editblock" data-b="${b.id}"><div class="tm"><b>${b.st}</b><span>${endTime(b)}</span></div>
       <div class="bd"><h3>${esc(blockTitle(b))}</h3><span class="bs">${fmtDur(b.m)}${b.sh?' · '+sheetsLabel(b.sh):''} · ${b.al?'alarm '+(S.plan.lead||0)+' min early':'no alarm'}</span></div>${ic('chev')}</button>`).join(''):
       `<div class="card flat empty">${ic('plan')}<p class="muted">Free day. Tap Add block to schedule something.</p></div>`)+`</div></div>`;
 
-  const by={};let tot=0;for(const b of S.plan.blocks){const m=b.m*b.days.length;by[b.s]=(by[b.s]||0)+m;tot+=m}
+  const by={};let tot=0;for(const b of S.plan.blocks.filter(phVis)){const m=b.m*b.days.length;by[b.s]=(by[b.s]||0)+m;tot+=m}
   const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]);
   if(ents.length)h+=`<section class="card"><div class="sec-h"><h3>Week at a glance</h3><span class="small muted">${fmtDur(tot)}</span></div>
     <div class="stackbar">`+ents.map(([id,m])=>`<i style="${cvar(id)};flex:${m} 1 0"></i>`).join('')+`</div>
@@ -1315,6 +1834,7 @@ function vPlan(){
     S.plan.subjects.map(s=>`<button type="button" class="item" data-act="editsubj" data-s="${esc(s.id)}" style="${cvar(s.id)};grid-template-columns:1fr auto"><span class="stack" style="gap:6px"><span class="t">${subjChip(s.id)}</span><span class="small muted row" style="gap:14px"><span class="row" style="gap:6px">Importance ${pips(s.w)}</span><span class="row" style="gap:6px">Confidence ${pips(s.c)}</span></span></span>${ic('chev')}</button>`).join('')+`</section>`;
   h+=vTestsPlan();
   h+=`<button class="btn lg ghost" type="button" data-act="settings">${ic('sliders')}Exam date, appearance, exports</button>`;
+  h+=`<button class="btn lg ghost" type="button" data-act="toolsheet">${ic('open')}Study tools and permissions</button>`;
   h+=`<section class="card flat aboutapp">${ic('spark')}<p class="small muted">A web page cannot see what you do in other apps, so this app counts what you log or time here. For alarms that ring when this page is closed, export the schedule to your calendar from Settings. Automatic tracking of other apps is done by the Android companion app.</p></section>`;
   return h;
 }
@@ -1365,6 +1885,7 @@ function vReport(){
   h+=`<section class="card"><h3>Hours per day</h3>${dayChart(r)}<p class="small muted">Dashed outline is planned, solid is logged.</p></section>`;
   const rows=Object.entries(r.bySub).filter(([,v])=>v.p||v.a||v.sh||v.shA);
   if(rows.length)h+=`<section class="card"><h3>By subject</h3>`+rows.map(([id,v])=>`<div class="stack" style="gap:7px"><div class="row between">${subjChip(id)}<span class="small muted">${fmtDur(v.a)} / ${fmtDur(v.p)}${v.sh||v.shA?' · '+v.shA+'/'+v.sh+' sheets':''}</span></div><div class="meter ${tone(v.p?pct(v.a,v.p):null)}"><i data-w="${pct(v.a,v.p)}"></i></div></div>`).join('')+`</section>`;
+  h+=vToolReport(r);
   h+=`<section class="card"><h3>Study time of day</h3>${hourChart(r)}<p class="small muted">Dashed is when the plan puts study, solid is when you studied.${r.avgShift!==null?` Sessions started ${Math.abs(Math.round(r.avgShift))} minutes ${r.avgShift>=0?'later':'earlier'} than planned on average.`:''}</p></section>`;
   if(r.sessions.length)h+=`<section class="card"><h3>Planned and actual start</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Day</th><th>Subject</th><th>Plan</th><th>Actual</th><th>Shift</th></tr></thead><tbody>`+
     r.sessions.map(s=>`<tr><td>${DAYS[dow(parseYmd(s.d))]}</td><td>${esc(subjName(s.s))}</td><td>${s.ps}</td><td>${s.st}</td><td>${s.diff>0?'+':''}${s.diff}m</td></tr>`).join('')+`</tbody></table></div></section>`;
@@ -1537,6 +2058,7 @@ function ringItem(o){
     <div class="grid2" style="width:100%">${o.side}</div></div>`;
   el.hidden=false;beep();clearInterval(ringTimer);let n=0;ringTimer=setInterval(()=>{if(++n>40)return stopRing();beep()},2200);
   if(window.AsstSpeak&&o.say)AsstSpeak(o.say);
+  notify(o.title,(o.kicker||'')+(o.time?' · '+o.time:''),'x|'+o.title);
 }
 function ringReminder(r){
   ringItem({kicker:r.kind==='alarm'?'Alarm':'Reminder',title:r.text,time:timeTxt(new Date(r.at)),sub:r.rep?REPS[r.rep]:'',say:r.kind==='alarm'?'Alarm. '+r.text:'Reminder. '+r.text,
@@ -1575,6 +2097,711 @@ function setArmed(on){
   else if(!on&&armed){armed=false;try{wakeLock&&wakeLock.release()}catch(e){}wakeLock=null}
   paintHeader();
 }
+
+/* ---------- permissions, study tools and automatic tracking ----------
+   What a web page can and cannot do, so nobody is promised more than this does:
+   - It can ask once for notifications, storage that the browser will not clear, and the microphone. After a "yes" the browser remembers.
+   - It cannot see other apps or other sites. What it CAN do is notice that you left to open a study tool from here
+     and came back, and log that time (after you agreed once). Time spent in apps you opened some other way comes from the
+     Android companion's usage file (import it below) or, on a computer, from a browser extension. */
+const PTOOLS=()=>S.plan.tools||(S.plan.tools=[]);
+const trackOn=()=>lsGet('pl.track',false)===true;
+function setTrack(on){lsSet('pl.track',!!on)}
+const toolName=v=>{const t=PTOOLS().find(x=>x.id===v);return t?t.name:(v||'')};
+const PERM={store:null};
+
+/* ----- permissions ----- */
+function permStatus(k){
+  if(k==='notif')return typeof Notification==='undefined'?'na':Notification.permission==='default'?'ask':Notification.permission;
+  if(k==='store')return !(navigator.storage&&navigator.storage.persist)?'na':PERM.store===true?'granted':PERM.store===false?'ask':'ask';
+  if(k==='mic')return !(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)?'na':(lsGet('pl.perm.mic',null)||'ask');
+  if(k==='track')return trackOn()?'granted':'ask';
+  return 'na';
+}
+async function refreshPerms(){
+  try{if(navigator.storage&&navigator.storage.persisted)PERM.store=await navigator.storage.persisted()}catch(e){}
+  try{
+    if(navigator.permissions&&navigator.permissions.query){
+      const r=await navigator.permissions.query({name:'microphone'});
+      if(r.state==='granted'||r.state==='denied')lsSet('pl.perm.mic',r.state);
+    }
+  }catch(e){}
+}
+async function askPerm(k){
+  try{
+    if(k==='notif'){if(typeof Notification==='undefined')return;await Notification.requestPermission()}
+    else if(k==='store'){if(navigator.storage&&navigator.storage.persist)PERM.store=await navigator.storage.persist()}
+    else if(k==='mic'){
+      const st=await navigator.mediaDevices.getUserMedia({audio:true});
+      st.getTracks().forEach(t=>t.stop());lsSet('pl.perm.mic','granted');
+    }else if(k==='track')setTrack(true);
+  }catch(e){if(k==='mic')lsSet('pl.perm.mic','denied')}
+  permRepaint();
+}
+async function askAllPerms(){
+  for(const k of ['notif','store','mic','track'])if(permStatus(k)==='ask')await askPerm(k);
+}
+const PERM_INFO=[
+ {k:'notif',t:'Notifications',d:'Shows a banner with sound when a study block, reminder or mock test starts, even while you are in another tab or app. If your phone shuts this page down to save battery, a banner cannot appear. The calendar export in Settings is the reliable way for a locked phone.'},
+ {k:'store',t:'Keep my data on this device',d:'Asks the browser not to clear your plan and logs when it is short of space.'},
+ {k:'mic',t:'Microphone',d:'Lets you talk to the assistant. It listens only while you hold the mic button on.'},
+ {k:'track',t:'Track my study tools',d:'Once you agree here, opening a study tool from Abhyashify starts a timer that stops when you come back, and the time is logged as study time. It never asks again. You can switch it off at any time. Abhyashify cannot see anything you do inside those tools.'}
+];
+const STATUS_TXT={granted:['Allowed','good'],denied:['Blocked in browser settings','bad'],ask:['Not asked yet','warn'],na:['Not available here','']};
+function permRow(p){
+  const st=permStatus(p.k),[txt,tone]=STATUS_TXT[st]||STATUS_TXT.na;
+  const act=st==='ask'?`<button class="btn sm" type="button" data-act="perm" data-k="${p.k}">Allow</button>`:
+    (p.k==='track'&&st==='granted')?`<button class="btn sm ghost" type="button" data-act="trackoff">Turn off</button>`:'';
+  return `<div class="perm"><div class="stack" style="gap:3px;min-width:0"><span class="t">${p.t}</span><span class="small muted">${p.d}</span>${st==='denied'?`<span class="small" style="color:var(--bad)">${H('Allow it from the lock icon next to the address, or in the browser settings for this site.','पता-पट्टी के ताले के आइकन से, या इस साइट की ब्राउज़र सेटिंग से इसे अनुमति दें।')}</span>`:''}</div>
+    <div class="stack" style="gap:6px;align-items:flex-end"><span class="st ${tone}">${txt}</span>${act}</div></div>`;
+}
+function permRepaint(){
+  const w=document.getElementById('wizperms');if(w)w.innerHTML=PERM_INFO.map(permRow).join('');
+  const t=document.getElementById('toolperms');if(t)t.innerHTML=PERM_INFO.map(permRow).join('');
+  const all=document.getElementById('permallbtn');if(all)all.hidden=!PERM_INFO.some(p=>permStatus(p.k)==='ask');
+  const tl=document.getElementById('wiztools');if(tl&&typeof wizToolsPaint==='function')wizToolsPaint();
+  if(tab==='today'&&!GATE&&sheetEl.hidden&&!document.getElementById('wiz'))try{render(false)}catch(e){}
+}
+
+/* ----- notifications that appear when the page is in the background ----- */
+async function notify(title,body,tag){
+  try{
+    if(typeof Notification==='undefined'||Notification.permission!=='granted')return false;
+    if(document.visibilityState==='visible')return false;
+    const opt={body:body||'',tag:tag||'abhyashify',icon:'icon-192.png',badge:'icon-192.png',vibrate:[200,100,200],requireInteraction:true};
+    const reg=navigator.serviceWorker&&navigator.serviceWorker.getRegistration?await navigator.serviceWorker.getRegistration():null;
+    if(reg&&reg.showNotification){await reg.showNotification(title,opt);return true}
+    new Notification(title,opt);return true;
+  }catch(e){return false}
+}
+
+/* ----- opening a tool and logging the time ----- */
+function toolHref(t){
+  if(/android/i.test(navigator.userAgent)&&t.pkg){
+    try{
+      const u=new URL(t.url);
+      return 'intent://'+u.host+u.pathname+u.search+'#Intent;scheme='+u.protocol.replace(':','')+';package='+t.pkg+';S.browser_fallback_url='+encodeURIComponent(t.url)+';end';
+    }catch(e){}
+  }
+  return t.url;
+}
+function openLink(href){
+  const a=document.createElement('a');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';
+  document.body.appendChild(a);a.click();a.remove();
+}
+function blockNow(){
+  const now=new Date(),nm=now.getHours()*60+now.getMinutes();
+  return blocksOn(S.plan,now).find(b=>nm>=toMin(b.st)-15&&nm<=toMin(b.st)+b.m+30)||null;
+}
+function openTool(id){
+  const t=PTOOLS().find(x=>x.id===id);if(!t)return;
+  if(trackOn()&&!run){
+    const b=blockNow();
+    lsSet('pl.toolrun',{tid:t.id,t0:Date.now(),s:b?b.s:null,b:b?b.id:null,ps:b?b.st:null,pm:b?b.m:null,hid:0});
+  }
+  openLink(toolHref(t));
+  if(!trackOn())return;
+  toast(H('Opening '+t.name+'. Come back here when you are done and the time is logged.',t.name+' खुल रहा है। पढ़ाई के बाद यहाँ लौटें, समय अपने-आप दर्ज हो जाएगा।'));
+}
+let lastAuto=null;
+function finishToolRun(){
+  if(GATE)return;
+  const tr=lsGet('pl.toolrun',null);if(!tr||!tr.hid)return;
+  if(document.visibilityState!=='visible')return;
+  lsSet('pl.toolrun',null);
+  const m=Math.round((Date.now()-tr.t0)/60000);
+  const nm=toolName(tr.tid);
+  if(!trackOn())return;
+  if(m<2){toast(H('You were in '+nm+' for under 2 minutes, so it was not logged.',nm+' में 2 मिनट से कम रहे, इसलिए दर्ज नहीं किया।'));return}
+  if(m>480){toast(H('That was over 8 hours in '+nm+', which looks like you forgot to come back. It was not logged. Use Log session to add the real time.',nm+' में 8 घंटे से ज़्यादा हो गए, शायद लौटना भूल गए। दर्ज नहीं किया। असली समय "सत्र दर्ज करें" से जोड़ें।'));return}
+  const d=new Date(tr.t0),log=ensureT({id:uid(),d:ymd(d),st:pad(d.getHours())+':'+pad(d.getMinutes()),m,b:tr.b||null,s:tr.s||null,ps:tr.ps||null,pm:tr.pm||null,q:0,mid:null,mu:0,t0:tr.t0,t1:tr.t0+m*60000,dev:deviceId(),src:'tool',tz:tzOff(),tool:tr.tid});
+  S.logs.push(log);if(S.logs.length>1800)S.logs=S.logs.slice(-1800);
+  mark('logs');lastAuto={id:log.id,tid:tr.tid,m,at:Date.now()};
+  toast(H('Logged '+fmtDur(m)+' in '+nm+'.','आज '+nm+' में '+FD(m)+' दर्ज हुआ।'));
+  render(false);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){const tr=lsGet('pl.toolrun',null);if(tr&&!tr.hid){tr.hid=1;lsSet('pl.toolrun',tr)}}
+  else setTimeout(finishToolRun,200);
+});
+window.addEventListener('pageshow',()=>setTimeout(finishToolRun,400));
+
+/* ----- cards on the Today and Report screens ----- */
+function vToolsCard(){
+  const ts=PTOOLS();if(!ts.length)return '';
+  const on=trackOn();
+  let last='';
+  if(lastAuto&&Date.now()-lastAuto.at<30*60000&&S.logs.some(l=>l.id===lastAuto.id)){
+    const lg=S.logs.find(l=>l.id===lastAuto.id);
+    last=`<div class="note" style="flex-wrap:wrap">${ic('check')}<span>Logged ${esc(fmtDur(lastAuto.m))} in ${esc(toolName(lastAuto.tid))}.</span>
+      <select data-act="toolsubj" aria-label="Subject for this time" style="min-height:34px">${'<option value="">Other</option>'+subjOpts(lg.s)}</select>
+      <button class="btn sm ghost" type="button" data-act="toolundo">Undo</button></div>`;
+  }
+  return `<section class="card"><div class="stack" style="gap:2px"><h3>Study tools</h3><p class="small muted">${on?'Tap one to open it. The time until you come back is logged as study time. No need to tell me.':'Tap one to open it. Turn on tracking and the time will be logged for you.'}</p></div>
+    <div class="tools">${ts.map(t=>`<button type="button" class="tool" data-act="toolopen" data-t="${esc(t.id)}">${ic('open')}<span>${esc(t.name)}</span></button>`).join('')}</div>
+    ${on?'':`<button class="btn sm soft" type="button" data-act="trackon">${ic('check')}Turn on automatic tracking</button>`}${last}</section>`;
+}
+function vDateNote(){
+  const su=S.plan.setup;
+  if(!su||su.dateKind!=='typical'||!S.plan.exam)return '';
+  return `<section class="card flat aboutapp">${ic('spark')}<p class="small muted">Your exam date (${esc(parseYmd(S.plan.exam).toLocaleDateString(LOC(),{day:'numeric',month:'long',year:'numeric'}))}) is a placeholder based on when this exam is usually held, not the official date. Change it in Settings once the official date is announced and the timetable will stretch or shrink to fit.</p></section>`;
+}
+function vToolReport(r){
+  const ds=new Set(r.days.map(d=>d.ds)),by={};
+  for(const l of LG())if(l.tool&&ds.has(l.d))by[l.tool]=(by[l.tool]||0)+l.m;
+  const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]);if(!ents.length)return '';
+  const mx=ents[0][1];
+  return `<section class="card"><h3>Study tools this week</h3>`+ents.map(([k,m])=>`<div class="stack" style="gap:6px"><div class="row between"><span class="t">${esc(toolName(k))}</span><span class="small muted">${fmtDur(m)}</span></div><div class="meter"><i data-w="${pct(m,mx)}"></i></div></div>`).join('')+`<p class="small muted">Time logged automatically when you opened these from Abhyashify, plus anything imported from your phone.</p></section>`;
+}
+
+/* ----- the Study tools and permissions sheet ----- */
+function toolsBody(){
+  const ts=PTOOLS();
+  return `<div class="stack" style="gap:2px"><h3>Permissions</h3><p class="small muted">Each one is asked once. After that the browser remembers your answer.</p></div>
+    <div class="perms" id="toolperms">${PERM_INFO.map(permRow).join('')}</div>
+    <button class="btn ghost" type="button" id="permallbtn" data-act="permall"${PERM_INFO.some(p=>permStatus(p.k)==='ask')?'':' hidden'}>Allow all of these</button>
+    <div class="stack" style="gap:2px"><h3>My study tools</h3><p class="small muted">Apps, sites and YouTube channels you study with. They show on the Today screen as one-tap buttons.</p></div>
+    <div class="stack" style="gap:0">${ts.length?ts.map(t=>`<div class="item" style="grid-template-columns:1fr auto"><span class="stack" style="gap:2px;min-width:0"><span class="t">${esc(t.name)}</span><span class="small muted" style="overflow-wrap:anywhere">${esc(t.url)}</span></span><button class="btn sm danger" type="button" data-act="tooldel" data-t="${esc(t.id)}" aria-label="Remove ${esc(t.name)}">${ic('x')}</button></div>`).join(''):'<p class="small muted">None yet.</p>'}</div>
+    <div class="grid2"><label class="field">Name<input type="text" id="tn" maxlength="40" placeholder="My YouTube playlist"></label><label class="field">Link<input type="url" id="tu" maxlength="300" placeholder="https://"></label></div>
+    <button class="btn soft" type="button" data-act="tooladd">${ic('plus')}Add this tool</button>
+    <div class="stack" style="gap:2px"><h3>Time from your phone</h3><p class="small muted">The Android companion app measures the time you spend in the study apps you chose and exports a file. Import it here and it is added to your logs, one entry per app per day. Days are filled from midnight because the file has totals, not start times.</p></div>
+    <input type="file" id="usef" accept=".json,application/json" hidden>
+    <button class="btn ghost" type="button" data-act="usagepick">${ic('upload')}Import the usage file (JSON)</button>`;
+}
+function toolsSheet(){
+  openSheet('Study tools and permissions',toolsBody(),()=>{});
+  refreshPerms().then(permRepaint);
+}
+function refreshToolsSheet(){
+  const f=document.getElementById('sf');if(!f)return;
+  f.innerHTML=toolsBody()+'<p class="err" id="sferr" role="alert"></p>';
+}
+function addTool(name,url,list){
+  name=(name||'').trim();url=(url||'').trim();
+  if(!name)throw new Error('Give the tool a name.');
+  if(!/^https?:\/\//i.test(url))url='https://'+url;
+  let u;try{u=new URL(url)}catch(e){throw new Error('That link does not look right.')}
+  if(!/^https?:$/.test(u.protocol)||!u.hostname.includes('.'))throw new Error('That link does not look right.');
+  const arr=list||PTOOLS();
+  if(arr.length>=40)throw new Error('That is plenty of tools. Remove one first.');
+  const known=TOOLS.find(t=>{try{return new URL(t.url).hostname.replace(/^www\./,'')===u.hostname.replace(/^www\./,'')}catch(e){return false}});
+  const id='t'+uid();
+  arr.push({id,name:name.slice(0,40),url:u.href,pkg:known?known.pkg:''});
+  return id;
+}
+function importUsage(o){
+  if(!o||o.source!=='abhyashify-usage'||!Array.isArray(o.days))throw new Error('bad');
+  let days=0,apps=0;const by=new Map(S.logs.map(l=>[l.id,l]));
+  for(const d of o.days){
+    if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d.date||''))continue;
+    const base=parseYmd(d.date).getTime();let off=0,any=false;
+    for(const a of (d.apps||[])){
+      const mins=Math.round(+a.minutes||0);if(!a.package||mins<1)continue;
+      const m=Math.min(720,mins);if(off+m>23*60)break;
+      const id='ph-'+d.date+'-'+String(a.package).replace(/[^a-z0-9._]/gi,'').slice(0,60);
+      const known=PTOOLS().find(t=>t.pkg&&t.pkg===a.package);
+      const rec=ensureT({id,d:d.date,st:fromMin(off),m,b:null,s:null,ps:null,pm:null,q:0,mid:null,mu:0,t0:base+off*60000,t1:base+(off+m)*60000,dev:'phone',src:'phone',tz:tzOff(),tool:known?known.id:String(a.label||a.package).slice(0,40)});
+      off+=m;any=true;apps++;
+      const old=by.get(id);
+      if(old)Object.assign(old,rec);else{S.logs.push(rec);by.set(id,rec)}
+    }
+    if(any)days++;
+  }
+  if(S.logs.length>1800)S.logs=S.logs.slice(-1800);
+  if(apps)mark('logs');
+  return {days,apps};
+}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const a=t.dataset.act,d=t.dataset;
+  switch(a){
+    case 'toolsheet':toolsSheet();break;
+    case 'perm':await askPerm(d.k);if(document.getElementById('toolperms'))refreshToolsSheet();break;
+    case 'permall':await askAllPerms();if(document.getElementById('toolperms'))refreshToolsSheet();break;
+    case 'trackon':setTrack(true);toast(H('Automatic tracking is on.','अपने-आप ट्रैकिंग चालू है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
+    case 'trackoff':setTrack(false);toast(H('Automatic tracking is off.','अपने-आप ट्रैकिंग बंद है।'));if(document.getElementById('toolperms'))refreshToolsSheet();permRepaint();break;
+    case 'toolopen':openTool(d.t);break;
+    case 'toolundo':if(lastAuto){S.logs=S.logs.filter(l=>l.id!==lastAuto.id);lastAuto=null;mark('logs');render(false);toast(H('Removed.','हटा दिया।'))}break;
+    case 'tooldel':S.plan.tools=PTOOLS().filter(x=>x.id!==d.t);mark('plan');refreshToolsSheet();if(tab==='today')render(false);break;
+    case 'tooladd':{
+      try{addTool(document.getElementById('tn').value,document.getElementById('tu').value);mark('plan');refreshToolsSheet();if(tab==='today')render(false);toast(H('Added.','जोड़ दिया।'))}
+      catch(err){const el=document.getElementById('sferr');if(el)el.textContent=err.message}
+      break}
+    case 'usagepick':{const f=document.getElementById('usef');if(f)f.click();break}
+  }
+});
+document.addEventListener('change',e=>{
+  const f=e.target;
+  if(f&&f.dataset&&f.dataset.act==='toolsubj'&&lastAuto){const l=S.logs.find(x=>x.id===lastAuto.id);if(l){l.s=f.value||null;mark('logs');render(false)}return}
+  if(f&&f.id==='usef'&&f.files&&f.files[0]){
+    const file=f.files[0];f.value='';
+    if(file.size>2e6){toast('That file is too large.');return}
+    const r=new FileReader();
+    r.onload=()=>{
+      try{const x=importUsage(JSON.parse(String(r.result)));render(false);toast(x.apps?H('Imported '+x.apps+' entries over '+x.days+' days.',x.days+' दिनों की '+x.apps+' प्रविष्टियाँ जोड़ीं।'):H('No study time found in that file.','उस फ़ाइल में पढ़ाई का समय नहीं मिला।'))}
+      catch(err){toast(H('That is not a usage file from the Abhyashify Android app.','यह Abhyashify Android ऐप की उपयोग फ़ाइल नहीं है।'))}
+    };
+    r.readAsText(file);
+  }
+});
+
+/* ---------- course setup wizard ----------
+   exam -> exact paper -> subjects (+ optional ones) -> permissions -> study tools -> date -> comfortable hours -> timetable.
+   Everything here is text in H(english, hindi). The overlay has its own click handling (data-wz) so it never clashes
+   with the rest of the app. */
+let W=null;
+const WSTEPS=['exam','variant','subjects','perms','tools','when','comfort','plan'];
+const MIXNAME='Revision & full mocks';
+const FAM=id=>id==='other'?{id:'other',name:'Other',hi:'अन्य',v:[],tools:'yt,drive,tg'}:EXAMS.find(f=>f.id===id);
+const wvCustom=()=>({id:'custom',name:(W.cName||'').trim()||'My exam',hi:'',when:'',wm:[],hrs:[3,5],mk:[180,100],s:[],o:[]});
+const wVar=()=>{if(!W||!W.fam)return null;if(W.fam==='other'||W.vr==='custom')return wvCustom();const f=FAM(W.fam);return f&&f.v.find(v=>v.id===W.vr)||null};
+const wFmt=ds=>parseYmd(ds).toLocaleDateString(LOC(),{day:'numeric',month:'short',year:'numeric'});
+const wDays=(a,b)=>Math.round((parseYmd(b)-parseYmd(a))/864e5);
+
+function openWizard(o){
+  o=o||{};
+  const ctx=o.ctx||(CL&&o.newCourse?'newcourse':(S.plan.subjects.length||S.plan.blocks.length)?'redo':'onboard');
+  W={ctx,step:'exam',fam:null,vr:null,cName:'',cSubs:'',base:[],picks:[],gx:[],offB:{},conf:{},extra:[],cover:0,
+     whenMode:'date',dDate:'',dMonth:'',dTarget:'',start:ymd(new Date()),confirmed:false,
+     hw:null,he:null,off:[],periods:['morning','evening'],sess:90,alarms:true,mocks:true,
+     toolSel:new Set(),toolCustom:[],draft:null,draftErr:'',phSel:null,daySel:dow(new Date()),courseName:'',leave:false,busy:false};
+  let el=document.getElementById('wiz');
+  if(!el){el=document.createElement('div');el.id='wiz';document.body.appendChild(el)}
+  el.hidden=false;document.body.classList.add('lock');
+  closeSheet(true);
+  wizPaint();
+}
+function closeWizard(){
+  const el=document.getElementById('wiz');if(el){el.hidden=true;el.innerHTML=''}
+  document.body.classList.remove('lock');W=null;
+}
+const wInfo=(en,hi)=>`<p class="muted">${H(en,hi)}</p>`;
+const wOpt=(wz,attrs,on,main,sub)=>`<button type="button" class="wz-opt" data-wz="${wz}" ${attrs||''} aria-pressed="${!!on}"><span class="wz-ot">${main}</span>${sub?`<span class="small muted">${sub}</span>`:''}</button>`;
+const wSwitch=(label,wf,on)=>`<label class="switch"><span>${label}</span><input type="checkbox" data-wf="${wf}"${on?' checked':''}></label>`;
+
+/* ----- step: exam ----- */
+function stExam(){
+  let h=wInfo('Pick what you are preparing for. I will load its subjects, then ask a few questions and build your timetable.','चुनें कि आप किसकी तैयारी कर रहे हैं। मैं उसके विषय जोड़ दूँगा, कुछ सवाल पूछूँगा और आपका टाइम-टेबल बना दूँगा।');
+  if(W.ctx==='redo')h+=`<p class="note">${ic('spark')}<span>${H('This replaces your current subjects, timetable and tests. Your logged sessions and materials stay.','इससे आपके मौजूदा विषय, टाइम-टेबल और टेस्ट बदल जाएँगे। दर्ज किए सत्र और सामग्री बनी रहेगी।')}</span></p>`;
+  h+=`<div class="wz-grid">`+EXAMS.map(f=>wOpt('fam',`data-v="${f.id}"`,W.fam===f.id,esc(L(f.name)),esc(L(f.d)))).join('')+wOpt('fam','data-v="other"',W.fam==='other',H('Other','अन्य'),H('Anything not listed. You type the subjects.','जो सूची में नहीं है। विषय आप खुद लिखें।'))+`</div>`;
+  h+=`<div class="stack" style="gap:8px"><span class="kick">${H('Language','भाषा')}</span>${langSeg()}</div>`;
+  if(W.ctx!=='redo')h+=`<button class="btn ghost" type="button" data-wz="skip">${W.ctx==='newcourse'?H('Skip the setup and create an empty course','सेटअप छोड़ें और खाली कोर्स बनाएँ'):H('Skip the setup and build my own plan','सेटअप छोड़ें और अपना प्लान खुद बनाएँ')}</button>`;
+  return h;
+}
+
+/* ----- step: exact paper (branch / stage) ----- */
+function stVariant(){
+  const f=FAM(W.fam);
+  if(W.fam==='other')return stCustom(true);
+  let h=wInfo('Which one exactly? Each has its own subjects.','ठीक-ठीक कौन-सा? हर एक के अपने विषय हैं।');
+  h+=`<div class="wz-list">`+f.v.map(v=>wOpt('var',`data-v="${v.id}"`,W.vr===v.id,esc(L(v.name)),esc(v.when?L(v.when):''))).join('')+wOpt('var','data-v="custom"',W.vr==='custom',H('Other (my own paper or branch)','अन्य (मेरा अपना पेपर या शाखा)'),H('You type the name and the subjects.','नाम और विषय आप खुद लिखें।'))+`</div>`;
+  if(W.vr==='custom')h+=stCustom(false);
+  return h;
+}
+function stCustom(top){
+  return `<section class="card wz-card">${top?wInfo('Tell me what you are preparing for. I will use your subjects and ask the same questions as for the listed exams.','बताइए आप किसकी तैयारी कर रहे हैं। मैं आपके विषयों के साथ वही सवाल पूछूँगा जो सूची वाली परीक्षाओं के लिए पूछता हूँ।'):''}
+    <label class="field">${H('Exam or goal name','परीक्षा या लक्ष्य का नाम')}<input type="text" data-wf="cName" value="${esc(W.cName)}" maxlength="30" placeholder="${H('For example: State Police exam','जैसे: राज्य पुलिस परीक्षा')}"></label>
+    <label class="field">${H('Subjects, one per line','विषय, हर पंक्ति में एक')}<textarea data-wf="cSubs" rows="6" placeholder="${H('Maths\nReasoning\nGeneral Knowledge','गणित\nतर्कशक्ति\nसामान्य ज्ञान')}">${esc(W.cSubs)}</textarea></label></section>`;
+}
+
+/* ----- step: subjects ----- */
+function wizInitSubs(){
+  const v=wVar();
+  W.base=W.vr==='custom'||W.fam==='other'
+    ?W.cSubs.split('\n').map(x=>x.trim().slice(0,40)).filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,40).map(n=>({name:n,w:3}))
+    :v.s.filter(s=>s.name!==MIXNAME).map(s=>({name:s.name,w:s.w}));
+  W.picks=v.o.map(()=>[]);W.gx=v.o.map(()=>[]);W.offB={};W.conf={};W.extra=[];
+  W.hw=null;W.he=null;W.draft=null;
+}
+function wizSubjects(){
+  const v=wVar(),out=[],seen=new Set();
+  const push=(name,w)=>{const k=name.toLowerCase();if(!name||seen.has(k)||name===MIXNAME)return;seen.add(k);out.push({name,w:w||3,c:W.conf[name]||3})};
+  W.base.forEach(b=>{if(!W.offB[b.name])push(b.name,b.w)});
+  v.o.forEach((g,gi)=>{(W.picks[gi]||[]).forEach(n=>{const s=g.l.find(x=>x.name===n);push(n,s?s.w:3)});(W.gx[gi]||[]).forEach(n=>push(n,3))});
+  W.extra.forEach(n=>push(n,3));
+  return out;
+}
+function wizSubErr(){
+  const v=wVar();
+  for(let gi=0;gi<v.o.length;gi++){
+    const g=v.o[gi],n=(W.picks[gi]||[]).length+(W.gx[gi]||[]).length;
+    if(n<g.min)return H('Choose '+(g.min===g.n?g.n:'at least '+g.min)+' for: '+L(g.q),L(g.q)+': '+(g.min===g.n?g.n+' चुनें':'कम से कम '+g.min+' चुनें'));
+  }
+  if(!wizSubjects().length)return H('Add at least one subject.','कम से कम एक विषय जोड़ें।');
+  return '';
+}
+function stSubjects(){
+  const v=wVar();
+  let h=wInfo('Untick anything you do not need, say how strong you feel in each subject, or add your own. Weaker and more important subjects get more time.','जो ज़रूरी नहीं उसे हटाएँ, हर विषय में अपनी मज़बूती बताएँ, या अपना विषय जोड़ें। कमज़ोर और ज़्यादा ज़रूरी विषयों को ज़्यादा समय मिलेगा।');
+  v.o.forEach((g,gi)=>{
+    const sel=W.picks[gi],gx=W.gx[gi],cnt=sel.length+gx.length,full=cnt>=g.n;
+    const hint=g.min===g.n?H('Choose '+g.n,g.n+' चुनें'):g.min>0?H('Choose up to '+g.n+' (at least '+g.min+')','अधिकतम '+g.n+' चुनें (कम से कम '+g.min+')'):H('Optional. Choose up to '+g.n,'वैकल्पिक। अधिकतम '+g.n+' चुनें');
+    h+=`<section class="card wz-card"><div class="stack" style="gap:2px"><h3>${esc(L(g.q))}</h3><p class="small muted">${hint} · ${cnt}/${g.n}</p></div><div class="wz-chips">`+
+      g.l.map(s=>{const on=sel.includes(s.name);return `<button type="button" class="wz-chip" data-wz="pick" data-g="${gi}" data-n="${esc(s.name)}" aria-pressed="${on}"${!on&&full&&g.n>1?' disabled':''}>${esc(L(s.name))}</button>`}).join('')+
+      gx.map((n,i)=>`<button type="button" class="wz-chip" data-wz="gxdel" data-g="${gi}" data-i="${i}" aria-pressed="true">${esc(n)} ×</button>`).join('')+`</div>
+      <div class="wz-add"><input type="text" data-wf="gx${gi}" maxlength="40" placeholder="${H('Other: type yours','अन्य: अपना लिखें')}" aria-label="${H('Other','अन्य')}"><button class="btn sm soft" type="button" data-wz="gxadd" data-g="${gi}">${H('Add','जोड़ें')}</button></div></section>`;
+  });
+  const rate=(name,c)=>`<div class="seg wz-rate" role="group" aria-label="${H('How strong are you in','आपकी मज़बूती')} ${esc(name)}">`+[[2,'Weak','कमज़ोर'],[3,'OK','ठीक'],[4,'Strong','मज़बूत']].map(([n,e,hh])=>`<button type="button" data-wz="conf" data-n="${esc(name)}" data-v="${n}" aria-pressed="${(W.conf[name]||3)===n}">${H(e,hh)}</button>`).join('')+`</div>`;
+  h+=`<section class="card wz-card"><div class="stack" style="gap:2px"><h3>${H('Your subjects','आपके विषय')}</h3><p class="small muted">${H('How strong do you feel in each?','हर विषय में आप कितने मज़बूत हैं?')}</p></div>`;
+  const rows=[];
+  W.base.forEach(b=>{
+    const off=!!W.offB[b.name];
+    rows.push(`<div class="wz-sub${off?' off':''}"><label class="wz-chk"><input type="checkbox" data-wz="boff" data-n="${esc(b.name)}"${off?'':' checked'}><span>${esc(L(b.name))}</span></label>${off?'':rate(b.name)}</div>`);
+  });
+  v.o.forEach((g,gi)=>{
+    (W.picks[gi]||[]).forEach(n=>rows.push(`<div class="wz-sub"><span class="t">${esc(L(n))}</span>${rate(n)}</div>`));
+    (W.gx[gi]||[]).forEach(n=>rows.push(`<div class="wz-sub"><span class="t">${esc(n)}</span>${rate(n)}</div>`));
+  });
+  W.extra.forEach((n,i)=>rows.push(`<div class="wz-sub"><span class="row between" style="gap:8px"><span class="t">${esc(n)}</span><button class="icb sm" type="button" data-wz="exdel" data-i="${i}" aria-label="${H('Remove','हटाएँ')}">${ic('x')}</button></span>${rate(n)}</div>`));
+  h+=(rows.join('')||`<p class="small muted">${H('No subjects yet. Add one below.','अभी कोई विषय नहीं। नीचे जोड़ें।')}</p>`);
+  h+=`<div class="wz-add"><input type="text" data-wf="exadd" maxlength="40" placeholder="${H('Add a subject of your own','अपना विषय जोड़ें')}" aria-label="${H('Add a subject','विषय जोड़ें')}"><button class="btn sm soft" type="button" data-wz="exadd">${H('Add','जोड़ें')}</button></div></section>`;
+  h+=`<section class="card wz-card"><div class="stack" style="gap:2px"><h3>${H('Where are you in the syllabus?','पाठ्यक्रम में आप कहाँ हैं?')}</h3><p class="small muted">${H('This decides how much of the plan is learning and how much is revision.','इससे तय होता है कि प्लान में कितना सीखना और कितना रिवीज़न होगा।')}</p></div><div class="seg" role="group">`+
+    [[0,'Starting fresh','शुरू से'],[1,'About half done','लगभग आधा हो चुका'],[2,'Most of it done','ज़्यादातर हो चुका']].map(([n,e,hh])=>`<button type="button" data-wz="cover" data-v="${n}" aria-pressed="${W.cover===n}">${H(e,hh)}</button>`).join('')+`</div></section>`;
+  const err=wizSubErr();
+  if(err)h+=`<p class="err" role="alert" style="display:block">${esc(err)}</p>`;
+  return h;
+}
+
+/* ----- step: permissions (right after the course is decided) ----- */
+function stPerms(){
+  return wInfo('Your course is set. So you do not have to hunt for settings later, allow these now. Each one is asked only once; the browser remembers your answer and you can change it any time.','आपका कोर्स तय हो गया। बाद में सेटिंग ढूँढनी न पड़े, इसलिए अभी अनुमति दे दें। हर एक सिर्फ़ एक बार पूछी जाएगी; ब्राउज़र आपका जवाब याद रखेगा और आप कभी भी बदल सकते हैं।')+
+    `<div class="perms" id="wizperms">${PERM_INFO.map(permRow).join('')}</div>
+    <button class="btn" type="button" id="permallbtn" data-act="permall"${PERM_INFO.some(p=>permStatus(p.k)==='ask')?'':' hidden'}>${ic('check')}${H('Allow all of these','इन सबकी अनुमति दें')}</button>
+    <p class="small muted">${H('You can skip this and continue. Nothing here is needed to make the timetable.','आप इसे छोड़कर आगे बढ़ सकते हैं। टाइम-टेबल बनाने के लिए इनमें से कुछ ज़रूरी नहीं।')}</p>`;
+}
+
+/* ----- step: study tools ----- */
+function wizToolList(){
+  const f=FAM(W.fam)||{tools:'yt,drive,tg'};
+  return f.tools.split(',').map(id=>TOOLS.find(t=>t.id===id)).filter(Boolean);
+}
+function wizToolsPaint(){
+  const el=document.getElementById('wiztools');if(!el)return;
+  el.innerHTML=wizToolsHtml();
+}
+function wizToolsHtml(){
+  const sug=wizToolList();
+  let h=`<div class="wz-chips">`+sug.map(t=>`<button type="button" class="wz-chip" data-wz="tool" data-t="${t.id}" aria-pressed="${W.toolSel.has(t.id)}">${esc(L(t.name))}</button>`).join('')+
+    W.toolCustom.map((t,i)=>`<button type="button" class="wz-chip" data-wz="tooldel" data-i="${i}" aria-pressed="true">${esc(t.name)} ×</button>`).join('')+`</div>`;
+  h+=`<div class="grid2"><label class="field">${H('Name','नाम')}<input type="text" data-wf="tn" maxlength="40" placeholder="${H('My YouTube playlist','मेरी YouTube प्लेलिस्ट')}"></label><label class="field">${H('Link','लिंक')}<input type="url" data-wf="tu" maxlength="300" placeholder="https://"></label></div>
+    <button class="btn sm soft" type="button" data-wz="tooladd">${ic('plus')}${H('Add this tool','यह टूल जोड़ें')}</button><p class="err" id="wzterr" role="alert"></p>`;
+  h+=trackOn()
+    ?`<p class="note">${ic('check')}<span>${H('Automatic tracking is on. Opening any of these from Abhyashify logs the time until you come back.','अपने-आप ट्रैकिंग चालू है। इनमें से किसी को Abhyashify से खोलने पर लौटने तक का समय दर्ज होगा।')}</span></p>`
+    :`<div class="note" style="flex-wrap:wrap">${ic('spark')}<span>${H('Automatic tracking is off. Turn it on once and I will log the time you spend in these without asking again.','अपने-आप ट्रैकिंग बंद है। एक बार चालू कर दें तो मैं बिना दोबारा पूछे इनमें बिताया समय दर्ज करूँगा।')}</span><button class="btn sm" type="button" data-act="trackon">${H('Turn on','चालू करें')}</button></div>`;
+  return h;
+}
+function stTools(){
+  return wInfo('Which apps, websites or YouTube channels do you study with? Pick them once. They appear on your Today screen as one-tap buttons, and when you open one from there, the time you spend is logged as study time automatically, with no questions asked each time.','आप किन ऐप, वेबसाइट या YouTube चैनल से पढ़ते हैं? एक बार चुन लें। वे आपकी "आज" स्क्रीन पर एक-टैप बटन बनकर दिखेंगे, और वहाँ से खोलने पर आपका बिताया समय अपने-आप पढ़ाई के समय में दर्ज होगा, हर बार पूछे बिना।')+
+    `<div id="wiztools" class="stack" style="gap:12px">${wizToolsHtml()}</div>
+    <p class="small muted">${H('A web page cannot see what happens inside other apps. It sees only that you left to open a tool from here and came back. For time spent in apps you open yourself, use the Android companion app and import its file later (Plan → Study tools and permissions).','वेब पेज दूसरे ऐप के अंदर क्या होता है यह नहीं देख सकता। वह सिर्फ़ यह देखता है कि आप यहाँ से कोई टूल खोलने गए और लौट आए। जिन ऐप को आप खुद खोलते हैं उनका समय Android साथी ऐप से मिलेगा; उसकी फ़ाइल बाद में इंपोर्ट करें (प्लान → पढ़ाई के टूल और अनुमतियाँ)।')}</p>`;
+}
+
+/* ----- step: exam date ----- */
+function wizTypical(){
+  const v=wVar();if(!v||!v.wm||!v.wm.length)return null;
+  const st=parseYmd(W.start),min=addDays(st,45);let best=null;
+  for(let y=st.getFullYear();y<=st.getFullYear()+2;y++)for(const m of v.wm){const d=new Date(y,m-1,1);if(d>=min&&(!best||d<best))best=d}
+  return best;
+}
+function wizEnd(){
+  const st=W.start,out={end:'',kind:W.whenMode,err:'',warn:''};
+  if(!st||isNaN(parseYmd(st)))return Object.assign(out,{err:H('Pick the day you start studying.','पढ़ाई शुरू करने का दिन चुनें।')});
+  if(W.whenMode==='date'||W.whenMode==='target'){
+    const v=W.whenMode==='date'?W.dDate:W.dTarget;
+    if(!v)return Object.assign(out,{err:W.whenMode==='date'?H('Enter your exam date.','अपनी परीक्षा की तारीख़ भरें।'):H('Enter the date you want to finish by.','जिस तारीख़ तक पूरा करना है वह भरें।')});
+    out.end=v;
+  }else if(W.whenMode==='month'){
+    if(!W.dMonth)return Object.assign(out,{err:H('Pick the month and year of your exam.','अपनी परीक्षा का महीना और साल चुनें।')});
+    out.end=W.dMonth+'-01';
+    out.warn=H('You gave a month, so I plan up to the 1st of it. That keeps you a little ahead of the real date.','आपने महीना बताया है, इसलिए मैं उसकी 1 तारीख़ तक प्लान बना रहा हूँ। इससे आप असली तारीख़ से थोड़ा आगे रहेंगे।');
+  }else{
+    const d=wizTypical();
+    if(!d)return Object.assign(out,{err:H('There is no usual month for this one. Choose one of the other options.','इसका कोई तय महीना नहीं है। दूसरा विकल्प चुनें।')});
+    out.end=ymd(d);
+    out.warn=H('This is only a placeholder from when the exam is usually held, not an official date. Check the official notice and change it in Settings when it is announced.','यह सिर्फ़ उस समय का अनुमान है जब परीक्षा आम तौर पर होती है, आधिकारिक तारीख़ नहीं। आधिकारिक सूचना देखें और घोषणा होने पर सेटिंग में बदल दें।');
+  }
+  if(isNaN(parseYmd(out.end)))return Object.assign(out,{err:H('That date does not look right.','यह तारीख़ सही नहीं लग रही।')});
+  const n=wDays(st,out.end);
+  if(n<7)return Object.assign(out,{err:H('The date must be at least a week after you start.','तारीख़ शुरू करने के दिन से कम से कम एक हफ़्ता आगे होनी चाहिए।')});
+  if(n>1460)return Object.assign(out,{err:H('That is more than four years away. Pick a nearer date.','यह चार साल से ज़्यादा दूर है। नज़दीक की तारीख़ चुनें।')});
+  if(n<30)out.warn=(out.warn?out.warn+' ':'')+H('That is under a month, so the plan will be a revision sprint.','यह एक महीने से कम है, इसलिए प्लान रिवीज़न की दौड़ जैसा होगा।');
+  out.days=n;return out;
+}
+function stWhen(){
+  const v=wVar(),typ=wizTypical(),e=wizEnd();
+  let h=wInfo('I need an end date to build the timetable up to. Tell me whichever you know and I will check it with you.','टाइम-टेबल बनाने के लिए मुझे अंतिम तारीख़ चाहिए। जो भी आपको पता हो बताइए, मैं आपके साथ उसे जाँच लूँगा।');
+  h+=`<label class="field">${H('Start studying from','पढ़ाई शुरू करने का दिन')}<input type="date" data-wf="start" value="${esc(W.start)}" min="${ymd(new Date())}"></label>`;
+  h+=`<div class="wz-list">`+
+    wOpt('wm','data-v="date"',W.whenMode==='date',H('I know the exam date','मुझे परीक्षा की तारीख़ पता है'))+
+    (W.whenMode==='date'?`<input class="wz-in" type="date" data-wf="dDate" value="${esc(W.dDate)}" aria-label="${H('Exam date','परीक्षा की तारीख़')}">`:'')+
+    wOpt('wm','data-v="month"',W.whenMode==='month',H('I only know the month and year','मुझे सिर्फ़ महीना और साल पता है'))+
+    (W.whenMode==='month'?`<input class="wz-in" type="month" data-wf="dMonth" value="${esc(W.dMonth)}" aria-label="${H('Exam month','परीक्षा का महीना')}">`:'')+
+    wOpt('wm','data-v="target"',W.whenMode==='target',H('I have my own target to finish by','मेरा खुद का पूरा करने का लक्ष्य है'),H('For example a course-completion date.','जैसे कोर्स पूरा करने की तारीख़।'))+
+    (W.whenMode==='target'?`<input class="wz-in" type="date" data-wf="dTarget" value="${esc(W.dTarget)}" aria-label="${H('Target date','लक्ष्य की तारीख़')}">`:'')+
+    (typ?wOpt('wm','data-v="typical"',W.whenMode==='typical',H('I am not sure yet','मुझे अभी पक्का नहीं पता'),H('Use the usual time: '+(v.when||''),'आम समय इस्तेमाल करें: '+L(v.when||''))):'')+
+  `</div>`;
+  if(v.when&&W.whenMode!=='typical')h+=`<p class="small muted">${H('Usually: ','आम तौर पर: ')}${esc(L(v.when))} ${H('This is only a guide and changes every year. Check the official notice.','यह सिर्फ़ एक अंदाज़ा है और हर साल बदलता है। आधिकारिक सूचना देखें।')}</p>`;
+  if(e.err)h+=`<p class="err" role="alert" style="display:block">${esc(e.err)}</p>`;
+  else{
+    const wk=Math.round(e.days/7);
+    h+=`<section class="card wz-card"><span class="kick">${H('Please check','कृपया जाँच लें')}</span><p><b>${esc(wFmt(e.end))}</b> ${H(e.kind==='target'?'is your target date':'is your exam date','आपकी '+(e.kind==='target'?'लक्ष्य तारीख़ है':'परीक्षा की तारीख़ है'))}.</p>
+      <p class="muted">${H('The timetable runs from '+wFmt(W.start)+' to '+wFmt(e.end)+': '+e.days+' days, about '+wk+' weeks.',wFmt(W.start)+' से '+wFmt(e.end)+' तक टाइम-टेबल चलेगा: '+e.days+' दिन, लगभग '+wk+' हफ़्ते।')}</p>
+      ${e.warn?`<p class="small" style="color:var(--warn)">${esc(e.warn)}</p>`:''}
+      <label class="switch"><span>${H('Yes, plan up to this date','हाँ, इसी तारीख़ तक प्लान बनाएँ')}</span><input type="checkbox" data-wf="confirmed"${W.confirmed?' checked':''}></label></section>`;
+  }
+  return h;
+}
+
+/* ----- step: when do you like to study ----- */
+function stComfort(){
+  const v=wVar();
+  if(W.hw==null){W.hw=v.hrs[0];W.he=v.hrs[1]}
+  const wkMin=[0,1,2,3,4,5,6].reduce((a,d)=>a+(W.off.includes(d)?0:(d>=5?W.he:W.hw)*60),0);
+  let h=wInfo('Now tell me what suits you. I will fit the timetable into the times you pick. You can change every block afterwards.','अब बताइए आपके लिए क्या ठीक रहेगा। मैं टाइम-टेबल आपके चुने समय में बिठा दूँगा। बाद में हर ब्लॉक बदल सकते हैं।');
+  h+=`<div class="grid2"><label class="field">${H('Hours on weekdays','सोम-शुक्र के घंटे')}<input type="number" data-wf="hw" min="0.5" max="14" step="0.5" value="${W.hw}" inputmode="decimal"></label><label class="field">${H('Hours on Saturday and Sunday','शनि-रवि के घंटे')}<input type="number" data-wf="he" min="0.5" max="14" step="0.5" value="${W.he}" inputmode="decimal"></label></div>
+    <p class="small muted" id="wzwk">${H('About '+fmtDur(wkMin)+' a week.','हफ़्ते में लगभग '+FD(wkMin)+'।')}</p>`;
+  h+=`<div class="stack" style="gap:8px"><span class="kick">${H('Which part of the day suits you? Pick all that apply','दिन का कौन-सा हिस्सा ठीक रहेगा? जितने चाहें चुनें')}</span><div class="wz-chips">`+PERIODS.map(p=>`<button type="button" class="wz-chip" data-wz="per" data-v="${p.id}" aria-pressed="${W.periods.includes(p.id)}">${esc(L(p.name))} · ${esc(L(p.sub))}</button>`).join('')+`</div></div>`;
+  h+=`<div class="stack" style="gap:8px"><span class="kick">${H('Rest day (optional)','आराम का दिन (वैकल्पिक)')}</span><div class="days">`+DAYS.map((d,i)=>`<label><input type="checkbox" data-wz="off" data-v="${i}"${W.off.includes(i)?' checked':''}>${esc(L(d))}</label>`).join('')+`</div></div>`;
+  h+=`<div class="stack" style="gap:8px"><span class="kick">${H('Longest single sitting','एक बार में सबसे लंबा समय')}</span><div class="seg">`+[45,60,90,120].map(n=>`<button type="button" data-wz="sess" data-v="${n}" aria-pressed="${W.sess===n}">${FD(n)}</button>`).join('')+`</div></div>`;
+  h+=wSwitch(H('Weekly mock tests in the later phases','बाद के चरणों में हर हफ़्ते मॉक टेस्ट'),'mocks',W.mocks)+wSwitch(H('Ring an alarm before each block','हर ब्लॉक से पहले अलार्म बजाएँ'),'alarms',W.alarms);
+  if(!W.periods.length)h+=`<p class="err" role="alert" style="display:block">${H('Pick at least one part of the day.','दिन का कम से कम एक हिस्सा चुनें।')}</p>`;
+  return h;
+}
+function wizComfortErr(){
+  if(!W.periods.length)return 1;
+  if(!(W.hw>=0.5&&W.hw<=14&&W.he>=0.5&&W.he<=14))return 1;
+  if(W.off.length>=7)return 1;
+  return 0;
+}
+
+/* ----- step: the timetable ----- */
+function wizExamName(){
+  const f=FAM(W.fam),v=wVar();
+  if(W.fam==='other'||W.vr==='custom')return (W.cName||'').trim().slice(0,30)||'My exam';
+  let n=v.name.replace(/\s*\([^)]*\)/g,'').replace(/:\s*/g,' ').replace(/\s+/g,' ').trim();
+  if(f.pf)n=f.pf+' '+n;
+  return n.slice(0,30);
+}
+function wizGenerate(){
+  const v=wVar(),e=wizEnd();
+  W.draftErr='';W.draft=null;
+  try{
+    W.draft=genPlan({start:W.start,end:e.end,subjects:wizSubjects(),hw:W.hw,he:W.he,off:W.off,periods:W.periods,sess:W.sess,brk:10,cover:W.cover,
+      mock:{m:v.mk[0],marks:v.mk[1]},mocks:W.mocks,alarm:W.alarms,lead:5,examName:wizExamName()});
+    W.draft.dateKind=e.kind;W.phSel=W.draft.phases[0]?W.draft.phases[0].id:null;
+    if(!W.courseName)W.courseName=wizExamName();
+  }catch(err){W.draftErr=err.message}
+}
+function wBlockRow(b){
+  const subj=W.draft.plan.subjects;
+  return `<div class="wz-blk" data-id="${b.id}"><input type="time" data-wb="${b.id}" data-f="st" value="${b.st}" aria-label="${H('Start','शुरू')}">
+    <input type="number" data-wb="${b.id}" data-f="m" min="5" max="600" step="5" value="${b.m}" inputmode="numeric" aria-label="${H('Minutes','मिनट')}">
+    <select data-wb="${b.id}" data-f="s" aria-label="${H('Subject','विषय')}">${subj.map(s=>`<option value="${esc(s.id)}"${s.id===b.s?' selected':''}>${esc(L(s.name))}</option>`).join('')}</select>
+    <button class="icb sm" type="button" data-wz="blkdel" data-id="${b.id}" aria-label="${H('Remove this block','यह ब्लॉक हटाएँ')}">${ic('x')}</button>
+    <span class="small muted wz-bk">${esc(L(KINDS[b.k]))}${b.k==='mock'?'':b.t?' · '+esc(L(b.t)):''}</span></div>`;
+}
+function stPlan(){
+  if(W.draftErr)return `<p class="err" role="alert" style="display:block">${esc(W.draftErr)}</p>`;
+  const d=W.draft;if(!d)return '';
+  const P=d.plan,e=wizEnd();
+  let h=`<section class="card wz-card"><div class="stack" style="gap:3px"><h3>${esc(P.examName)}</h3><p class="muted">${H(wFmt(W.start)+' to '+wFmt(P.exam)+' · '+d.days+' days',wFmt(W.start)+' से '+wFmt(P.exam)+' · '+d.days+' दिन')}</p>
+    <p class="muted">${H('About '+fmtDur(Math.round(d.totalMin/Math.max(1,d.days/7)))+' a week · '+d.plan.subjects.filter(s=>s.id!==MIX_ID).length+' subjects · '+P.tests.length+' mock tests scheduled','हफ़्ते में लगभग '+FD(Math.round(d.totalMin/Math.max(1,d.days/7)))+' · '+d.plan.subjects.filter(s=>s.id!==MIX_ID).length+' विषय · '+P.tests.length+' मॉक टेस्ट तय')}</p></div>`;
+  h+=d.phases.map(p=>`<div class="wz-ph"><b>${esc(L(p.name))}</b><span class="small muted">${esc(phDate(p.from))} to ${esc(phDate(p.to))} · ${H(p.days+' days',p.days+' दिन')} · ${H(fmtDur(p.weekMin)+' a week',FD(p.weekMin)+' प्रति हफ़्ता')}</span><span class="small muted">${esc(p.note)}</span></div>`).join('')+`</section>`;
+  if(e.warn)h+=`<p class="note">${ic('spark')}<span>${esc(e.warn)}</span></p>`;
+  d.warnings.forEach(w=>{h+=`<p class="note">${ic('spark')}<span>${esc(w)}</span></p>`});
+  h+=`<section class="card wz-card"><div class="stack" style="gap:2px"><h3>${H('Follow it as it is, or change it','जैसा है वैसा अपनाएँ, या बदलें')}</h3><p class="small muted">${H('Change the time, minutes or subject of any block, remove one, or add your own. You can also edit everything later in the Plan tab.','किसी भी ब्लॉक का समय, मिनट या विषय बदलें, कोई हटाएँ या अपना जोड़ें। यह सब बाद में प्लान टैब में भी बदल सकते हैं।')}</p></div>`;
+  if(d.phases.length>1)h+=`<div class="seg" role="group" aria-label="${H('Phase','चरण')}">`+d.phases.map(p=>`<button type="button" data-wz="phase" data-v="${p.id}" aria-pressed="${p.id===W.phSel}">${esc(L(p.name))}</button>`).join('')+`</div>`;
+  h+=`<div class="seg" role="group" aria-label="${H('Day','दिन')}">`+DAYS.map((x,i)=>`<button type="button" data-wz="day" data-v="${i}" aria-pressed="${i===W.daySel}">${esc(L(x))}</button>`).join('')+`</div>`;
+  const bl=P.blocks.filter(b=>b.days.includes(W.daySel)&&(!d.phases.length||b.ph===W.phSel)).sort((a,b)=>toMin(a.st)-toMin(b.st));
+  h+=`<div class="stack" style="gap:8px">`+(bl.length?bl.map(wBlockRow).join(''):`<p class="small muted">${H('A free day.','खाली दिन।')}</p>`)+`</div>
+    <button class="btn sm soft" type="button" data-wz="blkadd">${ic('plus')}${H('Add a block on this day','इस दिन एक ब्लॉक जोड़ें')}</button></section>`;
+  if(P.tests.length)h+=`<p class="small muted">${H('Mock tests: '+P.tests.slice(0,4).map(t=>phDate(t.date)).join(', ')+(P.tests.length>4?' and '+(P.tests.length-4)+' more':'')+'. Each one rings an alarm and asks for your score afterwards.','मॉक टेस्ट: '+P.tests.slice(0,4).map(t=>phDate(t.date)).join(', ')+(P.tests.length>4?' और '+(P.tests.length-4)+' और':'')+'। हर एक पर अलार्म बजेगा और बाद में आपका स्कोर पूछा जाएगा।')}</p>`;
+  if(W.ctx==='newcourse')h+=`<label class="field">${H('Name of this course','इस कोर्स का नाम')}<input type="text" data-wf="courseName" value="${esc(W.courseName)}" maxlength="80"></label>`;
+  return h;
+}
+function wizAddBlock(){
+  const P=W.draft.plan,per=PERIODS.filter(p=>W.periods.includes(p.id))[0]||PERIODS[1];
+  const ph=W.draft.phases.find(p=>p.id===W.phSel)||W.draft.phases[0];
+  P.blocks.push({id:uid(),days:[W.daySel],st:fromMin(per.a),m:60,s:P.subjects[0].id,k:'theory',sh:0,al:W.alarms,t:'',from:ph?ph.from:undefined,to:ph?ph.to:undefined,ph:ph?ph.id:undefined});
+}
+
+/* ----- frame ----- */
+const WTITLES={exam:['Choose your exam','अपनी परीक्षा चुनें'],variant:['Which one exactly?','ठीक-ठीक कौन-सा?'],subjects:['Your subjects','आपके विषय'],perms:['Allow once, use everywhere','एक बार अनुमति, हर जगह उपयोग'],tools:['What do you study with?','आप किससे पढ़ते हैं?'],when:['Your exam date','आपकी परीक्षा की तारीख़'],comfort:['When do you like to study?','आप कब पढ़ना पसंद करते हैं?'],plan:['Your timetable','आपका टाइम-टेबल']};
+function wizValid(){
+  switch(W.step){
+    case 'exam':return false;
+    case 'variant':return W.fam==='other'?!!(W.cName.trim()&&W.cSubs.trim()):W.vr==='custom'?!!(W.cName.trim()&&W.cSubs.trim()):!!W.vr;
+    case 'subjects':return !wizSubErr();
+    case 'when':return !wizEnd().err&&W.confirmed;
+    case 'comfort':return !wizComfortErr();
+    case 'plan':return !!W.draft&&!W.busy;
+    default:return true;
+  }
+}
+function wizPaint(keep){
+  const el=document.getElementById('wiz');if(!el||!W)return;
+  const i=WSTEPS.indexOf(W.step),body=document.getElementById('wzbody'),sc=keep&&body?body.scrollTop:0;
+  const f=FAM(W.fam);
+  const title=W.step==='variant'&&f&&W.fam!=='other'?L(f.name):H(...WTITLES[W.step]);
+  const html={exam:stExam,variant:stVariant,subjects:stSubjects,perms:stPerms,tools:stTools,when:stWhen,comfort:stComfort,plan:stPlan}[W.step]();
+  const showNext=!(W.step==='exam'||(W.step==='variant'&&W.fam!=='other'&&W.vr!=='custom'));
+  el.innerHTML=`<div class="wz" role="dialog" aria-modal="true" aria-label="${H('Course setup','कोर्स सेटअप')}">
+    <header class="wz-h">${i>0?`<button class="icb" type="button" data-wz="back" aria-label="${H('Back','पीछे')}">${ic('chev','flip')}</button>`:'<span style="width:40px"></span>'}
+      <div class="wz-t"><span class="kick">${H('Step '+(i+1)+' of '+WSTEPS.length,'चरण '+(i+1)+' / '+WSTEPS.length)}</span><b>${esc(title)}</b></div>
+      <button class="icb${W.leave?' leave':''}" type="button" data-wz="close" aria-label="${W.leave?H('Tap again to discard the setup','सेटअप रद्द करने के लिए दोबारा दबाएँ'):H('Close','बंद करें')}">${W.leave?`<span class="small">${H('Discard?','रद्द करें?')}</span>`:ic('x')}</button></header>
+    <div class="wz-bar"><i style="width:${Math.round((i+1)/WSTEPS.length*100)}%"></i></div>
+    <div class="wz-b" id="wzbody"><div class="wz-in-b">${html}</div></div>
+    ${showNext?`<footer class="wz-f"><button class="btn lg" type="button" data-wz="next"${wizValid()?'':' disabled'}>${W.step==='plan'?(W.busy?H('Saving…','सहेज रहा हूँ…'):H('Use this timetable','यह टाइम-टेबल अपनाएँ')):W.step==='perms'||W.step==='tools'?H('Continue','आगे बढ़ें'):H('Next','आगे')}</button></footer>`:''}</div>`;
+  const nb=document.getElementById('wzbody');if(nb)nb.scrollTop=sc;
+}
+function wizGo(step){
+  W.step=step;W.leave=false;
+  if(step==='perms')refreshPerms().then(permRepaint);
+  if(step==='plan')wizGenerate();
+  wizPaint();const b=document.getElementById('wzbody');if(b)b.scrollTop=0;
+}
+function wizNext(){
+  const i=WSTEPS.indexOf(W.step);
+  if(!wizValid())return;
+  if(W.step==='variant'){wizInitSubs();W.confirmed=false}
+  if(W.step==='plan'){wizApply();return}
+  wizGo(WSTEPS[i+1]);
+}
+function wizBack(){
+  const i=WSTEPS.indexOf(W.step);if(i<=0)return;
+  let s=WSTEPS[i-1];
+  if(W.step==='subjects'&&W.fam==='other')s='variant';
+  wizGo(s);
+}
+async function wizApply(){
+  if(!W.draft||W.busy)return;
+  W.busy=true;wizPaint(true);
+  const P=W.draft.plan,e=wizEnd(),v=wVar(),f=FAM(W.fam);
+  const tools=[];
+  for(const id of W.toolSel){const t=TOOLS.find(x=>x.id===id);if(t)tools.push({id:t.id,name:t.name,url:t.url,pkg:t.pkg})}
+  for(const t of W.toolCustom)tools.push(t);
+  P.tools=tools;
+  P.setup={fam:W.fam,famName:f.name,variant:W.vr||'custom',variantName:v.name,picks:(v.o||[]).map((g,gi)=>({q:g.q,sel:(W.picks[gi]||[]).concat(W.gx[gi]||[])})),
+    mock:{m:v.mk[0],marks:v.mk[1]},dateKind:e.kind,cover:W.cover,hw:W.hw,he:W.he,off:W.off,periods:W.periods,sess:W.sess,mocks:W.mocks,alarms:W.alarms,made:ymd(new Date())};
+  const name=(W.courseName||P.examName||'My course').trim().slice(0,80);
+  try{
+    if(W.ctx==='newcourse'&&CL){
+      const id=await createCourse(name,P);CL.courses.push({id,name});
+      if(W.alarms)setArmed(true);
+      closeWizard();await openCourse(id);
+    }else{
+      S.plan=P;mark('plan');
+      if(CL&&name&&(CL.name==='My course'||W.ctx==='redo')&&name!==CL.name){
+        CL.name=name;const c=CL.courses.find(x=>x.id===CL.cid);if(c)c.name=name;
+        FB.updateDoc(courseRef(),{name,updatedAt:FB.serverTimestamp()}).catch(()=>{});
+      }
+      if(W.alarms)setArmed(true);
+      closeWizard();
+    }
+    planPh=null;tab='today';selIdx=dow(new Date());render();
+    toast(H('Your timetable is ready. Tap the Plan tab to change anything.','आपका टाइम-टेबल तैयार है। कुछ बदलना हो तो प्लान टैब खोलें।'));
+  }catch(err){
+    console.error(err);W.busy=false;wizPaint(true);toast(H('Could not create the course: '+((err&&err.code)||'error'),'कोर्स नहीं बन सका: '+((err&&err.code)||'त्रुटि')));
+  }
+}
+
+/* change the exam date later: rebuild the generated part of the timetable from the answers saved in plan.setup */
+function rebuildPlan(end){
+  const p=S.plan,su=p.setup;if(!su)throw new Error('This course was not made by the setup.');
+  const today=ymd(new Date());
+  if(!(wDays(today,end)>=7))throw new Error('The date must be at least a week from today to rebuild the timetable.');
+  const subs=p.subjects.filter(s=>s.id!==MIX_ID).map(s=>({id:s.id,name:s.name,w:s.w,c:s.c}));
+  const g=genPlan({start:today,end,subjects:subs,hw:su.hw,he:su.he,off:su.off||[],periods:su.periods,sess:su.sess,brk:10,cover:su.cover||0,
+    mock:su.mock||{m:180,marks:100},mocks:su.mocks!==false,alarm:su.alarms!==false,lead:p.lead,examName:p.examName});
+  p.blocks=p.blocks.filter(b=>b.man||!b.ph).concat(g.plan.blocks);
+  p.tests=(p.tests||[]).filter(t=>t.score!=null||!t.gen||t.date<today).concat(g.plan.tests);
+  p.phases=g.plan.phases;p.buffer=g.plan.buffer;
+  if(!p.subjects.some(s=>s.id===MIX_ID)){const m=g.plan.subjects.find(s=>s.id===MIX_ID);if(m)p.subjects.push(m)}
+  planPh=null;
+}
+
+/* ----- events ----- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('#wiz [data-wz]');if(!t||!W)return;
+  const a=t.dataset.wz,d=t.dataset,v=wVar();
+  switch(a){
+    case 'close':
+      if(W.step==='exam'||W.leave){closeWizard();break}
+      W.leave=true;wizPaint(true);break;
+    case 'back':wizBack();break;
+    case 'next':wizNext();break;
+    case 'skip':{
+      const ctx=W.ctx;closeWizard();
+      if(ctx==='newcourse'&&CL)emptyCourseForm();
+      else{S.plan.subjects=[{id:uid(),name:'Subject 1',w:3,c:3}];mark('plan');tab='plan';render()}
+      break}
+    case 'fam':W.fam=d.v;W.vr=null;wizGo('variant');break;
+    case 'var':W.vr=d.v;
+      if(d.v==='custom')wizPaint(true);
+      else{wizInitSubs();W.confirmed=false;wizGo('subjects')}
+      break;
+    case 'pick':{
+      const gi=+d.g,g=v.o[gi],sel=W.picks[gi],i=sel.indexOf(d.n);
+      if(i>=0)sel.splice(i,1);
+      else if(g.n===1){sel.length=0;W.gx[gi]=[];sel.push(d.n)}
+      else if(sel.length+W.gx[gi].length<g.n)sel.push(d.n);
+      wizPaint(true);break}
+    case 'gxadd':{
+      const gi=+d.g,g=v.o[gi],inp=document.querySelector('#wiz [data-wf=gx'+gi+']'),n=(inp&&inp.value||'').trim().slice(0,40);
+      if(!n)break;
+      if(g.n===1){W.picks[gi].length=0;W.gx[gi]=[n]}
+      else if(W.picks[gi].length+W.gx[gi].length<g.n&&!W.gx[gi].includes(n))W.gx[gi].push(n);
+      wizPaint(true);break}
+    case 'gxdel':W.gx[+d.g].splice(+d.i,1);wizPaint(true);break;
+    case 'exadd':{
+      const inp=document.querySelector('#wiz [data-wf=exadd]'),n=(inp&&inp.value||'').trim().slice(0,40);
+      if(n&&!wizSubjects().some(s=>s.name.toLowerCase()===n.toLowerCase()))W.extra.push(n);
+      wizPaint(true);break}
+    case 'exdel':W.extra.splice(+d.i,1);wizPaint(true);break;
+    case 'conf':W.conf[d.n]=+d.v;wizPaint(true);break;
+    case 'boff':W.offB[d.n]=!t.checked;wizPaint(true);break;
+    case 'cover':W.cover=+d.v;wizPaint(true);break;
+    case 'tool':if(W.toolSel.has(d.t))W.toolSel.delete(d.t);else W.toolSel.add(d.t);wizToolsPaint();break;
+    case 'tooldel':W.toolCustom.splice(+d.i,1);wizToolsPaint();break;
+    case 'tooladd':{
+      const n=document.querySelector('#wiz [data-wf=tn]'),u=document.querySelector('#wiz [data-wf=tu]');
+      try{addTool(n.value,u.value,W.toolCustom);wizToolsPaint()}
+      catch(err){const x=document.getElementById('wzterr');if(x)x.textContent=err.message}
+      break}
+    case 'wm':W.whenMode=d.v;W.confirmed=false;wizPaint(true);break;
+    case 'per':{const i=W.periods.indexOf(d.v);if(i>=0)W.periods.splice(i,1);else W.periods.push(d.v);wizPaint(true);break}
+    case 'off':{const n=+d.v,i=W.off.indexOf(n);if(i>=0)W.off.splice(i,1);else W.off.push(n);wizPaint(true);break}
+    case 'sess':W.sess=+d.v;wizPaint(true);break;
+    case 'phase':W.phSel=d.v;wizPaint(true);break;
+    case 'day':W.daySel=+d.v;wizPaint(true);break;
+    case 'blkdel':W.draft.plan.blocks=W.draft.plan.blocks.filter(b=>b.id!==d.id);wizPaint(true);break;
+    case 'blkadd':wizAddBlock();wizPaint(true);break;
+  }
+});
+function wizFieldEvent(e){
+  const t=e.target;if(!W||!t||!t.closest||!t.closest('#wiz'))return;
+  const wf=t.dataset&&t.dataset.wf,wb=t.dataset&&t.dataset.wb;
+  if(t.dataset&&t.dataset.wz==='boff'&&e.type==='change')return;
+  if(wb){
+    const b=W.draft&&W.draft.plan.blocks.find(x=>x.id===wb);if(!b)return;
+    if(t.dataset.f==='st'&&/^\d\d:\d\d$/.test(t.value))b.st=t.value;
+    else if(t.dataset.f==='m')b.m=Math.min(600,Math.max(5,Math.round(+t.value||60)));
+    else if(t.dataset.f==='s')b.s=t.value;
+    return;
+  }
+  if(!wf)return;
+  if(wf==='cName'||wf==='cSubs'){W[wf]=t.value;const nb=document.querySelector('#wiz [data-wz=next]');if(nb)nb.disabled=!wizValid();return}
+  if(wf==='courseName'){W.courseName=t.value;return}
+  if(e.type!=='change')return;
+  if(wf==='start'){W.start=t.value;W.confirmed=false;wizPaint(true)}
+  else if(wf==='dDate'||wf==='dTarget'||wf==='dMonth'){W[wf]=t.value;W.confirmed=false;wizPaint(true)}
+  else if(wf==='confirmed'){W.confirmed=t.checked;const nb=document.querySelector('#wiz [data-wz=next]');if(nb)nb.disabled=!wizValid()}
+  else if(wf==='hw'||wf==='he'){W[wf]=Math.min(14,Math.max(0.5,+t.value||0.5));wizPaint(true)}
+  else if(wf==='mocks'||wf==='alarms')W[wf]=t.checked;
+}
+document.addEventListener('input',wizFieldEvent);
+document.addEventListener('change',wizFieldEvent);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&W&&sheetEl.hidden){if(W.step==='exam'||W.leave)closeWizard();else{W.leave=true;wizPaint(true)}}});
 /* ---------- assistant, Hindi side: answers about the app, and understanding Hindi / Hinglish commands ---------- */
 const KB_HI=[
 /*0 log*/'पढ़ाई का समय दर्ज करने के लिए किसी ब्लॉक पर **समय दर्ज करें** दबाएँ, या आज टैब पर **एक अतिरिक्त सत्र दर्ज करें** दबाएँ। मिनट, शुरू करने का समय, विषय, हल की गई अभ्यास शीट, और चाहें तो सामग्री और पूरे किए पेज भरें। आप मुझसे भी कह सकते हैं, जैसे "मैंने आज 90 मिनट प्रायिकता पढ़ी"।',
@@ -1600,8 +2827,11 @@ const KB_HI=[
 /*20 theme*/'मुझसे कहें, जैसे "डार्क मोड", "मुख्य रंग हरा करो" या "बैकग्राउंड मिंट करो"। सेटिंग्स में भी चुन सकते हैं। पहले जैसा करने के लिए "लुक रीसेट करो" कहें।',
 /*21 voice*/'मुझसे बात करने के लिए इस चैट में माइक्रोफ़ोन दबाएँ, मैं ज़ोर से जवाब {दूँगा|दूँगी}। स्लाइडर वाले आइकन में महिला (अनु) या पुरुष (आदि) आवाज़, गति और भाषा चुनें। आवाज़ पहचानना आपके ब्राउज़र पर निर्भर है (Chrome या Edge सबसे अच्छे चलते हैं)।',
 /*22 smart*/'आम अनुरोध मैं बिना API key और बिना ख़र्च के ख़ुद समझ {लेता|लेती} हूँ। खुले सवालों और अनुरोधों के लिए सहायक की सेटिंग्स में अपनी AI की चिपकाकर **स्मार्ट मोड** चालू कर सकते हैं (Google Gemini की मुफ़्त की चलती है)। की इसी डिवाइस पर रहती है।',
-/*23 android*/'वेब पेज यह नहीं देख सकता कि आप दूसरे कौन-से ऐप चलाते हैं। एक अलग Android साथी ऐप आपके चुने पढ़ाई वाले ऐप का समय नापकर आपको JSON देता है। उस JSON को साप्ताहिक रिपोर्ट में पढ़ना अभी बना नहीं है।',
-/*24 about*/'Abhyashify GATE DA 2027 के लिए एक पढ़ाई का प्लानर है। यह आपकी साप्ताहिक समय-सारणी बनाता है, अलार्म बजाता है, पढ़ाई का समय दर्ज करता है, सामग्री और टेस्ट का हिसाब रखता है, और हफ़्ते की रिपोर्ट देता है जो आपके किए की योजना से तुलना करती है।',
+/*23 android*/'वेब पेज यह नहीं देख सकता कि आप दूसरे कौन-से ऐप चलाते हैं। एक अलग Android साथी ऐप आपके चुने पढ़ाई वाले ऐप में बिताया समय मापता है और JSON फ़ाइल एक्सपोर्ट करता है। **योजना, पढ़ाई के टूल और अनुमतियाँ** में वह फ़ाइल इंपोर्ट करें और समय आपके लॉग में जुड़ जाएगा।',
+/*24 study tools*/'जिन ऐप, साइट और YouTube चैनल से आप पढ़ते हैं उन्हें **योजना, पढ़ाई के टूल और अनुमतियाँ** में जोड़ें (सेटअप भी पूछता है)। ट्रैकिंग एक बार चालू करें। उसके बाद आज स्क्रीन से कोई टूल खोलने पर टाइमर चलता है और लौटने तक का समय बिना कुछ पूछे दर्ज हो जाता है। वेब पेज दूसरे ऐप के अंदर नहीं देख सकता, सिर्फ़ यह कि आप गए और लौटे। जिन ऐप को आप खुद खोलते हैं उनका समय Android साथी फ़ाइल से आता है।',
+/*25 setup*/'"मेरा कोर्स सेट करो" कहें या **मेरा कोर्स सेट करें** दबाएँ (पहला पेज, या दोबारा करने के लिए सेटिंग्स)। आप परीक्षा और उसका पेपर या शाखा चुनते हैं, वैकल्पिक विषय चुनते हैं, एक बार नोटिफ़िकेशन आदि की अनुमति देते हैं, पढ़ाई के टूल बताते हैं, परीक्षा या लक्ष्य की तारीख़ पक्की करते हैं, बताते हैं कितने घंटे और दिन का कौन-सा समय ठीक है, और उस तारीख़ तक का दिन-दर-दिन टाइम-टेबल पाते हैं। उसे जैसा है वैसा अपना सकते हैं या कोई भी ब्लॉक बदल सकते हैं।',
+/*26 permissions*/'सेटअप एक बार नोटिफ़िकेशन, ब्राउज़र द्वारा सँभाला जाने वाला स्टोरेज, माइक्रोफ़ोन और टूल ट्रैकिंग की अनुमति माँगता है। उन्हें **योजना, पढ़ाई के टूल और अनुमतियाँ** में देख और बदल सकते हैं। नोटिफ़िकेशन तभी दिख सकते हैं जब ब्राउज़र इस पेज को ज़िंदा रखे। लॉक फ़ोन पर भरोसेमंद अलार्म के लिए सेटिंग्स का कैलेंडर एक्सपोर्ट इस्तेमाल करें।',
+/*24 about*/'Abhyashify प्रतियोगी और बोर्ड परीक्षाओं (JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA और अन्य, या आपकी अपनी) के लिए एक पढ़ाई का प्लानर है। यह आपकी साप्ताहिक समय-सारणी बनाता है, अलार्म बजाता है, पढ़ाई का समय दर्ज करता है, सामग्री और टेस्ट का हिसाब रखता है, और हफ़्ते की रिपोर्ट देता है जो आपके किए की योजना से तुलना करती है।',
 /*25 signout*/'खाता शीट (ऊपर दाएँ) खोलें और **साइन आउट** दबाएँ। इससे इस डिवाइस की स्थानीय कॉपी भी साफ़ हो जाती है।'
 ];
 
@@ -1664,6 +2894,7 @@ function hiNorm(text){
   if(HI_YES.has(flat)||HI_YES.has(flat.split(' ')[0]) && flat.split(' ').length<=3)return 'yes';
   if(HI_NO.has(flat)||HI_NO.has(flat.split(' ')[0]) && flat.split(' ').length<=3)return 'no';
   if(/(धन्यवाद|शुक्रिया|थैंक्स|थैंक यू|dhanyavaad|dhanyawad|shukriya|thanks)/.test(flat)&&flat.split(' ').length<=5)return 'thanks';
+  if(/(कोर्स|परीक्षा|पाठ्यक्रम|एग्जाम).*(सेट ?अप|सेटअप|चुन)|(सेट ?अप|सेटअप).*(कोर्स|परीक्षा|एग्जाम)|(course|exam) (setup|set up|chuno|chunna)|(setup|set up) (my )?(course|exam)/.test(flat))return 'set up my course';
   if(/^(नमस्ते|नमस्कार|हैलो|हेलो|हाय|सुप्रभात|namaste|namaskar|hello|hi)(?=\s|$)/.test(flat)&&flat.split(' ').length<=3)return 'hello';
   if(/(पूर्ववत|अनडू|वापस (करो|कर दो|लो|ले लो)|पिछला (बदलाव|काम) (वापस|रद्द)|पिछला बदलाव|wapas karo|wapas kar do|undo)/.test(flat)&&flat.split(' ').length<=8)return 'undo';
   if(/(क्या क्या कर सकत|क्या कर सकत|मदद|सहायता|हेल्प|madad|kya kya kar sakte|kya kar sakte)/.test(flat)&&!/(अलार्म|टेस्ट|बनाओ)/.test(flat))return 'what can you do';
@@ -2010,12 +3241,16 @@ const AX={
     S.plan.blocks.push({id:uid(),days,st,m,s:sub.id,k,sh:Math.max(0,Math.min(20,Math.round(+a.sheets||0))),al:a.alarm!==false,t:''});mark('plan');
     return {msg:H(`Added a ${KINDS[k].toLowerCase()} block for ${sub.name}: ${dayNames(days)} at ${st} for ${fmtDur(m)}.`,`${L(sub.name)} के लिए ${L(KINDS[k])} ब्लॉक जोड़ दिया: ${dayNames(days)}, ${st} बजे से, ${FD(m)} के लिए।`)};
   },
+  open_setup(a){
+    const had=S.plan.subjects.length||S.plan.blocks.length;
+    closeAssistant();
+    setTimeout(()=>openWizard({ctx:had?'redo':'onboard'}),180);
+    return {msg:H('Opening the course setup. Pick your exam, check the date, tell me when you like to study, and I will build the timetable.','कोर्स सेटअप खोल रहा हूँ। अपनी परीक्षा चुनें, तारीख़ जाँचें, बताएँ आप कब पढ़ना चाहते हैं, और मैं टाइम-टेबल बना दूँगा।')};
+  },
   new_schedule(a){
     const hasSubs=S.plan.subjects.length>0;
     if(a.mode==='template'||!hasSubs){
-      const T=gateTemplate(),keep={tests:S.plan.tests||[],reminders:S.plan.reminders||[]};
-      S.plan=Object.assign(T,keep);mark('plan');
-      return {msg:H('Loaded the GATE DA 2027 template: nine subjects and a weekly timetable. Your tests and reminders are untouched. Change anything in the Plan tab.','GATE DA 2027 टेम्पलेट लग गया: नौ विषय और साप्ताहिक समय-सारणी। आपके टेस्ट और रिमाइंडर जैसे थे वैसे हैं। कुछ भी बदलना हो तो योजना टैब में बदलें।')};
+      return AX.open_setup({});
     }
     const r=buildSchedule(a);S.plan.blocks=r.blocks;mark('plan');
     const top=Object.entries(r.got).sort((x,y)=>y[1]-x[1]).slice(0,4).map(([id,m])=>H(subjName(id)+' '+fmtDur(m)+'/week',L(subjName(id))+' '+FD(m)+'/हफ़्ता')).join(', ');
@@ -2081,7 +3316,7 @@ const AX={
     if(!CL)throw new Error(H('Separate courses need sign-in so each one keeps its own data. Sign in from the Account button, then ask me again.','अलग-अलग कोर्स के लिए साइन इन ज़रूरी है, ताकि हर कोर्स का अपना डेटा रहे। खाता बटन से साइन इन करें, फिर मुझसे दोबारा कहें।'));
     const name=String(a.name||'').trim().slice(0,80);if(!name)throw new Error(H('What should the course be called?','कोर्स का नाम क्या रखें?'));
     const id=await createCourse(name);CL.courses.push({id,name});await openCourse(id);
-    return {msg:H(`Created the course "${name}" and switched to it. Ask me to load the GATE DA template or build a schedule for it.`,`"${name}" कोर्स बना दिया और उसी पर आ गया। मुझसे GATE DA टेम्पलेट लगाने या इसकी समय-सारणी बनाने को कहें।`)};
+    return {msg:H(`Created the course "${name}" and switched to it. Say "set up my course" and I will open the setup to pick the exam and build a timetable.`,`"${name}" कोर्स बना दिया और उसी पर आ गया। मुझसे GATE DA टेम्पलेट लगाने या इसकी समय-सारणी बनाने को कहें।`)};
   },
   async open_course(a){
     if(!CL)throw new Error(H('Sign in to switch between courses.','कोर्स बदलने के लिए साइन इन करें।'));
@@ -2093,7 +3328,7 @@ const SPEC_TYPES=new Set([...Object.keys(AX)]);
 async function runActions(list,opts){
   opts=opts||{};const msgs=[],errs=[];let close=false;
   list=(Array.isArray(list)?list:[]).filter(a=>a&&SPEC_TYPES.has(a.type)).slice(0,6);
-  if(!opts.confirmed&&list.some(a=>NEEDS_SURE.has(a.type))&&(S.plan.blocks.length||list.some(a=>a.type==='new_schedule'&&a.mode==='template'&&S.plan.subjects.length))){
+  if(!opts.confirmed&&list.some(a=>NEEDS_SURE.has(a.type))&&list.some(a=>a.type==='new_schedule'&&a.mode!=='template')&&S.plan.blocks.length){
     PENDING={actions:list};
     const n=S.plan.blocks.length;
     return {msgs:[H(`This will replace your ${n} schedule block${n===1?'':'s'}. Your subjects, materials, tests and reminders stay. Go ahead? (yes or no)`,`इससे आपके ${n} ब्लॉक बदल जाएँगे। आपके विषय, सामग्री, टेस्ट और रिमाइंडर वैसे ही रहेंगे। आगे बढ़ूँ? (हाँ या नहीं)`)],pending:true,close:false};
@@ -2135,8 +3370,11 @@ const KB=[
  {k:'theme color colour dark light mode accent background look appearance wallpaper change',a:'Ask me, for example "dark mode", "make the accent green" or "background mint". You can also pick them in Settings. Say "reset the look" to go back to the default.'},
  {k:'voice speak talk listen microphone mic male female speaking hear',a:'Tap the microphone in this chat to talk to me, and I answer out loud. Open the gear icon to choose a female or male voice, the speed and the language. Voice recognition uses your browser (Chrome or Edge work best).'},
  {k:'assistant ai smart mode key api gemini claude model',a:'I understand common requests on my own, with no key and no cost. For free-form questions and requests you can switch on **Smart mode** in the gear menu by pasting your own AI key (a free Google Gemini key works). The key stays on this device.'},
- {k:'android usage tracker other apps phone apps study time track',a:'A web page cannot see which other apps you use. A separate Android companion app measures time in the study apps you choose and gives you JSON. Reading that JSON into the weekly report is not built yet.'},
- {k:'what is abhyashify about app purpose',a:'Abhyashify is a study planner for GATE DA 2027. It builds your weekly schedule, rings alarms, logs your study time, tracks your materials and tests, and gives a weekly report that compares what you did with the plan.'},
+ {k:'android usage tracker other apps phone apps study time track',a:'A web page cannot see which other apps you use. A separate Android companion app measures time in the study apps you choose and exports a JSON file. In **Plan, Study tools and permissions** you can import that file and the time is added to your logs.'},
+ {k:'study tools youtube website apps track automatically consent open nptel unacademy',a:'Add the apps, sites and YouTube channels you study with in **Plan, Study tools and permissions** (the setup asks too). Turn on tracking once. After that, opening a tool from the Today screen starts a timer and the time until you come back is logged, with no questions. A web page cannot see inside other apps, only that you left and came back. Time in apps you open yourself comes from the Android companion file.'},
+ {k:'setup set up course exam choose jee neet gate upsc ssc nda cds cat clat ca wizard timetable create generate new start begin',a:'Say "set up my course" or tap **Set up my course** (front page, or Settings to redo it). You pick your exam and its paper or branch, choose any optional subjects, allow notifications and the other permissions once, name your study tools, confirm your exam date or target date, say how many hours and which parts of the day suit you, and get a day-by-day timetable up to that date. You can follow it as it is or edit any block.'},
+ {k:'permission permissions permissions need allow notifications microphone storage notification banner access',a:'The setup asks once for notifications, storage that the browser keeps, the microphone and tool tracking. You can see and change them in **Plan, Study tools and permissions**. Notifications can only appear while the browser keeps this page alive. On a locked phone the calendar export in Settings is the reliable alarm.'},
+ {k:'what is abhyashify about app purpose',a:'Abhyashify is a study planner for competitive and board exams (JEE, NEET, GATE, UPSC, SSC, NDA, CDS, CAT, CLAT, CA and more, or your own). It builds your weekly schedule, rings alarms, logs your study time, tracks your materials and tests, and gives a weekly report that compares what you did with the plan.'},
  {k:'sign out logout switch account',a:'Open the Account sheet (top right) and tap **Sign out**. That also clears the local copy on this device.'},
 ];
 function askKB(q){
@@ -2253,6 +3491,7 @@ async function brain(text){
     }
   }
   if(/^(undo|revert|take (that|it) back|go back)\b/.test(t))return {reply:undoLast()};
+  if(/\b(set ?up|setup)\b.{0,25}\b(course|exam|prep|preparation|timetable|wizard)\b|\b(course|exam) set ?up\b|\bsetup wizard\b|\b(choose|pick|select|change) (my |the )?exam\b|\b(i am|i'm|im) (preparing|studying|getting ready) for\b|\bhelp me (prepare|plan) for\b/.test(t))return doActs([ex_('open_setup',{})],'');
   {const lm=t.match(/\b(?:switch|change|speak|talk|reply|answer|set|use)\b.*\b(hindi|english)\b/)||t.match(/\blanguage\b.*\b(hindi|english)\b/)||t.match(/\b(hindi|english) (?:language|mode)\b/);
    if(lm&&!/\b(voice|accent)\b/.test(t))return doActs([ex_('set_language',{lang:lm[1]==='hindi'?'hi':'en'})],'');
    const vm=t.match(/\b(male|female) voice\b|\b(?:switch to|talk to|speak to|use|call you|be) (adi|anu)\b|\bvoice (?:to )?(male|female)\b/);
@@ -2416,7 +3655,7 @@ add_material {title (required), subject, kind:"theory"|"sheet"|"notes"|"mock", t
 set_exam {date (required), name}
 log_session {subject, minutes (required), date, time}
 start_timer {subject}   stop_timer {}
-create_course {name}   open_course {name}
+create_course {name}   open_course {name}   open_setup {} (opens the course setup: pick the exam, subjects, date, study times, timetable)
 navigate {to:"today"|"plan"|"materials"|"report"|"settings"|"account"}
 alarms_on {on:true|false}
 set_language {lang:"en"|"hi"}   set_voice {gender:"male"|"female"}`;
@@ -3040,6 +4279,11 @@ function closeSheet(quick){
 const need=(v,msg)=>{if(!v)throw new Error(msg);return v};
 const switchRow=(label,name,on)=>`<label class="switch"><span>${label}</span><input type="checkbox" name="${name}"${on?' checked':''}></label>`;
 
+/* a block added by hand while a phase is open belongs to that phase's dates and is kept when the timetable is rebuilt */
+function phaseTag(){
+  const p=PH().find(x=>x.id===selPhase());
+  return p?{from:p.from,to:p.to,ph:p.id,man:true}:{};
+}
 function blockForm(b){
   b=b||{id:'',days:[planDay],st:'06:30',m:90,s:S.plan.subjects[0]?S.plan.subjects[0].id:'',k:'theory',sh:0,al:true,t:''};
   const body=`<div class="stack" style="gap:8px"><span class="kick">Days</span><div class="days">${DAYS.map((d,i)=>`<label><input type="checkbox" name="day" value="${i}"${b.days.includes(i)?' checked':''}>${d}</label>`).join('')}</div></div>
@@ -3052,7 +4296,7 @@ function blockForm(b){
     ${b.id?`<button class="btn lg danger" type="button" data-act="delblock" data-b="${b.id}">Delete block</button>`:''}`;
   openSheet(b.id?'Edit block':'New block',body,fd=>{
     const days=fd.getAll('day').map(Number);need(days.length,'Pick at least one day.');need(S.plan.subjects.length,'Add a subject first.');
-    const nb={id:b.id||uid(),days,st:fd.get('st'),m:Math.max(5,+fd.get('m')||60),s:fd.get('s'),k:fd.get('k'),sh:Math.max(0,+fd.get('sh')||0),al:fd.get('al')==='on',t:(fd.get('t')||'').trim()};
+    const nb=Object.assign({},b.id?b:phaseTag(),{id:b.id||uid(),days,st:fd.get('st'),m:Math.max(5,+fd.get('m')||60),s:fd.get('s'),k:fd.get('k'),sh:Math.max(0,+fd.get('sh')||0),al:fd.get('al')==='on',t:(fd.get('t')||'').trim()});
     const i=S.plan.blocks.findIndex(x=>x.id===nb.id);if(i<0)S.plan.blocks.push(nb);else S.plan.blocks[i]=nb;
     mark('plan');closeSheet();render(false);toast(b.id?'Block saved':'Block added');
   });
@@ -3125,15 +4369,24 @@ function settingsForm(){
     <div class="stack" style="gap:8px"><span class="kick">Language</span>${langSeg()}</div>
     ${lookPickers()}
     <div class="grid2"><label class="field">Exam name<input type="text" name="en" value="${esc(p.examName)}" maxlength="30" placeholder="GATE DA"></label><label class="field">Exam date<input type="date" name="ex" value="${esc(p.exam)}"></label></div>
+    ${p.setup?`<label class="switch" id="rebrow"><span>Rebuild the timetable if I change the date</span><input type="checkbox" name="reb" checked></label><p class="small muted">Blocks and mock tests made by the setup are replaced, including ones you edited. Blocks you added yourself and scored tests stay.</p>`:''}
     <div class="grid2"><label class="field">Alarm minutes early<input type="number" name="lead" min="0" max="60" value="${p.lead}" inputmode="numeric"></label><label class="field">Revision buffer (days)<input type="number" name="buf" min="0" max="120" value="${p.buffer}" inputmode="numeric"></label></div>
     <button class="btn lg" type="submit">Save settings</button>
+    <button class="btn lg ghost" type="button" data-act="wiz">${ic('spark')}Set up the course again (exam, subjects, timetable)</button>
+    <button class="btn lg ghost" type="button" data-act="toolsheet">${ic('open')}Study tools and permissions</button>
     <button class="btn lg ghost" type="button" data-act="exportcsv">${ic('upload')}Export schedule for Google Calendar (CSV)</button>
     <p class="small muted">Import the file in Google Calendar on a computer. Your calendar's own notifications then work when this page is closed.</p>
     ${installBtn()}
     <button class="btn lg ghost" type="button" data-act="exportjson">${ic('upload')}Download a backup (JSON)</button>`,fd=>{
     if(CL){const cn=(fd.get('cn')||'').trim();if(cn&&cn!==CL.name){CL.name=cn;const c=CL.courses.find(x=>x.id===CL.cid);if(c)c.name=cn;FB.updateDoc(courseRef(),{name:cn,updatedAt:FB.serverTimestamp()}).catch(()=>toast('Could not rename the course.'))}}
+    const oldEx=p.exam;
     p.examName=(fd.get('en')||'').trim();p.exam=fd.get('ex')||'';p.lead=Math.max(0,+fd.get('lead')||0);p.buffer=Math.max(0,+fd.get('buf')||0);
-    mark('plan');closeSheet();render(false);toast('Settings saved');
+    let msg='Settings saved';
+    if(p.setup&&p.exam&&p.exam!==oldEx&&fd.get('reb')==='on'){
+      try{rebuildPlan(p.exam);if(p.setup.dateKind==='typical')p.setup.dateKind='date';msg='Timetable rebuilt for '+wFmt(p.exam)}
+      catch(err){p.exam=oldEx;throw err}
+    }
+    mark('plan');closeSheet();render(false);toast(msg);
   });
 }
 function saveFile(name,data,type){
@@ -3157,7 +4410,7 @@ function calendarCsv(){
   return rows.map(r=>r.map(csvQ).join(',')).join('\n');
 }
 
-/* ---------- template ---------- */
+/* ---------- GATE DA sample plan (no longer on the front page; kept for the test suite and as a sample) ---------- */
 function gateTemplate(){
   const subs=[['prob','Probability & Statistics',5,3],['la','Linear Algebra',4,3],['calc','Calculus & Optimization',3,3],['py','Python & DSA',3,3],['db','Databases & Warehousing',2,3],['ml','Machine Learning',5,3],['ai','Artificial Intelligence',4,3],['ga','General Aptitude',3,3],['mix','Revision & full mocks',3,3]];
   const P=Object.assign(defaultPlan(),{exam:'2027-02-06',examName:'GATE DA',subjects:subs.map(([id,name,w,c])=>({id,name,w,c}))});
@@ -3200,10 +4453,11 @@ function ring(b,late){
     <button class="btn lg" type="button" data-act="alarmstart" data-b="${b.id}">${ic('play')}Start now</button>
     <div class="grid2" style="width:100%"><button class="btn ghost" type="button" data-act="snooze" data-b="${b.id}">Snooze 5 min</button><button class="btn ghost" type="button" data-act="dismiss">Dismiss</button></div></div>`;
   el.hidden=false;beep();clearInterval(ringTimer);let n=0;ringTimer=setInterval(()=>{if(++n>40)return stopRing();beep()},2200);
+  notify(H(late?'Missed alarm':'Time to study',late?'छूटा हुआ अलार्म':'पढ़ने का समय')+': '+L(blockTitle(b)),b.st+' · '+FD(b.m),'b|'+b.id);
 }
 function stopRing(){clearInterval(ringTimer);document.getElementById('alarm').hidden=true}
 function alarmTick(){
-  tickTimer();extraAlarms();
+  tickTimer();extraAlarms();finishToolRun();
   const now=new Date(),ds=ymd(now),nm=now.getHours()*60+now.getMinutes();
   for(const b of blocksOn(S.plan,now)){
     if(!b.al)continue;
@@ -3241,7 +4495,8 @@ document.addEventListener('click',async e=>{
     case 'sel':selIdx=+d.v;render(false);break;
     case 'pday':planDay=+d.v;render(false);break;
     case 'close':closeSheet();break;
-    case 'tpl':applyTemplate();toast('Template added');break;
+    case 'wiz':openWizard();break;
+    case 'pph':planPh=d.v;render(false);break;
     case 'blank':S.plan.subjects=[{id:uid(),name:'Subject 1',w:3,c:3}];mark('plan');tab='plan';render();break;
     case 'start':startRun(d.b);break;
     case 'stop':logForm(run&&run.b);break;
@@ -3326,13 +4581,14 @@ function importBackup(o){
   for(const m of o.materials){if(!m||!m.id||haveM.has(m.id)||!m.title)continue;
     S.materials.push({id:String(m.id),title:String(m.title).slice(0,160),subj:m.subj||null,kind:m.kind||'theory',unit:m.unit||'pages',total:Math.max(0,+m.total||0),done:Math.max(0,+m.done||0),file:/^https?:\/\//i.test(m.file||'')?m.file:null,asset:null});addedM++}
   for(const l of o.logs){if(!l||!l.id||haveL.has(l.id)||!l.d||!l.st)continue;
-    const x=ensureT({id:String(l.id),d:l.d,st:l.st,m:Math.min(720,Math.max(1,+l.m||1)),b:l.b||null,s:l.s||null,ps:l.ps||null,pm:l.pm||null,q:+l.q||0,mid:l.mid||null,mu:+l.mu||0,t0:+l.t0||0,t1:+l.t1||0,dev:l.dev||deviceId(),src:l.src||'manual',tz:l.tz==null?tzOff():l.tz});
+    const x=ensureT({id:String(l.id),d:l.d,st:l.st,m:Math.min(720,Math.max(1,+l.m||1)),b:l.b||null,s:l.s||null,ps:l.ps||null,pm:l.pm||null,q:+l.q||0,mid:l.mid||null,mu:+l.mu||0,t0:+l.t0||0,t1:+l.t1||0,dev:l.dev||deviceId(),src:l.src||'manual',tz:l.tz==null?tzOff():l.tz,tool:l.tool||null});
     if(!(x.t0>0))continue;x.t1=x.t0+x.m*60000;S.logs.push(x);addedL++}
   if(addedM)mark('materials');if(addedL)mark('logs');
   closeSheet();render(false);toast(`Imported ${addedM} materials and ${addedL} sessions`);
 }
-function courseForm(){
-  openSheet('New course',`<label class="field">Course name<input type="text" name="n" maxlength="80" placeholder="GATE DA 2027" required></label><button class="btn lg" type="submit">Create course</button>`,async fd=>{
+function courseForm(){closeSheet(true);openWizard({ctx:'newcourse'})}
+function emptyCourseForm(){
+  openSheet('New course',`<label class="field">Course name<input type="text" name="n" maxlength="80" placeholder="My course" required></label><button class="btn lg" type="submit">Create course</button>`,async fd=>{
     const name=need((fd.get('n')||'').trim(),'Enter a name.');
     const id=await createCourse(name);CL.courses.push({id,name});closeSheet();await openCourse(id);toast('Course created');
   });

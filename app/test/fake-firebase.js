@@ -25,6 +25,7 @@ function makeFake(be, label) {
       if (!existing && data.ownerUid !== me) throw denied('create as other owner');
       if (existing && existing.ownerUid !== me) throw denied('not owner');
       if (!data.name || !Array.isArray(data.members) || !data.plan || !Array.isArray(data.plan.subjects) || !Array.isArray(data.plan.blocks)) throw denied('invalid course');
+      if (String(data.name).length > 80 || data.plan.subjects.length > 60 || data.plan.blocks.length > 300 || data.members.length > 10) throw denied('course over the limits');   // same limits as firestore.rules
       return;
     }
     if (p[0] === 'courses' && p[2] === 'people' && p.length === 6) {

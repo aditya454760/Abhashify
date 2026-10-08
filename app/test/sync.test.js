@@ -19,9 +19,9 @@ const mk = (id, day, h, m, mins) => `S.logs.push(ensureT({id:'${id}',d:'${day}',
   const A = open(be, 'A'); await sleep(200);
   ok('signed-out user sees the sign-in screen', A.d.getElementById('view').textContent.includes('Sign in with Google'));
   A.click('[data-act=signin]'); await sleep(500);
-  ok('signing in creates a course and shows onboarding', /Set up your schedule/.test(A.d.getElementById('view').textContent));
+  ok('signing in creates a course and shows onboarding', /Set up your course/.test(A.d.getElementById('view').textContent));
   ok('course doc created for the right owner', [...be.docs.entries()].some(([k, v]) => k.startsWith('courses/') && k.split('/').length === 2 && v.ownerUid === 'u-aditya' && Array.isArray(v.members)));
-  A.click('[data-act=tpl]'); await sleep(300);
+  A.ev('applyTemplate()'); await sleep(300);
   ok('template saved to the course plan', [...be.docs.values()].some(v => v.plan && v.plan.subjects && v.plan.subjects.length === 9));
   // log a session through the real form
   const today = A.ev('ymd(new Date())');
@@ -65,8 +65,8 @@ const mk = (id, day, h, m, mins) => `S.logs.push(ensureT({id:'${id}',d:'${day}',
   ok('another account cannot write into this account', blocked);
   // no Firebase at all: the app still works on this device only
   const L = open(be, 'L', null, true); await sleep(300);
-  ok('without Firebase the app opens in this-device mode', /Set up your schedule/.test(L.d.getElementById('view').textContent) && L.ev('CL')===null);
-  L.click('[data-act=tpl]'); await sleep(600);
+  ok('without Firebase the app opens in this-device mode', /Set up your course/.test(L.d.getElementById('view').textContent) && L.ev('CL')===null);
+  L.ev('applyTemplate()'); await sleep(600);
   ok('local mode saves to this device', JSON.parse(L.w.localStorage.getItem('pl.plan')).subjects.length === 9);
   const real = errs.filter(e => !/bad source/.test(e));
   ok('no unexpected script errors', real.length === 0 || (console.log(real), false));
