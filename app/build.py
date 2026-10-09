@@ -4,7 +4,7 @@ import os, shutil
 here = os.path.dirname(os.path.abspath(__file__))
 src = lambda n: open(os.path.join(here, 'src', n), encoding='utf-8').read()
 root = os.path.join(here, '..')
-head = src('head.html').replace('</style>', src('extra.css') + '</style>', 1)
+head = src('head.html').replace('</style>', src('extra.css') + src('neo.css') + '</style>', 1)
 i = head.index('</style>') + len('</style>')
 head_part, body_part = head[:i], head[i:]
 overlap = open(os.path.join(root, 'sync', 'core', 'overlap.js'), encoding='utf-8').read()

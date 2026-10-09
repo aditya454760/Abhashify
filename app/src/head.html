@@ -5,27 +5,30 @@
 <style>
 /* Layout: one phone-width column, soft cards on a quiet ground. Sticky top bar, floating pill nav, a mini timer docked above it. */
 :root{
-  --bg:#F2F4F3; --surface:#FFFFFF; --surface2:#F6F8F7; --ink:#12202B; --ink2:#55646F; --ink3:#8795A0;
-  --line:#E1E7E9; --track:#E5EAEC; --accent:#4349C9; --accent-soft:#E9EAFB; --accent-ink:#FFFFFF;
+  --bg:#E4E9EF; --surface:var(--bg); --surface2:color-mix(in srgb,var(--bg) 93%,#4a5a6e); --ink:#16222E; --ink2:#3E4A56; --ink3:#566470;
+  --line:color-mix(in srgb,var(--bg) 84%,#5a6a7e); --track:color-mix(in srgb,var(--bg) 86%,#5a6a7e);
+  --nhi:rgba(255,255,255,.9); --nlo:rgba(139,155,176,.55); --accent:#4349C9; --accent-soft:#E9EAFB; --accent-ink:#FFFFFF;
   --good:#1F8A57; --good-soft:#E3F4EA; --warn:#A5700C; --warn-soft:#FBF0D8; --bad:#C23B35; --bad-soft:#FBE6E4;
   --sl:46%; --scrim:rgba(14,20,26,.45);
-  --shadow:0 1px 2px rgba(18,32,43,.06),0 12px 30px -16px rgba(18,32,43,.22);
+  --shadow:8px 8px 18px var(--nlo),-8px -8px 18px var(--nhi);
   --f-display:'Bricolage Grotesque','Noto Sans Devanagari','Segoe UI',system-ui,sans-serif;
   --f-body:'Instrument Sans','Noto Sans Devanagari','Segoe UI',system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E1217; --surface:#171C24; --surface2:#1D232C; --ink:#E8ECF1; --ink2:#A2ADB9; --ink3:#77838F;
-    --line:#28303A; --track:#262E38; --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
+    --bg:#1F242C; --surface:var(--bg); --surface2:color-mix(in srgb,var(--bg) 90%,#000); --ink:#E8ECF1; --ink2:#B0BAC5; --ink3:#8E9AA6;
+    --line:color-mix(in srgb,var(--bg) 84%,#000); --track:color-mix(in srgb,var(--bg) 80%,#000);
+    --nhi:rgba(255,255,255,.06); --nlo:rgba(0,0,0,.5); --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
     --good:#58C68C; --good-soft:#15301F; --warn:#E4B35B; --warn-soft:#33290F; --bad:#F2837C; --bad-soft:#3A1A19;
-    --sl:66%; --scrim:rgba(0,0,0,.6); --shadow:0 12px 30px -16px rgba(0,0,0,.7); color-scheme:dark;
+    --sl:66%; --scrim:rgba(0,0,0,.6); color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0E1217; --surface:#171C24; --surface2:#1D232C; --ink:#E8ECF1; --ink2:#A2ADB9; --ink3:#77838F;
-  --line:#28303A; --track:#262E38; --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
+  --bg:#1F242C; --surface:var(--bg); --surface2:color-mix(in srgb,var(--bg) 90%,#000); --ink:#E8ECF1; --ink2:#B0BAC5; --ink3:#8E9AA6;
+  --line:color-mix(in srgb,var(--bg) 84%,#000); --track:color-mix(in srgb,var(--bg) 80%,#000);
+  --nhi:rgba(255,255,255,.06); --nlo:rgba(0,0,0,.5); --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
   --good:#58C68C; --good-soft:#15301F; --warn:#E4B35B; --warn-soft:#33290F; --bad:#F2837C; --bad-soft:#3A1A19;
-  --sl:66%; --scrim:rgba(0,0,0,.6); --shadow:0 12px 30px -16px rgba(0,0,0,.7); color-scheme:dark;
+  --sl:66%; --scrim:rgba(0,0,0,.6); color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}

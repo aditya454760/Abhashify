@@ -2,17 +2,17 @@
 const ACCENTS={indigo:'#4349C9',blue:'#1D6FD8',teal:'#0F8B8D',green:'#1F8A57',lime:'#5B8A12',yellow:'#B8860B',gold:'#B8860B',orange:'#D9631A',red:'#C23B35',pink:'#C93C7C',magenta:'#B5389E',purple:'#7A3FC4',violet:'#6A45D1',brown:'#8A5A3C',grey:'#58677A',gray:'#58677A',slate:'#4A5B6A',cyan:'#0E87A8',navy:'#26407A',maroon:'#8E2B3A'};
 // Each background has a light and a dark version. tone 'dark' means it only makes sense in dark mode.
 const BGS={
-  default:{label:'Default',l:{bg:'#F2F4F3'},d:{bg:'#0E1217'}},
-  paper:{label:'Paper',l:{bg:'#F7F1E5'},d:{bg:'#17140F'}},
-  mint:{label:'Mint',l:{bg:'#E9F4EE'},d:{bg:'#0C1511'}},
-  sky:{label:'Sky',l:{bg:'#E8F1FB'},d:{bg:'#0B131C'}},
-  blush:{label:'Blush',l:{bg:'#FBEDEE'},d:{bg:'#1A1113'}},
-  lavender:{label:'Lavender',l:{bg:'#EFEBFA'},d:{bg:'#13101E'}},
-  slate:{label:'Slate',l:{bg:'#E4E8EC'},d:{bg:'#0A0D11'}},
-  sunrise:{label:'Sunrise',l:{bg:'#FBEFE4',img:'linear-gradient(170deg,#FFE9D6 0%,#FBEFE4 38%,#F3EEF8 100%)'},d:{bg:'#18110F',img:'linear-gradient(170deg,#2A1A12 0%,#18110F 45%,#14111C 100%)'}},
-  aurora:{label:'Aurora',l:{bg:'#E8F3F1',img:'linear-gradient(165deg,#D8F1EA 0%,#E8F3F1 40%,#E6E8FA 100%)'},d:{bg:'#0B1416',img:'linear-gradient(165deg,#0D2420 0%,#0B1416 45%,#15122B 100%)'}},
-  midnight:{label:'Midnight',tone:'dark',d:{bg:'#0A1020',img:'linear-gradient(180deg,#0F1A36 0%,#0A1020 60%)'}},
-  black:{label:'Black',tone:'dark',d:{bg:'#000000'}}
+  default:{label:'Default',l:{bg:'#E4E9EF'},d:{bg:'#1F242C'}},
+  paper:{label:'Paper',l:{bg:'#F7F1E5'},d:{bg:'#2A261F'}},
+  mint:{label:'Mint',l:{bg:'#E9F4EE'},d:{bg:'#1C2823'}},
+  sky:{label:'Sky',l:{bg:'#E8F1FB'},d:{bg:'#1B2733'}},
+  blush:{label:'Blush',l:{bg:'#FBEDEE'},d:{bg:'#2C2124'}},
+  lavender:{label:'Lavender',l:{bg:'#EFEBFA'},d:{bg:'#262037'}},
+  slate:{label:'Slate',l:{bg:'#E4E8EC'},d:{bg:'#14181E'}},
+  sunrise:{label:'Sunrise',l:{bg:'#FBEFE4',img:'linear-gradient(170deg,#FFE9D6 0%,#FBEFE4 38%,#F3EEF8 100%)'},d:{bg:'#2A1F1B',img:'linear-gradient(170deg,#3A281D 0%,#2A1F1B 45%,#231E2E 100%)'}},
+  aurora:{label:'Aurora',l:{bg:'#E8F3F1',img:'linear-gradient(165deg,#D8F1EA 0%,#E8F3F1 40%,#E6E8FA 100%)'},d:{bg:'#1A2628',img:'linear-gradient(165deg,#1A3A34 0%,#1A2628 45%,#241F42 100%)'}},
+  midnight:{label:'Midnight',tone:'dark',d:{bg:'#141C32',img:'linear-gradient(180deg,#1C2850 0%,#141C32 60%)'}},
+  black:{label:'Black',tone:'dark',d:{bg:'#121519'}}
 };
 let LOOK=Object.assign({accent:null,bg:null},lsGet('pl.look',{}));
 const isDarkNow=()=>theme==='dark'||(theme==='auto'&&!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));

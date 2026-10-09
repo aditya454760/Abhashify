@@ -18,27 +18,30 @@
 <style>
 /* Layout: one phone-width column, soft cards on a quiet ground. Sticky top bar, floating pill nav, a mini timer docked above it. */
 :root{
-  --bg:#F2F4F3; --surface:#FFFFFF; --surface2:#F6F8F7; --ink:#12202B; --ink2:#55646F; --ink3:#8795A0;
-  --line:#E1E7E9; --track:#E5EAEC; --accent:#4349C9; --accent-soft:#E9EAFB; --accent-ink:#FFFFFF;
+  --bg:#E4E9EF; --surface:var(--bg); --surface2:color-mix(in srgb,var(--bg) 93%,#4a5a6e); --ink:#16222E; --ink2:#3E4A56; --ink3:#566470;
+  --line:color-mix(in srgb,var(--bg) 84%,#5a6a7e); --track:color-mix(in srgb,var(--bg) 86%,#5a6a7e);
+  --nhi:rgba(255,255,255,.9); --nlo:rgba(139,155,176,.55); --accent:#4349C9; --accent-soft:#E9EAFB; --accent-ink:#FFFFFF;
   --good:#1F8A57; --good-soft:#E3F4EA; --warn:#A5700C; --warn-soft:#FBF0D8; --bad:#C23B35; --bad-soft:#FBE6E4;
   --sl:46%; --scrim:rgba(14,20,26,.45);
-  --shadow:0 1px 2px rgba(18,32,43,.06),0 12px 30px -16px rgba(18,32,43,.22);
+  --shadow:8px 8px 18px var(--nlo),-8px -8px 18px var(--nhi);
   --f-display:'Bricolage Grotesque','Noto Sans Devanagari','Segoe UI',system-ui,sans-serif;
   --f-body:'Instrument Sans','Noto Sans Devanagari','Segoe UI',system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E1217; --surface:#171C24; --surface2:#1D232C; --ink:#E8ECF1; --ink2:#A2ADB9; --ink3:#77838F;
-    --line:#28303A; --track:#262E38; --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
+    --bg:#1F242C; --surface:var(--bg); --surface2:color-mix(in srgb,var(--bg) 90%,#000); --ink:#E8ECF1; --ink2:#B0BAC5; --ink3:#8E9AA6;
+    --line:color-mix(in srgb,var(--bg) 84%,#000); --track:color-mix(in srgb,var(--bg) 80%,#000);
+    --nhi:rgba(255,255,255,.06); --nlo:rgba(0,0,0,.5); --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
     --good:#58C68C; --good-soft:#15301F; --warn:#E4B35B; --warn-soft:#33290F; --bad:#F2837C; --bad-soft:#3A1A19;
-    --sl:66%; --scrim:rgba(0,0,0,.6); --shadow:0 12px 30px -16px rgba(0,0,0,.7); color-scheme:dark;
+    --sl:66%; --scrim:rgba(0,0,0,.6); color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0E1217; --surface:#171C24; --surface2:#1D232C; --ink:#E8ECF1; --ink2:#A2ADB9; --ink3:#77838F;
-  --line:#28303A; --track:#262E38; --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
+  --bg:#1F242C; --surface:var(--bg); --surface2:color-mix(in srgb,var(--bg) 90%,#000); --ink:#E8ECF1; --ink2:#B0BAC5; --ink3:#8E9AA6;
+  --line:color-mix(in srgb,var(--bg) 84%,#000); --track:color-mix(in srgb,var(--bg) 80%,#000);
+  --nhi:rgba(255,255,255,.06); --nlo:rgba(0,0,0,.5); --accent:#8F96FF; --accent-soft:#232853; --accent-ink:#0E1217;
   --good:#58C68C; --good-soft:#15301F; --warn:#E4B35B; --warn-soft:#33290F; --bad:#F2837C; --bad-soft:#3A1A19;
-  --sl:66%; --scrim:rgba(0,0,0,.6); --shadow:0 12px 30px -16px rgba(0,0,0,.7); color-scheme:dark;
+  --sl:66%; --scrim:rgba(0,0,0,.6); color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
@@ -363,6 +366,150 @@ html[lang=hi] .btn,html[lang=hi] .seg button{letter-spacing:0}
 .tool{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:10px 13px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:.9rem}
 .tool .ic{width:16px;height:16px}
 html[lang=hi] .wz-chip,html[lang=hi] .wz-opt{letter-spacing:0}
+
+/* ---------- neumorphic skin ----------
+   One material: the surface is the same colour as the ground, and depth comes only from a light edge (top left)
+   and a dark edge (bottom right). Raised = can be pressed. Sunk = holds a value, a choice or text you type.
+   Colour is kept for meaning only: the accent (primary action, current choice) and good / warn / bad.
+   --nhi / --nlo are set per theme in the head. Text colours were darkened there so the soft look stays readable. */
+:root{
+  --r1:var(--shadow);                                              /* cards, sheets */
+  --r2:5px 5px 11px var(--nlo),-5px -5px 11px var(--nhi);          /* buttons, chips */
+  --r3:3px 3px 7px var(--nlo),-3px -3px 7px var(--nhi);            /* small controls */
+  --s1:inset 5px 5px 10px var(--nlo),inset -5px -5px 10px var(--nhi);   /* wells, inputs, pressed */
+  --s2:inset 3px 3px 6px var(--nlo),inset -3px -3px 6px var(--nhi);
+  --groove:0 -1px 0 var(--nlo),0 1px 0 var(--nhi);
+}
+body{background-color:var(--bg)}
+
+/* raised surfaces */
+.card,.blk,.tile,.hero,.alarm-card,.as-m.a,.wz-opt,.wz-card,.dayb[aria-pressed="true"]{background:var(--surface);box-shadow:var(--r1);border:0}
+.card{border-radius:26px}
+.blk{border-radius:22px}
+.hero.run{background:var(--surface);box-shadow:var(--r1),inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 45%,transparent)}
+.card.flat{background:transparent;box-shadow:var(--s1);border:0}
+.tile{border-radius:20px;box-shadow:var(--r2)}
+.blk::before{left:10px;top:16px;bottom:16px;width:4px;border-radius:4px;opacity:.9}
+.blk.done{opacity:1}
+.blk.done h3{color:var(--ink2)}
+.logo{background:var(--accent);box-shadow:var(--r3)}
+.top{background:color-mix(in srgb,var(--bg) 82%,transparent)}
+
+/* nav: a raised bar, the current tab is pressed in */
+nav.tabs{background:var(--surface);box-shadow:var(--r1);border-radius:28px}
+nav.tabs button{border-radius:20px;color:var(--ink2)}
+nav.tabs button[aria-current="page"]{background:transparent;color:var(--accent);box-shadow:var(--s2)}
+#mini{background:var(--surface);color:var(--ink);box-shadow:var(--r1);border-radius:24px}
+#mini .ic{color:var(--accent)}
+
+/* buttons */
+.btn{box-shadow:var(--r2);border-radius:16px}
+.btn:hover{filter:none}
+.btn:active{transform:none;box-shadow:inset 4px 4px 9px rgba(0,0,0,.3),inset -3px -3px 8px rgba(255,255,255,.12)}
+.btn.sm{box-shadow:var(--r3)}
+.btn.soft,.btn.ghost{background:var(--surface);color:var(--accent);box-shadow:var(--r2)}
+.btn.ghost{color:var(--ink)}
+.btn.soft:active,.btn.ghost:active{box-shadow:var(--s2)}
+.btn.danger{background:var(--surface);color:var(--bad);box-shadow:var(--r2)}
+.btn.danger:active{box-shadow:var(--s2)}
+.btn.stopb{box-shadow:var(--r2)}
+.icb{border-radius:14px;background:var(--surface);box-shadow:var(--r3);color:var(--ink2)}
+.icb:hover{background:var(--surface)}
+.icb:active,.icb[aria-pressed="true"]{transform:none;box-shadow:var(--s2);background:var(--surface);color:var(--accent)}
+.icb.sm{border-radius:12px}
+.avatar{background:var(--surface)!important;color:var(--accent)!important;box-shadow:var(--r3)}
+.count{background:var(--surface);color:var(--accent);box-shadow:var(--s2)}
+.pre,.chip,.st,.as-chip{background:var(--surface);box-shadow:var(--r3)}
+.pre{color:var(--ink2)}
+.pre:active{transform:none;box-shadow:var(--s2)}
+.st{box-shadow:var(--s2)}
+.st.good{background:var(--surface);color:var(--good)} .st.bad{background:var(--surface);color:var(--bad)}
+.st.warn{background:var(--surface);color:var(--warn)} .st.acc{background:var(--surface);color:var(--accent)}
+.as-chip{color:var(--accent)} .as-chip.undo{background:var(--surface);color:var(--warn)}
+.tool{background:var(--surface);color:var(--accent);box-shadow:var(--r3);border-radius:14px}
+.tile-ic{background:var(--surface);box-shadow:var(--s2);border-radius:14px}
+.num{background:var(--surface);box-shadow:var(--s2)}
+#asstfab{box-shadow:var(--r1);background:var(--accent)}
+#asstfab:active{box-shadow:inset 4px 4px 9px rgba(0,0,0,.3),inset -3px -3px 8px rgba(255,255,255,.12)}
+
+/* segmented control: a groove with a raised thumb */
+.seg{background:var(--surface);box-shadow:var(--s1);border-radius:18px;padding:5px}
+.seg button{border-radius:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:var(--r3)}
+
+/* week strip */
+.dayb{border-radius:18px}
+.dayb[aria-pressed="true"]{box-shadow:var(--s1)}
+.dayn::after{background:var(--bg)}
+.dayb[aria-pressed="true"] .dayn::after{background:var(--bg)}
+.dayn.off{box-shadow:var(--s2)}
+
+/* wells: things you type into or that show a level */
+input[type=text],input[type=number],input[type=time],input[type=date],input[type=month],input[type=url],input[type=password],select,textarea,
+.wz-add input,.wz-in,#wiz textarea,.wz-blk input,.wz-blk select{background:var(--surface);border:0;box-shadow:var(--s1);border-radius:16px}
+input[type=file]{background:var(--surface);border:0;box-shadow:var(--s1)}
+input:focus,select:focus,textarea:focus,.wz-add input:focus,.wz-in:focus,#wiz textarea:focus,#wiz .field input:focus{outline:none;box-shadow:var(--s1),0 0 0 2px var(--accent);border:0}
+.meter{background:var(--surface);box-shadow:var(--s2);height:10px;border-radius:8px}
+.meter i{box-shadow:1px 1px 3px var(--nlo)}
+.stackbar{box-shadow:var(--s2);padding:2px;gap:2px;height:14px;background:var(--surface)}
+.stackbar i{border-radius:5px}
+.wz-bar{background:var(--surface);box-shadow:var(--s2);height:8px;border-radius:6px}
+.wz-bar i{height:100%}
+.pips i{background:var(--surface);box-shadow:var(--s2)} .pips i.on{background:var(--accent);box-shadow:none}
+.rt{stroke:var(--track)}
+.hero-ring .rsvg{filter:drop-shadow(2px 2px 3px var(--nlo)) drop-shadow(-2px -2px 3px var(--nhi))}
+.switch,.note,.wz-ph{background:var(--surface);box-shadow:var(--s1);border-radius:18px}
+.switch input,.wz-chk input{accent-color:var(--accent)}
+.days label,.wz-chip{background:var(--surface);color:var(--ink2);box-shadow:var(--r3);border-radius:14px}
+.days label:has(input:checked),.wz-chip[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:var(--s2)}
+.days label:has(input:checked)::after{content:"";position:absolute;left:30%;right:30%;bottom:5px;height:3px;border-radius:3px;background:var(--accent)}
+.wz-chip[aria-pressed="true"]{font-weight:700}
+.wz-opt{border-radius:20px;box-shadow:var(--r2)}
+.wz-opt[aria-pressed="true"]{background:var(--surface);box-shadow:var(--s1),inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 55%,transparent)}
+.wz-f{border-top:0;background:var(--bg);box-shadow:0 -10px 18px -12px var(--nlo)}
+.wz-h .icb.leave{color:var(--bad)}
+
+/* separators become fine grooves */
+.item,.perm,.wz-sub,.tbl td{border-top:0;box-shadow:inset 0 1px 0 var(--nlo),inset 0 2px 0 var(--nhi)}
+.item:first-child,.perm:first-child,.wz-sub:first-of-type{box-shadow:none}
+.tbl td{box-shadow:inset 0 1px 0 var(--nlo)}
+.as-head{border-bottom:0;box-shadow:0 8px 14px -12px var(--nlo)}
+.grab{background:var(--surface);box-shadow:var(--s2);height:6px}
+.axis{stroke:var(--line)}
+
+/* sheets and the assistant */
+#sheet .panel,.as-panel{background:var(--bg);box-shadow:0 -12px 30px -8px var(--nlo),0 -4px 12px -6px var(--nhi);border-radius:32px 32px 0 0}
+.scrim,.as-scrim{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.alarm-card{border-radius:32px}
+.alarm-ring{background:var(--surface);box-shadow:var(--s1);color:var(--accent)}
+.as-m.u{box-shadow:var(--r3);border-radius:20px 20px 6px 20px}
+.as-m.a{box-shadow:var(--r2);border-radius:20px 20px 20px 6px}
+.as-in input{background:var(--surface);box-shadow:var(--s1);border-radius:24px}
+.as-in input:focus{box-shadow:var(--s1),0 0 0 2px var(--accent)}
+.as-in .icb{background:var(--surface);box-shadow:var(--r3)}
+.as-in .icb:active{box-shadow:var(--s2)}
+.as-in .as-send{background:var(--accent);color:var(--accent-ink);box-shadow:var(--r3)}
+.as-in .as-mic.on{background:var(--surface);color:var(--accent);box-shadow:var(--s2),0 0 0 2px var(--accent)}
+.as-in .as-mic.talk{background:var(--surface);color:var(--good);box-shadow:var(--s2),0 0 0 2px var(--good)}
+.sw{box-shadow:var(--r3)}
+.sw[aria-pressed="true"]{box-shadow:var(--s2)}
+.sw[aria-pressed="true"]::after{box-shadow:0 0 0 2.5px var(--accent)}
+
+/* toast: a raised plate rather than a dark bar */
+#toast{background:var(--surface);color:var(--ink);box-shadow:var(--r1);border-radius:18px}
+
+/* loading placeholders */
+.sk i{background:linear-gradient(100deg,var(--track) 30%,var(--surface) 50%,var(--track) 70%);background-size:200% 100%;box-shadow:var(--s2)}
+
+/* keep the keyboard focus ring obvious on a soft surface */
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+@media (forced-colors:active){
+  .card,.blk,.btn,.icb,input,select,textarea,.seg,.wz-opt,nav.tabs{border:1px solid CanvasText}
+}
+.st{border-radius:14px;padding:4px 11px}
+.perm .st{white-space:normal;text-align:center;max-width:120px;justify-content:center}
+.perm>.stack:last-child{flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -1549,17 +1696,17 @@ function genPlan(cfg){
 const ACCENTS={indigo:'#4349C9',blue:'#1D6FD8',teal:'#0F8B8D',green:'#1F8A57',lime:'#5B8A12',yellow:'#B8860B',gold:'#B8860B',orange:'#D9631A',red:'#C23B35',pink:'#C93C7C',magenta:'#B5389E',purple:'#7A3FC4',violet:'#6A45D1',brown:'#8A5A3C',grey:'#58677A',gray:'#58677A',slate:'#4A5B6A',cyan:'#0E87A8',navy:'#26407A',maroon:'#8E2B3A'};
 // Each background has a light and a dark version. tone 'dark' means it only makes sense in dark mode.
 const BGS={
-  default:{label:'Default',l:{bg:'#F2F4F3'},d:{bg:'#0E1217'}},
-  paper:{label:'Paper',l:{bg:'#F7F1E5'},d:{bg:'#17140F'}},
-  mint:{label:'Mint',l:{bg:'#E9F4EE'},d:{bg:'#0C1511'}},
-  sky:{label:'Sky',l:{bg:'#E8F1FB'},d:{bg:'#0B131C'}},
-  blush:{label:'Blush',l:{bg:'#FBEDEE'},d:{bg:'#1A1113'}},
-  lavender:{label:'Lavender',l:{bg:'#EFEBFA'},d:{bg:'#13101E'}},
-  slate:{label:'Slate',l:{bg:'#E4E8EC'},d:{bg:'#0A0D11'}},
-  sunrise:{label:'Sunrise',l:{bg:'#FBEFE4',img:'linear-gradient(170deg,#FFE9D6 0%,#FBEFE4 38%,#F3EEF8 100%)'},d:{bg:'#18110F',img:'linear-gradient(170deg,#2A1A12 0%,#18110F 45%,#14111C 100%)'}},
-  aurora:{label:'Aurora',l:{bg:'#E8F3F1',img:'linear-gradient(165deg,#D8F1EA 0%,#E8F3F1 40%,#E6E8FA 100%)'},d:{bg:'#0B1416',img:'linear-gradient(165deg,#0D2420 0%,#0B1416 45%,#15122B 100%)'}},
-  midnight:{label:'Midnight',tone:'dark',d:{bg:'#0A1020',img:'linear-gradient(180deg,#0F1A36 0%,#0A1020 60%)'}},
-  black:{label:'Black',tone:'dark',d:{bg:'#000000'}}
+  default:{label:'Default',l:{bg:'#E4E9EF'},d:{bg:'#1F242C'}},
+  paper:{label:'Paper',l:{bg:'#F7F1E5'},d:{bg:'#2A261F'}},
+  mint:{label:'Mint',l:{bg:'#E9F4EE'},d:{bg:'#1C2823'}},
+  sky:{label:'Sky',l:{bg:'#E8F1FB'},d:{bg:'#1B2733'}},
+  blush:{label:'Blush',l:{bg:'#FBEDEE'},d:{bg:'#2C2124'}},
+  lavender:{label:'Lavender',l:{bg:'#EFEBFA'},d:{bg:'#262037'}},
+  slate:{label:'Slate',l:{bg:'#E4E8EC'},d:{bg:'#14181E'}},
+  sunrise:{label:'Sunrise',l:{bg:'#FBEFE4',img:'linear-gradient(170deg,#FFE9D6 0%,#FBEFE4 38%,#F3EEF8 100%)'},d:{bg:'#2A1F1B',img:'linear-gradient(170deg,#3A281D 0%,#2A1F1B 45%,#231E2E 100%)'}},
+  aurora:{label:'Aurora',l:{bg:'#E8F3F1',img:'linear-gradient(165deg,#D8F1EA 0%,#E8F3F1 40%,#E6E8FA 100%)'},d:{bg:'#1A2628',img:'linear-gradient(165deg,#1A3A34 0%,#1A2628 45%,#241F42 100%)'}},
+  midnight:{label:'Midnight',tone:'dark',d:{bg:'#141C32',img:'linear-gradient(180deg,#1C2850 0%,#141C32 60%)'}},
+  black:{label:'Black',tone:'dark',d:{bg:'#121519'}}
 };
 let LOOK=Object.assign({accent:null,bg:null},lsGet('pl.look',{}));
 const isDarkNow=()=>theme==='dark'||(theme==='auto'&&!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));
